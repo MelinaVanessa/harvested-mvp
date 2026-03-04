@@ -1,0 +1,28 @@
+export const TRANSLATIONS: Record<'de' | 'en', Record<string, Record<string, string>>> = {
+  de: {
+    nav: { map: 'Karte', home: 'Home', add: 'Teilen', likes: 'Likes', profile: 'Profil' },
+    home: { explore: 'Entdecken', following: 'Abonniert', empty: 'Keine Einträge gefunden 🌱', searchPlaceholder: 'Suche nach Äpfeln, Kürbis...' },
+    filter: { all: 'Alle anzeigen', pickup: 'Abholbereit', self: 'Selbst ernten' },
+    add: { title: 'Ernte teilen', submit: 'Angebot veröffentlichen', photo: 'Foto hochladen', what: 'Was bietest du an?', amount: 'Menge', unit: 'Einheit', desc: 'Beschreibung', type: 'Art der Übergabe', times: 'Abholzeiten', address: 'Adresse', aiOptimize: 'Text optimieren' },
+    profile: { posts: 'Angebote', following: 'Folge ich', member: 'Mitglied', edit: 'Profil bearbeiten', share: 'Profil teilen', settings: 'Einstell.', changePic: 'Profilbild ändern', newPic: 'Neues Profilbild wählen', view: 'Ansehen', cancel: 'Abbrechen', crop: 'Bild zuschneiden', done: 'Fertig', noFollowing: 'Noch niemanden abonniert.', shareTitle: 'Profil teilen', copy: 'Link kopieren', more: 'Mehr', followingBtn: 'Abonniert', followBtn: 'Folgen', namePlaceholder: 'Dein Name', tabPosts: 'Angebote', tabReservations: 'Reserviert', noReservations: 'Noch nichts reserviert.' },
+    settings: { title: 'Einstellungen', appearance: 'Darstellung', darkmode: 'Dunkelmodus', general: 'Allgemein', language: 'Sprache', logout: 'Abmelden', role: 'Modus', gardener: 'Gärtner', buyer: 'Käufer' },
+    likes: { title: 'Deine Favoriten', empty: 'Du hast noch keine Favoriten markiert.' },
+    map: { near: 'In der Nähe entdecken', latest: 'Neueste Angebote', searchPlaceholder: 'Ort suchen...' },
+    support: { title: 'Support & Kontakt', help: 'Wie können wir helfen?', sub: 'Fülle das Formular aus und unser Team meldet sich schnellstmöglich bei dir.', subject: 'Betreff', msg: 'Nachricht', send: 'Nachricht senden', thanks: 'Vielen Dank!', received: 'Wir haben deine Nachricht erhalten.' },
+    listing: { cook: 'Was koche ich damit?', recipes: 'Rezept-Ideen', loadingRecipes: 'Suche Rezepte...', reserve: 'Reservieren', yourOffer: 'Dein Angebot', available: 'verfügbar', soldOut: 'Leider vergriffen' },
+    login: { welcome: 'Willkommen zurück', subtitle: 'Teile deine Ernte, rette Lebensmittel.', email: 'E-Mail', password: 'Passwort', loginBtn: 'Einloggen', registerBtn: 'Registrieren', register: 'Noch kein Konto? Registrieren', hasAccount: 'Bereits ein Konto? Einloggen', error: 'Ungültige Anmeldedaten. Bitte prüfen.', rememberMe: 'Anmeldedaten speichern' },
+  },
+  en: {
+    nav: { map: 'Map', home: 'Home', add: 'Share', likes: 'Likes', profile: 'Profile' },
+    home: { explore: 'Explore', following: 'Following', empty: 'No listings found 🌱', searchPlaceholder: 'Search for apples, pumpkins...' },
+    filter: { all: 'Show all', pickup: 'Pickup', self: 'Self harvest' },
+    add: { title: 'Share Harvest', submit: 'Publish Listing', photo: 'Upload Photo', what: 'What are you offering?', amount: 'Amount', unit: 'Unit', desc: 'Description', type: 'Handover Type', times: 'Pickup Times', address: 'Address', aiOptimize: 'Optimize Text' },
+    profile: { posts: 'Listings', following: 'Following', member: 'Member', edit: 'Edit Profile', share: 'Share Profile', settings: 'Settings', changePic: 'Change Profile Picture', newPic: 'Choose New Picture', view: 'View', cancel: 'Cancel', crop: 'Crop Image', done: 'Done', noFollowing: 'Not following anyone yet.', shareTitle: 'Share Profile', copy: 'Copy Link', more: 'More', followingBtn: 'Following', followBtn: 'Follow', namePlaceholder: 'Your Name', tabPosts: 'Posts', tabReservations: 'Reserved', noReservations: 'No reservations yet.' },
+    settings: { title: 'Settings', appearance: 'Appearance', darkmode: 'Dark Mode', general: 'General', language: 'Language', logout: 'Log out', role: 'Mode', gardener: 'Gardener', buyer: 'Buyer' },
+    likes: { title: 'Your Favorites', empty: "You haven't marked any favorites yet." },
+    map: { near: 'Discover nearby', latest: 'Latest Listings', searchPlaceholder: 'Search location...' },
+    support: { title: 'Support & Contact', help: 'How can we help?', sub: 'Fill out the form and our team will get back to you asap.', subject: 'Subject', msg: 'Message', send: 'Send Message', thanks: 'Thank you!', received: 'We have received your message.' },
+    listing: { cook: 'What can I cook?', recipes: 'Recipe Ideas', loadingRecipes: 'Finding recipes...', reserve: 'Reserve', yourOffer: 'Your Offer', available: 'available', soldOut: 'Sold out' },
+    login: { welcome: 'Welcome back', subtitle: 'Share your harvest, save food.', email: 'Email', password: 'Password', loginBtn: 'Log in', register: 'No account? Register', error: 'Invalid credentials. Please check.', rememberMe: 'Remember me' },
+  },
+}

@@ -1,0 +1,465 @@
+import { useState, useEffect } from 'react'
+import { Map as MapIcon, Home, PlusCircle, User, Heart, MessageCircle, Menu, Leaf, Settings, LogOut, HelpCircle } from 'lucide-react'
+import { ErrorBoundary, NavButton } from '@/components'
+import {
+  LoginView,
+  ChatView,
+  InboxView,
+  SettingsView,
+  SupportView,
+  HomeView,
+  AddListingView,
+  LikesView,
+  MapView,
+  ProfileView,
+} from '@/views'
+import { THEMES, TRANSLATIONS } from '@/constants'
+import { getSavedLogin, setSavedLogin, clearSavedLogin, getSavedProfile, setSavedProfile } from '@/constants/storage'
+import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
+import type { UserProfile, Listing, Reservation, Message } from '@/types'
+
+type ActiveTab = 'home' | 'map' | 'add' | 'profile' | 'likes' | 'support' | 'settings'
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('home')
+  const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USER)
+  const [listings, setListings] = useState<Listing[]>(INITIAL_LISTINGS)
+  const [users, setUsers] = useState<Record<string, UserProfile>>(MOCK_USERS)
+  const [feedType, setFeedType] = useState<'explore' | 'following'>('explore')
+  const [filterType, setFilterType] = useState<'all' | 'pickup' | 'self_harvest'>('all')
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [language, setLanguage] = useState<'de' | 'en'>('de')
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null)
+  const [chatPartnerId, setChatPartnerId] = useState<string | null>(null)
+  const [showInbox, setShowInbox] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [messages, setMessages] = useState<Record<string, Message[]>>(INITIAL_MESSAGES)
+  const [showSaveLoginModal, setShowSaveLoginModal] = useState(false)
+  const [pendingSaveUserId, setPendingSaveUserId] = useState<string | null>(null)
+
+  const theme = isDarkMode ? THEMES.dark : THEMES.light
+  const t = TRANSLATIONS[language]
+  const currentUserWithRes = { ...currentUser, reservations }
+
+  useEffect(() => {
+    const saved = getSavedLogin()
+    if (saved?.userId && MOCK_USERS[saved.userId]) {
+      const base = MOCK_USERS[saved.userId]
+      const profilePatch = getSavedProfile(saved.userId)
+      setCurrentUser(profilePatch ? { ...base, ...profilePatch } : base)
+      setIsLoggedIn(true)
+    }
+  }, [])
+
+  const getGardener = (id: string) => users[id] ?? { name: 'Unbekannt', handle: '@unknown', avatar: '', id, bio: '', role: 'gardener', isMember: false, following: [], likedListings: [] }
+
+  const toggleLike = (listingId: string) => {
+    setCurrentUser((prev) => {
+      const isLiked = prev.likedListings.includes(listingId)
+      return {
+        ...prev,
+        likedListings: isLiked ? prev.likedListings.filter((id) => id !== listingId) : [...prev.likedListings, listingId],
+      }
+    })
+  }
+
+  const toggleFollow = (gardenerId: string) => {
+    setCurrentUser((prev) => {
+      const isFollowing = prev.following.includes(gardenerId)
+      const newFollowing = isFollowing ? prev.following.filter((id) => id !== gardenerId) : [...prev.following, gardenerId]
+      setUsers((prevUsers) => ({
+        ...prevUsers,
+        [prev.id]: { ...prevUsers[prev.id], following: newFollowing },
+      }))
+      return { ...prev, following: newFollowing }
+    })
+  }
+
+  const handleToggleRole = () => {
+    setCurrentUser((prev) => ({
+      ...prev,
+      role: prev.role === 'gardener' ? 'buyer' : 'gardener',
+    }))
+  }
+
+  const handleReservation = (listingId: string, amount: number) => {
+    setListings((prev) =>
+      prev.map((l) => (l.id === listingId ? { ...l, availableQuantity: Math.max(0, l.availableQuantity - amount) } : l))
+    )
+    setReservations((prev) => [
+      {
+        id: `r${Date.now()}`,
+        listingId,
+        amount,
+        timestamp: new Date().toISOString(),
+        status: 'active',
+      },
+      ...prev,
+    ])
+    alert(`Erfolgreich ${amount} reserviert! Der Gärtner wurde benachrichtigt.`)
+  }
+
+  const handleCancelReservation = (reservationId: string) => {
+    const res = reservations.find((r) => r.id === reservationId)
+    if (!res) return
+    setListings((prev) =>
+      prev.map((l) => (l.id === res.listingId ? { ...l, availableQuantity: l.availableQuantity + res.amount } : l))
+    )
+    setReservations((prev) => prev.filter((r) => r.id !== reservationId))
+    alert('Reservierung storniert.')
+  }
+
+  const handleCreateListing = (newListing: Listing) => {
+    setListings((prev) => [newListing, ...prev])
+    if (!currentUser.isMember) {
+      setCurrentUser((prev) => ({ ...prev, isMember: true }))
+      alert('Glückwunsch! Deine Mitgliedschaft ist jetzt kostenlos aktiv, da du etwas geteilt hast.')
+    }
+    setActiveTab('home')
+    setFeedType('explore')
+  }
+
+  const handleUpdateProfile = (updatedProfile: Partial<UserProfile>) => {
+    setCurrentUser((prev) => {
+      const next = { ...prev, ...updatedProfile }
+      setSavedProfile(prev.id, {
+        avatar: next.avatar,
+        name: next.name,
+        bio: next.bio,
+        handle: next.handle,
+      })
+      return next
+    })
+  }
+
+  const handleSendMessage = (partnerId: string, text: string) => {
+    const newMessage: Message = {
+      id: `m${Date.now()}`,
+      senderId: currentUser.id,
+      text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+    setMessages((prev) => ({ ...prev, [partnerId]: [...(prev[partnerId] ?? []), newMessage] }))
+  }
+
+  const handleDeleteListing = (id: string) => {
+    if (confirm('Möchtest du diesen Beitrag wirklich löschen?')) {
+      setListings((prev) => prev.filter((l) => l.id !== id))
+    }
+  }
+
+  const handleUpdateListing = (updatedListing: Listing) => {
+    setListings((prev) => prev.map((l) => (l.id === updatedListing.id ? updatedListing : l)))
+  }
+
+  const openProfile = (userId: string) => {
+    if (userId === currentUser.id) {
+      setActiveTab('profile')
+      setViewingProfileId(null)
+    } else {
+      setViewingProfileId(userId)
+    }
+  }
+
+  const handleMenuClick = (item: string) => {
+    setShowMenu(false)
+    if (item === 'support') {
+      setActiveTab('support')
+      setViewingProfileId(null)
+      setChatPartnerId(null)
+      setShowInbox(false)
+    } else if (item === 'settings') {
+      setActiveTab('settings')
+      setViewingProfileId(null)
+      setChatPartnerId(null)
+      setShowInbox(false)
+    }
+  }
+
+  const renderContent = () => {
+    if (chatPartnerId)
+      return (
+        <ChatView
+          partner={users[chatPartnerId]}
+          messages={messages[chatPartnerId] ?? []}
+          currentUserId={currentUser.id}
+          onSend={(text) => handleSendMessage(chatPartnerId, text)}
+          onBack={() => setChatPartnerId(null)}
+          theme={theme}
+        />
+      )
+    if (showInbox)
+      return (
+        <InboxView
+          users={users}
+          messages={messages}
+          onSelectChat={(id) => {
+            setChatPartnerId(id)
+            setShowInbox(false)
+          }}
+          onBack={() => setShowInbox(false)}
+          theme={theme}
+        />
+      )
+    if (viewingProfileId)
+      return (
+        <ProfileView
+          user={users[viewingProfileId]}
+          isOwnProfile={false}
+          listings={listings}
+          users={users}
+          onUpdateProfile={() => {}}
+          onBack={() => setViewingProfileId(null)}
+          onChat={() => setChatPartnerId(viewingProfileId)}
+          currentUser={currentUser}
+          onFollow={toggleFollow}
+          onDeleteListing={() => {}}
+          onUpdateListing={() => {}}
+          onUserClick={openProfile}
+          theme={theme}
+          t={t}
+        />
+      )
+
+    switch (activeTab) {
+      case 'home':
+        return (
+          <HomeView
+            listings={listings}
+            feedType={feedType}
+            setFeedType={setFeedType}
+            currentUser={currentUser}
+            toggleLike={toggleLike}
+            toggleFollow={toggleFollow}
+            getGardener={getGardener}
+            filterType={filterType}
+            setFilterType={setFilterType}
+            handleReservation={handleReservation}
+            onUserClick={openProfile}
+            theme={theme}
+            t={t}
+          />
+        )
+      case 'map':
+        return (
+          <MapView
+            listings={listings}
+            filterType={filterType}
+            setFilterType={setFilterType}
+            handleReservation={handleReservation}
+            getGardener={getGardener}
+            onUserClick={openProfile}
+            setActiveTab={setActiveTab}
+            currentUser={currentUser}
+            toggleLike={toggleLike}
+            toggleFollow={toggleFollow}
+            onToggleMenu={() => setShowMenu(true)}
+            theme={theme}
+            t={t}
+          />
+        )
+      case 'add':
+        return <AddListingView onAdd={handleCreateListing} currentUser={currentUser} theme={theme} t={t} />
+      case 'likes':
+        return (
+          <LikesView
+            listings={listings}
+            currentUser={currentUser}
+            toggleLike={toggleLike}
+            toggleFollow={toggleFollow}
+            getGardener={getGardener}
+            handleReservation={handleReservation}
+            onUserClick={openProfile}
+            theme={theme}
+            t={t}
+          />
+        )
+      case 'profile':
+        return (
+          <ProfileView
+            user={currentUserWithRes}
+            isOwnProfile
+            listings={listings}
+            users={users}
+            onUpdateProfile={handleUpdateProfile}
+            currentUser={currentUser}
+            onDeleteListing={handleDeleteListing}
+            onUpdateListing={handleUpdateListing}
+            onSettings={() => setActiveTab('settings')}
+            onUserClick={openProfile}
+            theme={theme}
+            t={t}
+            onCancelReservation={handleCancelReservation}
+            onFollow={toggleFollow}
+          />
+        )
+      case 'support':
+        return <SupportView onBack={() => setActiveTab('home')} theme={theme} t={t} />
+      case 'settings':
+        return (
+          <SettingsView
+            onBack={() => setActiveTab('profile')}
+            isDarkMode={isDarkMode}
+            setIsDarkMode={setIsDarkMode}
+            language={language}
+            setLanguage={setLanguage}
+            theme={theme}
+            t={t}
+            onLogout={() => setIsLoggedIn(false)}
+            userRole={currentUser.role}
+            onToggleRole={handleToggleRole}
+          />
+        )
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 w-full h-full bg-gray-200 flex justify-center items-center p-4 font-sans overflow-hidden">
+      <div
+        className={`relative flex flex-col rounded-[35px] shadow-2xl overflow-hidden ring-8 ring-[#1a1a1a] ${theme.bg} transition-colors duration-300`}
+        style={{ width: '390px', height: '100%', maxHeight: '844px', maxWidth: '100%' }}
+      >
+        <div className={`hidden sm:flex h-6 w-full ${theme.bg} z-50 justify-between items-center px-6 pt-2 shrink-0 transition-colors duration-300`}>
+          <span className={`text-[10px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>9:41</span>
+          <div className="flex gap-1.5">
+            <div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
+            <div className={`w-3 h-3 rounded-full opacity-20 ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
+          </div>
+        </div>
+
+        {!isLoggedIn ? (
+          <LoginView
+            onLogin={(userData) => {
+              if (userData) {
+                const nextUser = { ...currentUser, ...userData }
+                setCurrentUser(nextUser)
+                setIsLoggedIn(true)
+                setPendingSaveUserId(nextUser.id)
+                setShowSaveLoginModal(true)
+              } else {
+                setIsLoggedIn(true)
+              }
+            }}
+            theme={theme}
+            t={t}
+          />
+        ) : (
+          <>
+            {showSaveLoginModal && (
+              <div className="absolute inset-0 z-[70] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/40" onClick={() => { setShowSaveLoginModal(false); setPendingSaveUserId(null); clearSavedLogin(); }} />
+                <div className={`relative w-full max-w-sm rounded-2xl shadow-xl p-6 ${theme.card} border ${theme.border} animate-in zoom-in-95 fade-in duration-200`}>
+                  <p className={`text-base ${theme.text} text-center mb-6`}>
+                    {language === 'de'
+                      ? 'Möchtest du angemeldet bleiben? Deine Anmeldedaten werden dann auf diesem Gerät gespeichert.'
+                      : 'Do you want to stay logged in? Your login will be saved on this device.'}
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (pendingSaveUserId) setSavedLogin(pendingSaveUserId)
+                        setShowSaveLoginModal(false)
+                        setPendingSaveUserId(null)
+                      }}
+                      className="flex-1 py-3 rounded-xl font-semibold text-white bg-[#4A5D4E] hover:opacity-90 transition-opacity"
+                    >
+                      {language === 'de' ? 'Ja, speichern' : 'Yes, save'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearSavedLogin()
+                        setShowSaveLoginModal(false)
+                        setPendingSaveUserId(null)
+                      }}
+                      className={`flex-1 py-3 rounded-xl font-semibold border ${theme.border} ${theme.text} hover:opacity-80 transition-opacity`}
+                    >
+                      {language === 'de' ? 'Nein, danke' : 'No, thanks'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && (
+              <div className={`${theme.bg}/95 backdrop-blur-sm border-b ${theme.border} px-4 py-3 flex justify-between items-center z-40 shrink-0 transition-colors duration-300`}>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setShowMenu(true)} className={theme.text}>
+                    <Menu size={24} />
+                  </button>
+                  <h1 className={`text-xl font-bold tracking-tight ${theme.text}`}>Harvested</h1>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setShowInbox(true)} className={`relative p-1 ${theme.text}`}>
+                    <MessageCircle size={24} />
+                    {Object.keys(messages).length > 0 && (
+                      <div className={`absolute top-0 right-0 w-2.5 h-2.5 bg-[#C29901] rounded-full border-2 ${isDarkMode ? 'border-[#0D1A15]' : 'border-[#FCFAF7]'}`} />
+                    )}
+                  </button>
+                  <div className={`w-8 h-8 rounded-full overflow-hidden border ${theme.border} cursor-pointer`} onClick={() => setActiveTab('profile')}>
+                    <img src={currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <main id="scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-safe scrollbar-hide relative">
+              <ErrorBoundary>
+                {renderContent()}
+              </ErrorBoundary>
+              {!chatPartnerId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && <div className="h-20" />}
+            </main>
+
+            {!chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && (
+              <nav className={`absolute bottom-0 left-0 right-0 ${theme.nav} border-t ${theme.border} flex justify-around items-center py-4 px-2 pb-6 z-50 transition-colors duration-300`}>
+                <NavButton active={activeTab === 'map'} onClick={() => setActiveTab('map')} icon={<MapIcon size={24} />} label={t.nav.map} theme={theme} />
+                <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home size={24} />} label={t.nav.home} theme={theme} />
+                {currentUser.role === 'gardener' && (
+                  <NavButton active={activeTab === 'add'} onClick={() => setActiveTab('add')} icon={<PlusCircle size={24} />} label={t.nav.add} theme={theme} />
+                )}
+                <NavButton active={activeTab === 'likes'} onClick={() => setActiveTab('likes')} icon={<Heart size={24} />} label={t.nav.likes} theme={theme} />
+                <NavButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User size={24} />} label={t.nav.profile} theme={theme} />
+              </nav>
+            )}
+
+            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full z-50 pointer-events-none" />
+
+            {showMenu && (
+              <div className="absolute inset-0 z-[60] flex">
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in" onClick={() => setShowMenu(false)} />
+                <div className={`relative w-3/4 max-w-xs ${theme.bg} h-full shadow-2xl p-6 flex flex-col animate-in slide-in-from-left duration-300`}>
+                  <div className="mb-8 flex items-center gap-2">
+                    <Leaf className="text-[#4A5D4E]" size={28} />
+                    <span className={`text-2xl font-bold ${theme.text}`}>Harvested</span>
+                  </div>
+                  <div className="space-y-4 flex-1">
+                    <button onClick={() => handleMenuClick('support')} className={`flex items-center gap-3 ${theme.text} font-semibold p-2 hover:bg-gray-100/10 rounded-lg w-full text-left`}>
+                      <HelpCircle size={20} /> {t.support.title}
+                    </button>
+                    <button onClick={() => handleMenuClick('settings')} className={`flex items-center gap-3 ${theme.text} font-semibold p-2 hover:bg-gray-100/10 rounded-lg w-full text-left`}>
+                      <Settings size={20} /> {t.settings.title}
+                    </button>
+                  </div>
+                  <div className={`pt-4 border-t ${theme.border} space-y-4`}>
+                    <button
+                      onClick={() => { setShowMenu(false); setIsLoggedIn(false); clearSavedLogin(); }}
+                      className="flex items-center gap-3 text-red-500 font-semibold p-2 hover:bg-red-50 rounded-lg w-full text-left transition-colors"
+                    >
+                      <LogOut size={20} /> {t.settings?.logout ?? 'Abmelden'}
+                    </button>
+                    <p className={`text-xs ${theme.textSec} text-center`}>Version 1.0.3</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
