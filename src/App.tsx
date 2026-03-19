@@ -42,6 +42,8 @@ export default function App() {
   const theme = isDarkMode ? THEMES.dark : THEMES.light
   const t = TRANSLATIONS[language]
   const currentUserWithRes = { ...currentUser, reservations }
+  const showTopBar = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
+  const showBottomNav = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
 
   useEffect(() => {
     const saved = getSavedLogin()
@@ -318,12 +320,9 @@ export default function App() {
   }
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-gray-200 flex justify-center items-center p-4 font-sans overflow-hidden">
-      <div
-        className={`relative flex flex-col rounded-[35px] shadow-2xl overflow-hidden ring-8 ring-[#1a1a1a] ${theme.bg} transition-colors duration-300`}
-        style={{ width: '390px', height: '100%', maxHeight: '844px', maxWidth: '100%' }}
-      >
-        <div className={`hidden sm:flex h-6 w-full ${theme.bg} z-50 justify-between items-center px-6 pt-2 shrink-0 transition-colors duration-300`}>
+    <div className={`fixed inset-0 w-full h-[100dvh] ${theme.bg} font-sans overflow-hidden transition-colors duration-300`}>
+      <div className="relative flex flex-col w-full h-full min-h-0 min-w-0 overflow-hidden">
+        <div className={`hidden sm:flex h-6 w-full shrink-0 ${theme.bg} z-50 justify-between items-center px-6 pt-2 transition-colors duration-300`}>
           <span className={`text-[10px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>9:41</span>
           <div className="flex gap-1.5">
             <div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
@@ -332,7 +331,8 @@ export default function App() {
         </div>
 
         {!isLoggedIn ? (
-          <LoginView
+          <div className="flex-1 min-h-0 flex flex-col w-full">
+            <LoginView
             onLogin={(userData) => {
               if (userData) {
                 const nextUser = { ...currentUser, ...userData }
@@ -347,18 +347,20 @@ export default function App() {
             theme={theme}
             t={t}
           />
+          </div>
         ) : (
+          <div className="flex-1 min-h-0 flex flex-col min-w-0">
           <>
             {showSaveLoginModal && (
               <div className="absolute inset-0 z-[70] flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-black/40" onClick={() => { setShowSaveLoginModal(false); setPendingSaveUserId(null); clearSavedLogin(); }} />
-                <div className={`relative w-full max-w-sm rounded-2xl shadow-xl p-6 ${theme.card} border ${theme.border} animate-in zoom-in-95 fade-in duration-200`}>
-                  <p className={`text-base ${theme.text} text-center mb-6`}>
+                <div className={`relative w-full max-w-xs rounded-xl shadow-xl p-5 ${theme.card} border ${theme.border} animate-in zoom-in-95 fade-in duration-200`}>
+                  <p className={`text-sm ${theme.text} text-center mb-4`}>
                     {language === 'de'
                       ? 'Möchtest du angemeldet bleiben? Deine Anmeldedaten werden dann auf diesem Gerät gespeichert.'
                       : 'Do you want to stay logged in? Your login will be saved on this device.'}
                   </p>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -366,7 +368,7 @@ export default function App() {
                         setShowSaveLoginModal(false)
                         setPendingSaveUserId(null)
                       }}
-                      className="flex-1 py-3 rounded-xl font-semibold text-white bg-[#4A5D4E] hover:opacity-90 transition-opacity"
+                      className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white bg-[#4A5D4E] hover:opacity-90 transition-opacity"
                     >
                       {language === 'de' ? 'Ja, speichern' : 'Yes, save'}
                     </button>
@@ -377,7 +379,7 @@ export default function App() {
                         setShowSaveLoginModal(false)
                         setPendingSaveUserId(null)
                       }}
-                      className={`flex-1 py-3 rounded-xl font-semibold border ${theme.border} ${theme.text} hover:opacity-80 transition-opacity`}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-semibold border ${theme.border} ${theme.text} hover:opacity-80 transition-opacity`}
                     >
                       {language === 'de' ? 'Nein, danke' : 'No, thanks'}
                     </button>
@@ -386,16 +388,24 @@ export default function App() {
               </div>
             )}
 
-            {!chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && (
+            {showTopBar && (
               <div className={`${theme.bg}/95 backdrop-blur-sm border-b ${theme.border} px-4 py-3 flex justify-between items-center z-40 shrink-0 transition-colors duration-300`}>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setShowMenu(true)} className={theme.text}>
+                  <button
+                    onClick={() => setShowMenu(true)}
+                    className={`p-2 -m-2 rounded-lg hover:bg-black/5 ${isDarkMode ? 'hover:bg-white/10' : ''} ${theme.text}`}
+                    aria-label="Open menu"
+                  >
                     <Menu size={24} />
                   </button>
                   <h1 className={`text-xl font-bold tracking-tight ${theme.text}`}>Harvested</h1>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setShowInbox(true)} className={`relative p-1 ${theme.text}`}>
+                  <button
+                    onClick={() => setShowInbox(true)}
+                    className={`relative p-2 -m-2 rounded-lg hover:bg-black/5 ${isDarkMode ? 'hover:bg-white/10' : ''} ${theme.text}`}
+                    aria-label="Open inbox"
+                  >
                     <MessageCircle size={24} />
                     {Object.keys(messages).length > 0 && (
                       <div className={`absolute top-0 right-0 w-2.5 h-2.5 bg-[#C29901] rounded-full border-2 ${isDarkMode ? 'border-[#0D1A15]' : 'border-[#FCFAF7]'}`} />
@@ -408,15 +418,27 @@ export default function App() {
               </div>
             )}
 
-            <main id="scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-safe scrollbar-hide relative">
+            <main
+              id="scroll-container"
+              className={[
+                'flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide relative',
+                showBottomNav ? 'pb-[calc(72px+env(safe-area-inset-bottom,0px))]' : 'pb-safe',
+              ].join(' ')}
+            >
               <ErrorBoundary>
                 {renderContent()}
               </ErrorBoundary>
-              {!chatPartnerId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && <div className="h-20" />}
             </main>
 
-            {!chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && (
-              <nav className={`absolute bottom-0 left-0 right-0 ${theme.nav} border-t ${theme.border} flex justify-around items-center py-4 px-2 pb-6 z-50 transition-colors duration-300`}>
+            {showBottomNav && (
+              <nav
+                className={[
+                  'absolute bottom-0 left-0 right-0 z-50',
+                  `${theme.nav} border-t ${theme.border} transition-colors duration-300`,
+                  'px-2 pb-safe',
+                ].join(' ')}
+              >
+                <div className="h-[72px] flex justify-around items-center">
                 <NavButton active={activeTab === 'map'} onClick={() => setActiveTab('map')} icon={<MapIcon size={24} />} label={t.nav.map} theme={theme} />
                 <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home size={24} />} label={t.nav.home} theme={theme} />
                 {currentUser.role === 'gardener' && (
@@ -424,6 +446,7 @@ export default function App() {
                 )}
                 <NavButton active={activeTab === 'likes'} onClick={() => setActiveTab('likes')} icon={<Heart size={24} />} label={t.nav.likes} theme={theme} />
                 <NavButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User size={24} />} label={t.nav.profile} theme={theme} />
+                </div>
               </nav>
             )}
 
@@ -432,23 +455,37 @@ export default function App() {
             {showMenu && (
               <div className="absolute inset-0 z-[60] flex">
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in" onClick={() => setShowMenu(false)} />
-                <div className={`relative w-3/4 max-w-xs ${theme.bg} h-full shadow-2xl p-6 flex flex-col animate-in slide-in-from-left duration-300`}>
-                  <div className="mb-8 flex items-center gap-2">
+                <div
+                  className={[
+                    'relative h-full shadow-2xl flex flex-col',
+                    'w-[min(300px,82vw)]',
+                    'p-5',
+                    `${theme.bg}`,
+                    'animate-in slide-in-from-left duration-300',
+                  ].join(' ')}
+                >
+                  <div className="mb-6 flex items-center gap-2">
                     <Leaf className="text-[#4A5D4E]" size={28} />
                     <span className={`text-2xl font-bold ${theme.text}`}>Harvested</span>
                   </div>
                   <div className="space-y-4 flex-1">
-                    <button onClick={() => handleMenuClick('support')} className={`flex items-center gap-3 ${theme.text} font-semibold p-2 hover:bg-gray-100/10 rounded-lg w-full text-left`}>
+                    <button
+                      onClick={() => handleMenuClick('support')}
+                      className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
+                    >
                       <HelpCircle size={20} /> {t.support.title}
                     </button>
-                    <button onClick={() => handleMenuClick('settings')} className={`flex items-center gap-3 ${theme.text} font-semibold p-2 hover:bg-gray-100/10 rounded-lg w-full text-left`}>
+                    <button
+                      onClick={() => handleMenuClick('settings')}
+                      className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
+                    >
                       <Settings size={20} /> {t.settings.title}
                     </button>
                   </div>
                   <div className={`pt-4 border-t ${theme.border} space-y-4`}>
                     <button
                       onClick={() => { setShowMenu(false); setIsLoggedIn(false); clearSavedLogin(); }}
-                      className="flex items-center gap-3 text-red-500 font-semibold p-2 hover:bg-red-50 rounded-lg w-full text-left transition-colors"
+                      className="flex items-center gap-3 text-red-500 font-semibold px-3 h-11 hover:bg-red-50 rounded-lg w-full text-left transition-colors"
                     >
                       <LogOut size={20} /> {t.settings?.logout ?? 'Abmelden'}
                     </button>
@@ -458,6 +495,7 @@ export default function App() {
               </div>
             )}
           </>
+          </div>
         )}
       </div>
     </div>

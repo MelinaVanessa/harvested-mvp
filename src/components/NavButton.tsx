@@ -13,10 +13,18 @@ export function NavButton({ active, onClick, icon, label, theme }: NavButtonProp
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 transition-all duration-200 ${active ? 'text-[#C29901] scale-105' : 'text-[#88887D] hover:text-[#FCFAF7]'}`}
+      className={[
+        'flex flex-col items-center justify-center',
+        'min-w-[56px] min-h-[44px] px-2 py-1',
+        'gap-1 select-none',
+        'transition-colors duration-200',
+        active ? 'text-[#C29901]' : 'text-[#88887D] hover:text-[#FCFAF7]',
+      ].join(' ')}
     >
-      <div>{React.cloneElement(icon, { fill: active ? '#C29901' : 'none' })}</div>
-      <span className={`text-[10px] font-medium ${active ? 'text-[#FCFAF7]' : 'text-[#88887D]'}`}>{label}</span>
+      <div className="leading-none">
+        {React.cloneElement(icon, { fill: active ? '#C29901' : 'none', size: 22 })}
+      </div>
+      <span className={`text-[11px] leading-none font-medium ${active ? 'text-[#FCFAF7]' : 'text-[#88887D]'}`}>{label}</span>
     </button>
   )
 }
