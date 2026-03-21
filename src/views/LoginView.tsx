@@ -5,7 +5,6 @@ import type { ThemeTokens } from '@/types'
 
 const WALDGRUEN = '#4A5D4E'
 const OFF_WHITE = '#FCFAF7'
-const TEXT_DARK = '#0D1A15'
 const TEXT_MUTED = '#88887D'
 
 interface LoginViewProps {
@@ -14,7 +13,7 @@ interface LoginViewProps {
   t: Record<string, Record<string, string>>
 }
 
-export function LoginView({ onLogin, theme, t }: LoginViewProps) {
+export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const [isRegistering, setIsRegistering] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

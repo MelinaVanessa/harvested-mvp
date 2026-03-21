@@ -4,21 +4,28 @@ import {
   PlusCircle,
   Settings,
   CheckCircle,
-  Edit3,
   Camera,
   X,
-  Link as LinkIcon,
-  MessageCircle,
-  Send,
-  Share2,
   XCircle,
   Calendar,
   ShoppingBag,
 } from 'lucide-react'
-import { ListingCard } from '@/components/ListingCard'
 import { ListingDetailModal } from '@/components/ListingDetailModal'
 import { ImageCropper } from '@/components/ImageCropper'
+import { LOGO_URL } from '@/constants'
 import type { Listing, UserProfile, Reservation, ThemeTokens } from '@/types'
+
+const SHARE_BRANDS = {
+  link: '/brands/link.svg',
+  whatsapp: '/brands/whatsapp.svg',
+  messages: '/brands/messages.svg',
+  share: '/brands/share.svg',
+  instagram: '/brands/instagram.svg',
+  linkedin: '/brands/linkedin.svg',
+  x: '/brands/x.svg',
+  facebook: '/brands/facebook.svg',
+  tiktok: '/brands/tiktok.svg',
+} as const
 
 interface ProfileViewProps {
   user: UserProfile
@@ -126,9 +133,75 @@ export function ProfileView({
     }
   }
 
-  const handleCopyLink = () => {
+  const profileShareUrl = `https://harvested.app/u/${(safeUser.handle ?? '').replace('@', '')}`
+  const profileShareLine = `${safeUser.name ?? 'Profil'} · Harvested · ${profileShareUrl}`
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(profileShareUrl)
+    } catch {
+      /* ignore */
+    }
     alert('Link in die Zwischenablage kopiert!')
     setShowShareOptions(false)
+  }
+
+  const shareOpen = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer')
+    setShowShareOptions(false)
+  }
+
+  const shareFacebook = () => {
+    shareOpen(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(profileShareUrl)}`)
+  }
+
+  const shareLinkedIn = () => {
+    shareOpen(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileShareUrl)}`)
+  }
+
+  const shareX = () => {
+    const text = encodeURIComponent(`Check out ${safeUser.name ?? 'this profile'} on Harvested`)
+    shareOpen(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(profileShareUrl)}`)
+  }
+
+  const shareWhatsApp = () => {
+    shareOpen(`https://wa.me/?text=${encodeURIComponent(profileShareLine)}`)
+  }
+
+  const shareSms = () => {
+    window.location.href = `sms:?body=${encodeURIComponent(profileShareLine)}`
+    setShowShareOptions(false)
+  }
+
+  const copyForPasteApps = async (hint: 'instagram' | 'tiktok') => {
+    try {
+      await navigator.clipboard.writeText(profileShareUrl)
+    } catch {
+      /* ignore */
+    }
+    alert(
+      hint === 'tiktok'
+        ? 'Link kopiert – z. B. in Bio oder Beschreibung einfügen.'
+        : 'Link kopiert – in Story, Post oder Bio einfügen.',
+    )
+    setShowShareOptions(false)
+  }
+
+  const shareSystem = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: `${safeUser.name ?? 'Harvested'} Profil`,
+          text: profileShareLine,
+          url: profileShareUrl,
+        })
+        setShowShareOptions(false)
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') void handleCopyLink()
+      }
+    } else {
+      void handleCopyLink()
+    }
   }
 
   const openFollowingList = () => {
@@ -160,7 +233,6 @@ export function ProfileView({
                   <img src={followedUser.avatar} className="w-12 h-12 rounded-full object-cover bg-gray-100" alt={followedUser.name} />
                   <div>
                     <p className="font-bold">{followedUser.name}</p>
-                    <p className={`text-xs ${theme?.textSec}`}>{followedUser.handle}</p>
                   </div>
                 </div>
                 <div
@@ -202,7 +274,7 @@ export function ProfileView({
           <button onClick={onBack} className={`p-1 -ml-2 ${theme?.text}`}>
             <ArrowLeft size={24} />
           </button>
-          <span className="font-bold">{safeUser.handle ?? ''}</span>
+          <span className="font-bold">{safeUser.name ?? ''}</span>
         </div>
       )}
 
@@ -260,7 +332,6 @@ export function ProfileView({
           ) : (
             <h2 className="text-lg font-bold leading-tight">{safeUser.name ?? ''}</h2>
           )}
-          <p className={`${theme?.textSec} text-sm mb-2`}>{safeUser.handle ?? ''}</p>
           {isEditing ? (
             <div className="w-full mb-3">
               <textarea
@@ -419,38 +490,96 @@ export function ProfileView({
           onClick={() => setShowShareOptions(false)}
         >
           <div className={`${theme?.card} m-4 rounded-2xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 duration-300 ring-1 ring-black/5`} onClick={(e) => e.stopPropagation()}>
-            <div className={`py-4 text-center border-b ${theme?.border}`}>
+            <div className={`border-b ${theme?.border} px-3 py-3 text-center`}>
               <h3 className={`text-sm font-bold ${theme?.textSec}`}>{t?.profile?.shareTitle}</h3>
             </div>
-            <div className="grid grid-cols-4 gap-4 p-4">
-              <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 group">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 group-active:scale-90 transition-transform">
-                  <LinkIcon size={24} />
-                </div>
-                <span className={`text-xs ${theme?.text}`}>{t?.profile?.copy}</span>
-              </button>
-              <button onClick={() => setShowShareOptions(false)} className="flex flex-col items-center gap-2 group">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 group-active:scale-90 transition-transform">
-                  <MessageCircle size={24} />
-                </div>
-                <span className={`text-xs ${theme?.text}`}>WhatsApp</span>
-              </button>
-              <button onClick={() => setShowShareOptions(false)} className="flex flex-col items-center gap-2 group">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 group-active:scale-90 transition-transform">
-                  <Send size={24} />
-                </div>
-                <span className={`text-xs ${theme?.text}`}>Nachricht</span>
-              </button>
-              <button onClick={() => setShowShareOptions(false)} className="flex flex-col items-center gap-2 group">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 group-active:scale-90 transition-transform">
-                  <Share2 size={24} />
-                </div>
-                <span className={`text-xs ${theme?.text}`}>{t?.profile?.more}</span>
-              </button>
+            <div className={`relative border-b ${theme?.border}`}>
+              <div
+                className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-proximity touch-pan-x pl-4 pr-3 py-2.5"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => void handleCopyLink()}
+                  className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[5.5rem] max-w-[6rem]"
+                >
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-2 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.link} alt="" className="w-7 h-7 object-contain" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>{t?.profile?.copy}</span>
+                </button>
+                <button type="button" onClick={shareWhatsApp} className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[4rem] max-w-[4.5rem]">
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-1.5 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.whatsapp} alt="" className="w-8 h-8 object-contain" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>WhatsApp</span>
+                </button>
+                <button type="button" onClick={shareSms} className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[4rem] max-w-[4.5rem]">
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-2 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.messages} alt="" className="w-7 h-7 object-contain" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>Nachricht</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void copyForPasteApps('instagram')}
+                  className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[4rem] max-w-[4.5rem]"
+                >
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-1.5 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.instagram} alt="" className="w-8 h-8 object-contain" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>Instagram</span>
+                </button>
+                <button type="button" onClick={shareLinkedIn} className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[4rem] max-w-[4.5rem]">
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-2 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.linkedin} alt="" className="w-7 h-7 object-contain" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>LinkedIn</span>
+                </button>
+                <button type="button" onClick={shareX} className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[4rem] max-w-[4.5rem]">
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-2 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.x} alt="" className="w-6 h-6 object-contain dark:invert" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>X</span>
+                </button>
+                <button type="button" onClick={shareFacebook} className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[4rem] max-w-[4.5rem]">
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-2 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.facebook} alt="" className="w-7 h-7 object-contain" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>Facebook</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void copyForPasteApps('tiktok')}
+                  className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[4rem] max-w-[4.5rem]"
+                >
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-2 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.tiktok} alt="" className="w-7 h-7 object-contain" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>TikTok</span>
+                </button>
+                <button type="button" onClick={() => void shareSystem()} className="flex shrink-0 snap-start flex-col items-center gap-1 group min-w-[4rem] max-w-[4.5rem]">
+                  <div className={`w-12 h-12 rounded-2xl ${theme?.card} border ${theme?.border} shadow-sm flex items-center justify-center p-2 group-active:scale-90 transition-transform`}>
+                    <img src={SHARE_BRANDS.share} alt="" className="w-7 h-7 object-contain" />
+                  </div>
+                  <span className={`text-[11px] text-center leading-tight ${theme?.text}`}>{t?.profile?.more}</span>
+                </button>
+              </div>
             </div>
-            <div className={`p-4 border-t ${theme?.border} bg-gray-50/50`}>
-              <div className={`flex items-center gap-3 p-3 border ${theme?.border} rounded-xl ${theme?.bg}`}>
-                <img src={safeUser.avatar ?? ''} className="w-10 h-10 rounded-full object-cover" alt={safeUser.name ?? ''} />
+            <div className={`border-t ${theme?.border} bg-gray-50/50 px-3 py-3 dark:bg-black/20`}>
+              <div className={`flex items-center gap-3 p-2.5 border ${theme?.border} rounded-xl ${theme?.bg}`}>
+                <img
+                  src={LOGO_URL}
+                  alt="Harvested"
+                  className="w-10 h-10 rounded-xl object-contain shrink-0 bg-[#FCFAF7] border border-[#88887D]/15"
+                  onError={(e) => {
+                    const el = e.currentTarget
+                    if (el.dataset.fallback === '1') return
+                    el.dataset.fallback = '1'
+                    el.src = '/favicon.svg'
+                  }}
+                />
+                <img src={safeUser.avatar ?? ''} className="w-10 h-10 rounded-full object-cover shrink-0 border border-[#88887D]/15" alt="" />
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-bold ${theme?.text} truncate`}>{safeUser.name ?? ''}</p>
                   <p className={`text-xs ${theme?.textSec} truncate`}>harvested.app/u/{(safeUser.handle ?? '').replace('@', '')}</p>

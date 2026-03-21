@@ -45,6 +45,22 @@ cd backend && npm install && npm run dev
 ```
 API: http://localhost:3001. Siehe `backend/README.md` für Endpoints und Header `X-User-Id`.
 
+## Karte (OpenStreetMap & optional Google)
+
+Standardmäßig ist die Karte **interaktiv** (Zoom, Verschieben, Marker) über **OpenStreetMap**-Kacheln (Leaflet) – **ohne API-Key**.
+
+Optional kann stattdessen **Google Maps** genutzt werden:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/) ein Projekt anlegen, **Maps JavaScript API** aktivieren und einen API-Key erstellen.
+2. Den Key per HTTP-Referrer einschränken (z. B. `http://localhost:5173/*` für lokale Entwicklung).
+3. Im Projektroot eine Datei `.env` anlegen (siehe `.env.example`):
+
+```bash
+VITE_GOOGLE_MAPS_API_KEY=dein_key_hier
+```
+
+Ist der Key gesetzt, wird Google Maps verwendet; schlägt das Laden fehl, fällt die App auf OpenStreetMap zurück.
+
 ## Logo
 
 **Dein echtes Logo** (nur das Symbol, z. B. PNG) gehört nach **`public/harvested-logo.png`**. Die Login-Seite lädt es unter `/harvested-logo.png`. Damit Hintergrund und Seite übereinstimmen (nur grüne Pixel sichtbar, Rest = Seitenfarbe):

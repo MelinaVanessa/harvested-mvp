@@ -1,9 +1,15 @@
-import { useState, useRef } from 'react'
-import { Search, Layers, Locate, ShoppingBag, Leaf } from 'lucide-react'
+import { useState, useRef, useCallback } from 'react'
+import L from 'leaflet'
+import { Search, Layers, Locate } from 'lucide-react'
 import { FilterChip } from '@/components/FilterChip'
 import { ListingCard } from '@/components/ListingCard'
 import { ListingDetailModal } from '@/components/ListingDetailModal'
+import { InteractiveGoogleMap } from '@/components/InteractiveGoogleMap'
+import { OpenStreetMapLayer } from '@/components/OpenStreetMapLayer'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
+
+/** Collapsed height of the listings sheet (px) — thin strip: handle barely above the bottom edge */
+const SHEET_PEEK_HEIGHT = 44
 
 interface MapViewProps {
   listings: Listing[]
@@ -38,11 +44,39 @@ export function MapView({
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const filteredListings = listings.filter((l) => filterType === 'all' || l.harvestType === filterType)
 
-  const [sheetHeight, setSheetHeight] = useState(130)
+  const [sheetHeight, setSheetHeight] = useState(SHEET_PEEK_HEIGHT)
   const [isDraggingState, setIsDraggingState] = useState(false)
   const isDragging = useRef(false)
   const startY = useRef(0)
   const startHeight = useRef(0)
+
+  const apiKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim()
+  const [googleMapsFailed, setGoogleMapsFailed] = useState(false)
+  const useGoogleMap = Boolean(apiKey) && !googleMapsFailed
+
+  const mapInstanceRef = useRef<google.maps.Map | null>(null)
+  const leafletMapRef = useRef<L.Map | null>(null)
+
+  const handleMapReady = useCallback((map: google.maps.Map) => {
+    mapInstanceRef.current = map
+  }, [])
+
+  const handleLocate = () => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        if (useGoogleMap && mapInstanceRef.current) {
+          mapInstanceRef.current.panTo({ lat, lng })
+          mapInstanceRef.current.setZoom(14)
+        } else if (leafletMapRef.current) {
+          leafletMapRef.current.setView([lat, lng], 14)
+        }
+      },
+      () => {},
+    )
+  }
 
   const isDark = theme.bg.includes('0D1A15')
 
@@ -57,7 +91,7 @@ export function MapView({
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging.current) return
     const newHeight = startHeight.current + (startY.current - e.clientY)
-    if (newHeight >= 100 && newHeight <= 820) setSheetHeight(newHeight)
+    if (newHeight >= 40 && newHeight <= 820) setSheetHeight(newHeight)
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
@@ -66,42 +100,35 @@ export function MapView({
     ;(e.target as Element).releasePointerCapture(e.pointerId)
     if (sheetHeight > 700) setActiveTab('home')
     else if (sheetHeight > 300) setSheetHeight(600)
-    else setSheetHeight(130)
+    else setSheetHeight(SHEET_PEEK_HEIGHT)
   }
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${isDark ? 'bg-[#050A08]' : 'bg-[#E5E0D8]'}`}>
-      <div className={`absolute inset-0 ${isDark ? 'bg-[#050A08]' : 'bg-[#F2F4F0]'}`}>
-        <div
-          className={`absolute top-[45%] left-0 w-full h-8 transform -rotate-2 origin-left ${isDark ? 'bg-[#1A2E35]' : 'bg-[#AADAFF]'} opacity-50`}
+      {useGoogleMap && apiKey ? (
+        <InteractiveGoogleMap
+          apiKey={apiKey}
+          listings={filteredListings}
+          isDark={isDark}
+          onMarkerClick={setSelectedListing}
+          onMapReady={handleMapReady}
+          onMapFailure={() => setGoogleMapsFailed(true)}
+          loadingLabel={t?.map?.loading}
         />
-        <div
-          className={`absolute top-[38%] left-[60%] w-32 h-32 rounded-full ${isDark ? 'bg-[#1A2E35]' : 'bg-[#AADAFF]'} opacity-50`}
+      ) : (
+        <OpenStreetMapLayer
+          listings={filteredListings}
+          isDark={isDark}
+          onMarkerClick={setSelectedListing}
+          leafletMapRef={leafletMapRef}
+          sheetHeight={sheetHeight}
         />
-        <div
-          className={`absolute top-[42%] left-[15%] w-56 h-32 rounded-[20%] ${isDark ? 'bg-[#1A2621]' : 'bg-[#C5E8C5]'} opacity-60`}
-        />
-        <div
-          className={`absolute top-[10%] right-[10%] w-32 h-32 rounded-full ${isDark ? 'bg-[#1A2621]' : 'bg-[#C5E8C5]'} opacity-60`}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `linear-gradient(${isDark ? '#333' : '#888'} 1px, transparent 1px), linear-gradient(90deg, ${isDark ? '#333' : '#888'} 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
-            opacity: 0.1,
-          }}
-        />
-        <div
-          className={`absolute top-0 left-[45%] w-2 h-full ${isDark ? 'bg-[#2C3E34]' : 'bg-[#FFFFFF]'} shadow-sm opacity-50`}
-        />
-        <div
-          className={`absolute top-[60%] left-0 w-full h-2 ${isDark ? 'bg-[#2C3E34]' : 'bg-[#FFFFFF]'} shadow-sm transform rotate-6 opacity-50`}
-        />
-      </div>
+      )}
 
-      <div className="absolute top-4 left-4 right-4 z-20 flex flex-col gap-3">
-        <div className={`${theme.mapFilterBg} rounded-full shadow-md px-4 py-2.5 flex items-center gap-2 border ${theme.border}`}>
+      <div className="absolute top-4 left-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none">
+        <div
+          className={`${theme.mapFilterBg} rounded-full shadow-md px-4 py-2.5 flex items-center gap-2 border ${theme.border} pointer-events-auto`}
+        >
           <Search size={18} className={theme.textSec} />
           <input
             type="text"
@@ -110,62 +137,48 @@ export function MapView({
             defaultValue="Berlin, Brandenburg"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+        {googleMapsFailed && apiKey && (
+          <p className={`text-xs px-1 text-amber-700 dark:text-amber-300 pointer-events-auto`}>{t?.map?.loadError}</p>
+        )}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 pointer-events-auto">
           <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} />
           <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} />
           <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} />
         </div>
       </div>
 
-      <div className="absolute top-40 right-4 z-10 flex flex-col gap-3">
-        <button className={`w-10 h-10 ${theme.card} rounded-full shadow-md flex items-center justify-center ${theme.textSec}`}>
+      <div className="absolute top-40 right-4 z-[100] flex flex-col gap-3 pointer-events-auto">
+        <button type="button" className={`w-10 h-10 ${theme.card} rounded-full shadow-md flex items-center justify-center ${theme.textSec}`}>
           <Layers size={20} />
         </button>
       </div>
 
-      {filteredListings.map((l) => (
+      <div className="absolute bottom-24 right-4 z-[100] transition-all duration-300 pointer-events-auto" style={{ bottom: sheetHeight + 20 }}>
         <button
-          key={l.id}
-          onClick={() => setSelectedListing(l)}
-          className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-125 focus:scale-125 z-0 focus:z-10 group"
-          style={{ left: `${l.location.x}%`, top: `${l.location.y}%` }}
+          type="button"
+          onClick={handleLocate}
+          disabled={typeof navigator === 'undefined' || !navigator.geolocation}
+          className={`w-12 h-12 ${theme.card} rounded-full shadow-lg flex items-center justify-center text-[#4285F4] disabled:opacity-40 disabled:pointer-events-none`}
         >
-          <div className="relative">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-[2px] border-white relative z-10 ${l.harvestType === 'pickup' ? 'bg-[#EA4335]' : 'bg-[#34A853]'}`}
-            >
-              {l.harvestType === 'pickup' ? (
-                <ShoppingBag size={14} color="white" />
-              ) : (
-                <Leaf size={14} color="white" />
-              )}
-            </div>
-            <div
-              className={`absolute top-6 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] z-0 ${l.harvestType === 'pickup' ? 'border-t-[#EA4335]' : 'border-t-[#34A853]'}`}
-            />
-          </div>
-        </button>
-      ))}
-
-      <div className="absolute bottom-24 right-4 z-10 transition-all duration-300" style={{ bottom: sheetHeight + 20 }}>
-        <button className={`w-12 h-12 ${theme.card} rounded-full shadow-lg flex items-center justify-center text-[#4285F4]`}>
           <Locate size={24} fill="currentColor" style={{ fillOpacity: 0.2 }} />
         </button>
       </div>
 
       {!selectedListing && (
         <div
-          className={`absolute bottom-0 left-0 right-0 ${theme.card} rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-40 flex flex-col ${isDraggingState ? '' : 'transition-all duration-300 ease-out'}`}
+          className={`absolute bottom-0 left-0 right-0 ${theme.card} rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[110] flex flex-col pointer-events-auto ${isDraggingState ? '' : 'transition-all duration-300 ease-out'}`}
           style={{ height: `${sheetHeight}px`, maxHeight: '90%' }}
         >
           <div
-            className="w-full pt-4 pb-4 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing shrink-0 touch-none rounded-t-3xl"
+            className={`w-full flex flex-col items-center justify-center cursor-grab active:cursor-grabbing shrink-0 touch-none rounded-t-3xl ${
+              sheetHeight <= 80 ? 'py-1.5' : 'pt-4 pb-4'
+            }`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
           >
-            <div className="w-12 h-1.5 bg-gray-300 rounded-full mb-1" />
-            {sheetHeight < 200 && (
+            <div className="w-12 h-1.5 bg-gray-300 rounded-full shrink-0" />
+            {sheetHeight > 88 && sheetHeight < 140 && (
               <p className={`text-xs ${theme.textSec} font-medium mt-1`}>{t?.map?.near}</p>
             )}
           </div>

@@ -9,7 +9,7 @@ interface NavButtonProps {
   theme: ThemeTokens
 }
 
-export function NavButton({ active, onClick, icon, label, theme }: NavButtonProps) {
+export function NavButton({ active, onClick, icon, label, theme: _theme }: NavButtonProps) {
   return (
     <button
       onClick={onClick}

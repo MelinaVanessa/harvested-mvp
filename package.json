@@ -11,12 +11,17 @@
     "process-logo": "node scripts/process-logo.mjs"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.20.8",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@types/google.maps": "^3.58.1",
+    "@types/leaflet": "^1.9.21",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
@@ -24,8 +29,8 @@
     "eslint": "^9.13.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
-    "jimp": "^1.6.0",
     "globals": "^15.11.0",
+    "jimp": "^1.6.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "typescript": "~5.6.2",

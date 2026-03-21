@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react'
 import { X, Leaf } from 'lucide-react'
-import type { ThemeTokens } from '@/types'
 
 interface ImageCropperProps {
   imageSrc: string
