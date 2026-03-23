@@ -31,10 +31,17 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Confirm VITE_API_URL presence
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL }}
+        run: |
+          echo "VITE_API_URL set? $([[ -n \"$VITE_API_URL\" ]] && echo yes || echo no)"
+
       - name: Build
         env:
           BASE_PATH: /harvested-mvp/
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          # Prefer Actions secrets if present; otherwise fall back to repository variables.
+          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL }}
         run: npm run build
 
       - name: Deploy dist to gh-pages
