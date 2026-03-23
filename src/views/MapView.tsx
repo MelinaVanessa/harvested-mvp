@@ -88,7 +88,7 @@ export function MapView({
   useEffect(() => {
     let cancelled = false
     const q = mapQuery.trim()
-    if (q.length < 3) {
+    if (q.length < 1) {
       setGeoSuggestions([])
       setShowGeoSuggestions(false)
       return
@@ -123,9 +123,25 @@ export function MapView({
           })
           .filter((x): x is GeoSuggestion => Boolean(x))
 
+        const qLower = q.toLowerCase()
+        const startsWith = (name: string) => {
+          const n = name.toLowerCase()
+          if (n.startsWith(qLower)) return true
+          return n
+            .split(/[\s,/-]+/)
+            .filter(Boolean)
+            .some((part) => part.startsWith(qLower))
+        }
+        const sorted = [...parsed].sort((a, b) => {
+          const aStarts = startsWith(a.displayName)
+          const bStarts = startsWith(b.displayName)
+          if (aStarts !== bStarts) return aStarts ? -1 : 1
+          return a.displayName.localeCompare(b.displayName)
+        })
+
         if (cancelled) return
-        setGeoSuggestions(parsed)
-        setShowGeoSuggestions(parsed.length > 0)
+        setGeoSuggestions(sorted)
+        setShowGeoSuggestions(sorted.length > 0)
       } catch (e) {
         // keep the map usable even if geocoding fails
         if (!cancelled) {
