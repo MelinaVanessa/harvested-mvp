@@ -50,7 +50,9 @@ export function MapView({
   const startY = useRef(0)
   const startHeight = useRef(0)
 
-  const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ?? ''
+  const apiBaseUrl =
+    (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ||
+    'https://harvested-mvp.onrender.com'
 
   const apiKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim()
   const [googleMapsFailed, setGoogleMapsFailed] = useState(false)
@@ -98,15 +100,11 @@ export function MapView({
     const t = window.setTimeout(async () => {
       try {
         setIsGeoLoading(true)
-        const url = apiBaseUrl
-          ? `${apiBaseUrl}/api/geocode?query=${encodeURIComponent(q)}&limit=6`
-          : `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=0&polygon_geojson=0&accept-language=en&q=${encodeURIComponent(
-              q
-            )}`
+        const url = `${apiBaseUrl}/api/geocode?query=${encodeURIComponent(q)}&limit=6`
 
         const res = await fetch(url, {
           signal: controller.signal,
-          headers: apiBaseUrl ? { Accept: 'application/json' } : { Accept: 'application/json' },
+          headers: { Accept: 'application/json' },
         })
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -114,10 +112,10 @@ export function MapView({
 
         const parsed = data
           .map((x) => {
-            // backend proxy returns {lat,lon,displayName}; nominatim returns {lat,lon,display_name}
+            // backend proxy returns {lat,lon,displayName}
             const lat = Number(x.lat)
             const lon = Number(x.lon)
-            const displayName = (x.displayName as string | undefined) ?? (x.display_name as string | undefined) ?? ''
+            const displayName = (x.displayName as string | undefined) ?? ''
             if (!Number.isFinite(lat) || !Number.isFinite(lon) || !displayName) return null
             return { lat, lon, displayName }
           })

@@ -20,7 +20,9 @@ import type { UserProfile, Listing, Reservation, Message } from '@/types'
 
 type ActiveTab = 'home' | 'map' | 'add' | 'profile' | 'likes' | 'support' | 'settings'
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ?? ''
+const API_BASE_URL =
+  (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ||
+  'https://harvested-mvp.onrender.com'
 const API_ENABLED = API_BASE_URL.length > 0
 
 export default function App() {
@@ -41,6 +43,7 @@ export default function App() {
   const [messages, setMessages] = useState<Record<string, Message[]>>(INITIAL_MESSAGES)
   const [showSaveLoginModal, setShowSaveLoginModal] = useState(false)
   const [pendingSaveUserId, setPendingSaveUserId] = useState<string | null>(null)
+  const [isShortLandscape, setIsShortLandscape] = useState(false)
 
   const theme = isDarkMode ? THEMES.dark : THEMES.light
   const t = TRANSLATIONS[language]
@@ -56,6 +59,16 @@ export default function App() {
       setCurrentUser(profilePatch ? { ...base, ...profilePatch } : base)
       setIsLoggedIn(true)
     }
+  }, [])
+
+  useEffect(() => {
+    const updateViewportFlags = () => {
+      const shortLandscape = window.innerWidth >= 900 && window.innerHeight <= 700
+      setIsShortLandscape(shortLandscape)
+    }
+    updateViewportFlags()
+    window.addEventListener('resize', updateViewportFlags)
+    return () => window.removeEventListener('resize', updateViewportFlags)
   }, [])
 
   useEffect(() => {
@@ -390,15 +403,18 @@ export default function App() {
   }
 
   return (
-    <div className={`fixed inset-0 w-full h-[100dvh] ${theme.bg} font-sans overflow-hidden transition-colors duration-300`}>
-      <div className="relative flex flex-col w-full h-full min-h-0 min-w-0 overflow-hidden">
-        <div className={`hidden sm:flex h-6 w-full shrink-0 ${theme.bg} z-50 justify-between items-center px-6 pt-2 transition-colors duration-300`}>
-          <span className={`text-[10px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>9:41</span>
-          <div className="flex gap-1.5">
-            <div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
-            <div className={`w-3 h-3 rounded-full opacity-20 ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
-          </div>
-        </div>
+    <div
+      className={[
+        'fixed inset-0 w-full h-[100dvh] font-sans overflow-hidden transition-colors duration-300',
+        theme.bg,
+      ].join(' ')}
+    >
+      <div
+        className={[
+          'relative flex flex-col w-full h-full min-h-0 min-w-0 overflow-hidden',
+        ].join(' ')}
+      >
+        
 
         {!isLoggedIn ? (
           <div className="flex-1 min-h-0 flex flex-col w-full">
@@ -459,30 +475,32 @@ export default function App() {
             )}
 
             {showTopBar && (
-              <div className={`${theme.bg}/95 backdrop-blur-sm border-b ${theme.border} px-4 py-3 flex justify-between items-center z-40 shrink-0 transition-colors duration-300`}>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowMenu(true)}
-                    className={`p-2 -m-2 rounded-lg hover:bg-black/5 ${isDarkMode ? 'hover:bg-white/10' : ''} ${theme.text}`}
-                    aria-label="Open menu"
-                  >
-                    <Menu size={24} />
-                  </button>
-                  <h1 className={`text-xl font-bold tracking-tight ${theme.text}`}>Harvested</h1>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowInbox(true)}
-                    className={`relative p-2 -m-2 rounded-lg hover:bg-black/5 ${isDarkMode ? 'hover:bg-white/10' : ''} ${theme.text}`}
-                    aria-label="Open inbox"
-                  >
-                    <MessageCircle size={24} />
-                    {Object.keys(messages).length > 0 && (
-                      <div className={`absolute top-0 right-0 w-2.5 h-2.5 bg-[#C29901] rounded-full border-2 ${isDarkMode ? 'border-[#0D1A15]' : 'border-[#FCFAF7]'}`} />
-                    )}
-                  </button>
-                  <div className={`w-8 h-8 rounded-full overflow-hidden border ${theme.border} cursor-pointer`} onClick={() => setActiveTab('profile')}>
-                    <img src={currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+              <div className={`${theme.bg}/95 backdrop-blur-sm border-b ${theme.border} z-40 shrink-0 transition-colors duration-300`}>
+                <div className={`w-full px-4 ${isShortLandscape ? 'py-1.5' : 'py-3'} flex justify-between items-center`}>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowMenu(true)}
+                      className={`${isShortLandscape ? 'p-1.5 -m-1.5' : 'p-2 -m-2'} rounded-lg hover:bg-black/5 ${isDarkMode ? 'hover:bg-white/10' : ''} ${theme.text}`}
+                      aria-label="Open menu"
+                    >
+                      <Menu size={isShortLandscape ? 21 : 24} />
+                    </button>
+                    <h1 className={`${isShortLandscape ? 'text-base' : 'text-xl'} font-bold tracking-tight ${theme.text}`}>Harvested</h1>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowInbox(true)}
+                      className={`relative ${isShortLandscape ? 'p-1.5 -m-1.5' : 'p-2 -m-2'} rounded-lg hover:bg-black/5 ${isDarkMode ? 'hover:bg-white/10' : ''} ${theme.text}`}
+                      aria-label="Open inbox"
+                    >
+                      <MessageCircle size={isShortLandscape ? 21 : 24} />
+                      {Object.keys(messages).length > 0 && (
+                        <div className={`absolute top-0 right-0 w-2.5 h-2.5 bg-[#C29901] rounded-full border-2 ${isDarkMode ? 'border-[#0D1A15]' : 'border-[#FCFAF7]'}`} />
+                      )}
+                    </button>
+                    <div className={`${isShortLandscape ? 'w-7 h-7' : 'w-8 h-8'} rounded-full overflow-hidden border ${theme.border} cursor-pointer`} onClick={() => setActiveTab('profile')}>
+                      <img src={currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -492,7 +510,11 @@ export default function App() {
               id="scroll-container"
               className={[
                 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide relative',
-                showBottomNav ? 'pb-[calc(72px+env(safe-area-inset-bottom,0px))]' : 'pb-safe',
+                showBottomNav
+                  ? isShortLandscape
+                    ? 'pb-[calc(52px+env(safe-area-inset-bottom,0px))]'
+                    : 'pb-[calc(72px+env(safe-area-inset-bottom,0px))]'
+                  : 'pb-safe',
               ].join(' ')}
             >
               <ErrorBoundary>
@@ -505,26 +527,24 @@ export default function App() {
                 className={[
                   'absolute bottom-0 left-0 right-0 z-50',
                   `${theme.nav} border-t ${theme.border} transition-colors duration-300`,
-                  'px-2 pb-safe',
+                  isShortLandscape ? 'px-2 py-0.5 pb-safe' : 'px-2 pb-safe',
                 ].join(' ')}
               >
-                <div className="h-[72px] flex justify-around items-center">
-                <NavButton active={activeTab === 'map'} onClick={() => setActiveTab('map')} icon={<MapIcon size={24} />} label={t.nav.map} theme={theme} />
-                <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home size={24} />} label={t.nav.home} theme={theme} />
+                <div className={`${isShortLandscape ? 'h-[52px]' : 'h-[72px]'} flex justify-around items-center`}>
+                <NavButton active={activeTab === 'map'} onClick={() => setActiveTab('map')} icon={<MapIcon size={24} />} label={t.nav.map} theme={theme} compact={isShortLandscape} />
+                <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home size={24} />} label={t.nav.home} theme={theme} compact={isShortLandscape} />
                 {currentUser.role === 'gardener' && (
-                  <NavButton active={activeTab === 'add'} onClick={() => setActiveTab('add')} icon={<PlusCircle size={24} />} label={t.nav.add} theme={theme} />
+                  <NavButton active={activeTab === 'add'} onClick={() => setActiveTab('add')} icon={<PlusCircle size={24} />} label={t.nav.add} theme={theme} compact={isShortLandscape} />
                 )}
-                <NavButton active={activeTab === 'likes'} onClick={() => setActiveTab('likes')} icon={<Heart size={24} />} label={t.nav.likes} theme={theme} />
-                <NavButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User size={24} />} label={t.nav.profile} theme={theme} />
+                <NavButton active={activeTab === 'likes'} onClick={() => setActiveTab('likes')} icon={<Heart size={24} />} label={t.nav.likes} theme={theme} compact={isShortLandscape} />
+                <NavButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User size={24} />} label={t.nav.profile} theme={theme} compact={isShortLandscape} />
                 </div>
               </nav>
             )}
 
-            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full z-50 pointer-events-none" />
-
             {showMenu && (
-              <div className="absolute inset-0 z-[60] flex">
-                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in" onClick={() => setShowMenu(false)} />
+              <div className="absolute inset-0 z-[120] flex">
+                <div className="absolute inset-0 bg-black/50 animate-in fade-in" onClick={() => setShowMenu(false)} />
                 <div
                   className={[
                     'relative h-full shadow-2xl flex flex-col',
