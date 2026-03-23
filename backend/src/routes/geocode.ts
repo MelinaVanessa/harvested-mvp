@@ -8,12 +8,53 @@ type NominatimRow = {
   display_name: string
 }
 
+type NominatimReverseRow = {
+  lat: string
+  lon: string
+  display_name: string
+}
+
 /** GET /api/geocode?query=<term>&limit=<n>
  * Returns a small list of address suggestions (lat/lon + display name).
  * Proxy to OpenStreetMap Nominatim to avoid browser CORS issues.
  */
 geocodeRouter.get('/', async (req, res) => {
   const query = (req.query.query as string | undefined)?.trim()
+  const latRaw = req.query.lat as string | undefined
+  const lonRaw = req.query.lon as string | undefined
+
+  if (latRaw && lonRaw) {
+    const lat = Number(latRaw)
+    const lon = Number(lonRaw)
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return res.status(400).json({ error: 'lat and lon must be valid numbers' })
+    }
+
+    try {
+      const reverseUrl =
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
+        `&lat=${encodeURIComponent(String(lat))}&lon=${encodeURIComponent(String(lon))}` +
+        `&accept-language=en`
+      const reverseRes = await fetch(reverseUrl, {
+        headers: {
+          'User-Agent': 'HarvestedMVP/1.0 (github.com)',
+        },
+      })
+      if (!reverseRes.ok) {
+        return res.status(502).json({ error: `Reverse geocoding failed (${reverseRes.status})` })
+      }
+      const row = (await reverseRes.json()) as NominatimReverseRow
+      return res.json({
+        lat: Number(row.lat),
+        lon: Number(row.lon),
+        displayName: row.display_name ?? '',
+      })
+    } catch (e) {
+      console.error('[geocode] reverse failed', e)
+      return res.status(502).json({ error: 'Reverse geocoding failed' })
+    }
+  }
+
   if (!query) return res.status(400).json({ error: 'query is required' })
 
   const limitRaw = req.query.limit as string | undefined

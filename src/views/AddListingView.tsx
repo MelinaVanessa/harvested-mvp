@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera, ShoppingBag, Leaf } from 'lucide-react'
+import { Camera, ShoppingBag, Leaf, LocateFixed } from 'lucide-react'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
 
 interface AddListingViewProps {
@@ -35,6 +35,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
   const [addressQuery, setAddressQuery] = useState('')
   const [addressSuggestions, setAddressSuggestions] = useState<GeoSuggestion[]>([])
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -99,6 +100,61 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
       window.clearTimeout(timeout)
     }
   }, [addressQuery, apiBaseUrl])
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      window.alert('Geolocation is not supported on this device.')
+      return
+    }
+
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude
+        const lon = position.coords.longitude
+
+        try {
+          const res = await fetch(`${apiBaseUrl}/api/geocode?lat=${encodeURIComponent(String(lat))}&lon=${encodeURIComponent(String(lon))}`, {
+            headers: { Accept: 'application/json' },
+          })
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          const row = (await res.json()) as GeoSuggestion
+          const resolvedAddress = row.displayName?.trim() || `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+          setFormData((prev) => ({
+            ...prev,
+            location: {
+              ...(prev.location ?? { x: 50, y: 50, address: '' }),
+              address: resolvedAddress,
+              lat,
+              lng: lon,
+            },
+          }))
+          setAddressQuery(resolvedAddress)
+          setShowAddressSuggestions(false)
+        } catch {
+          const fallbackAddress = `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+          setFormData((prev) => ({
+            ...prev,
+            location: {
+              ...(prev.location ?? { x: 50, y: 50, address: '' }),
+              address: fallbackAddress,
+              lat,
+              lng: lon,
+            },
+          }))
+          setAddressQuery(fallbackAddress)
+          setShowAddressSuggestions(false)
+        } finally {
+          setIsLocating(false)
+        }
+      },
+      () => {
+        setIsLocating(false)
+        window.alert('Location access denied. Please allow location permissions.')
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+    )
+  }
 
   return (
     <div className={`px-6 py-8 ${theme.bg} ${theme.text} min-h-full pb-24`}>
@@ -211,6 +267,19 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
           </div>
           <div>
             <label className={`block text-xs font-bold uppercase mb-1 ${theme.textSec}`}>{t?.add?.address}</label>
+            <button
+              type="button"
+              onClick={handleUseCurrentLocation}
+              disabled={isLocating}
+              className={`mb-2 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                isLocating
+                  ? 'cursor-not-allowed opacity-70'
+                  : 'hover:bg-black/5'
+              } ${theme.border} ${theme.text}`}
+            >
+              <LocateFixed size={14} />
+              {isLocating ? 'Using your location...' : 'Use my current location'}
+            </button>
             <div className="relative">
               <input
                 required
