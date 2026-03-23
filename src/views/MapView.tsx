@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import L from 'leaflet'
 import { Search, Layers, Locate } from 'lucide-react'
 import { FilterChip } from '@/components/FilterChip'
@@ -50,6 +50,8 @@ export function MapView({
   const startY = useRef(0)
   const startHeight = useRef(0)
 
+  const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ?? ''
+
   const apiKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim()
   const [googleMapsFailed, setGoogleMapsFailed] = useState(false)
   const useGoogleMap = Boolean(apiKey) && !googleMapsFailed
@@ -57,9 +59,97 @@ export function MapView({
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const leafletMapRef = useRef<L.Map | null>(null)
 
+  type GeoSuggestion = {
+    lat: number
+    lon: number
+    displayName: string
+  }
+
+  const [mapQuery, setMapQuery] = useState('')
+  const [geoSuggestions, setGeoSuggestions] = useState<GeoSuggestion[]>([])
+  const [isGeoLoading, setIsGeoLoading] = useState(false)
+  const [showGeoSuggestions, setShowGeoSuggestions] = useState(false)
+
   const handleMapReady = useCallback((map: google.maps.Map) => {
     mapInstanceRef.current = map
   }, [])
+
+  const panTo = (lat: number, lon: number) => {
+    if (useGoogleMap && mapInstanceRef.current) {
+      mapInstanceRef.current.panTo({ lat, lng: lon })
+      mapInstanceRef.current.setZoom(14)
+      return
+    }
+    if (leafletMapRef.current) {
+      leafletMapRef.current.setView([lat, lon], 14)
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    const q = mapQuery.trim()
+    if (q.length < 3) {
+      setGeoSuggestions([])
+      setShowGeoSuggestions(false)
+      return
+    }
+
+    const controller = new AbortController()
+    const t = window.setTimeout(async () => {
+      try {
+        setIsGeoLoading(true)
+        const url = apiBaseUrl
+          ? `${apiBaseUrl}/api/geocode?query=${encodeURIComponent(q)}&limit=6`
+          : `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=0&polygon_geojson=0&accept-language=en&q=${encodeURIComponent(
+              q
+            )}`
+
+        const res = await fetch(url, {
+          signal: controller.signal,
+          headers: apiBaseUrl ? { Accept: 'application/json' } : { Accept: 'application/json' },
+        })
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = (await res.json()) as any[]
+
+        const parsed = data
+          .map((x) => {
+            // backend proxy returns {lat,lon,displayName}; nominatim returns {lat,lon,display_name}
+            const lat = Number(x.lat)
+            const lon = Number(x.lon)
+            const displayName = (x.displayName as string | undefined) ?? (x.display_name as string | undefined) ?? ''
+            if (!Number.isFinite(lat) || !Number.isFinite(lon) || !displayName) return null
+            return { lat, lon, displayName }
+          })
+          .filter((x): x is GeoSuggestion => Boolean(x))
+
+        if (cancelled) return
+        setGeoSuggestions(parsed)
+        setShowGeoSuggestions(parsed.length > 0)
+      } catch (e) {
+        // keep the map usable even if geocoding fails
+        if (!cancelled) {
+          setGeoSuggestions([])
+          setShowGeoSuggestions(false)
+        }
+      } finally {
+        if (!cancelled) setIsGeoLoading(false)
+      }
+    }, 250)
+
+    return () => {
+      cancelled = true
+      controller.abort()
+      window.clearTimeout(t)
+    }
+  }, [mapQuery, apiBaseUrl, useGoogleMap])
+
+  const handleSelectSuggestion = (s: GeoSuggestion) => {
+    setMapQuery(s.displayName)
+    setShowGeoSuggestions(false)
+    setGeoSuggestions([])
+    panTo(s.lat, s.lon)
+  }
 
   const handleLocate = () => {
     if (!navigator.geolocation) return
@@ -126,17 +216,60 @@ export function MapView({
       )}
 
       <div className="absolute top-4 left-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none">
-        <div
-          className={`${theme.mapFilterBg} rounded-full shadow-md px-4 py-2.5 flex items-center gap-2 border ${theme.border} pointer-events-auto`}
-        >
-          <Search size={18} className={theme.textSec} />
-          <input
-            type="text"
-            className={`flex-1 bg-transparent text-sm focus:outline-none ${theme.mapOverlayText} placeholder:${theme.textSec}`}
-            placeholder={t?.map?.searchPlaceholder}
-            defaultValue="Berlin, Brandenburg"
-          />
+        <div className="relative w-full pointer-events-auto">
+          <div
+            className={`${theme.mapFilterBg} w-full rounded-full shadow-md px-4 py-2.5 flex items-center gap-2 border ${theme.border}`}
+          >
+            <Search size={18} className={theme.textSec} />
+            <input
+              type="text"
+              value={mapQuery}
+              onChange={(e) => setMapQuery(e.target.value)}
+              onFocus={() => {
+                if (geoSuggestions.length > 0) setShowGeoSuggestions(true)
+              }}
+              onBlur={() => {
+                // allow clicks (handled via onMouseDown), so delay hiding slightly
+                window.setTimeout(() => setShowGeoSuggestions(false), 120)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && geoSuggestions[0]) {
+                  handleSelectSuggestion(geoSuggestions[0]!)
+                }
+              }}
+              className={`flex-1 bg-transparent text-sm focus:outline-none ${theme.mapOverlayText} placeholder:${theme.textSec}`}
+              placeholder={t?.map?.searchPlaceholder}
+            />
+          </div>
+
+          {showGeoSuggestions && (
+            <div
+              className={`${theme.card} mt-2 rounded-2xl border ${theme.border} shadow-2xl overflow-hidden`}
+            >
+              {isGeoLoading ? (
+                <div className={`px-4 py-2 text-xs ${theme.textSec}`}>Loading…</div>
+              ) : (
+                <div className="max-h-56 overflow-y-auto">
+                  {geoSuggestions.map((s) => (
+                    <button
+                      key={`${s.lat}:${s.lon}:${s.displayName}`}
+                      type="button"
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-black/5 ${theme.text}`}
+                      onMouseDown={(e) => {
+                        // prevent input blur before selection runs
+                        e.preventDefault()
+                        handleSelectSuggestion(s)
+                      }}
+                    >
+                      <div className="font-semibold line-clamp-1">{s.displayName}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
         {googleMapsFailed && apiKey && (
           <p className={`text-xs px-1 text-amber-700 dark:text-amber-300 pointer-events-auto`}>{t?.map?.loadError}</p>
         )}
