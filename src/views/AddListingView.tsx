@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Camera, ShoppingBag, Leaf } from 'lucide-react'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
 
@@ -23,6 +23,18 @@ const defaultForm: Partial<Listing> = {
 export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState<Partial<Listing>>(defaultForm)
+  const apiBaseUrl =
+    (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ||
+    'https://harvested-mvp.onrender.com'
+
+  type GeoSuggestion = {
+    lat: number
+    lon: number
+    displayName: string
+  }
+  const [addressQuery, setAddressQuery] = useState('')
+  const [addressSuggestions, setAddressSuggestions] = useState<GeoSuggestion[]>([])
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -52,6 +64,41 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
         '✨ Frisch aus meinem Garten! Knackig, saftig und voller Geschmack. Perfekt für einen gesunden Snack oder Salat. Kommt vorbei und holt es euch!',
     }))
   }
+
+  useEffect(() => {
+    setAddressQuery(formData.location?.address ?? '')
+  }, [formData.location?.address])
+
+  useEffect(() => {
+    const q = addressQuery.trim()
+    if (q.length < 1) {
+      setAddressSuggestions([])
+      setShowAddressSuggestions(false)
+      return
+    }
+
+    const controller = new AbortController()
+    const timeout = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/geocode?query=${encodeURIComponent(q)}&limit=6`, {
+          signal: controller.signal,
+          headers: { Accept: 'application/json' },
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const rows = (await res.json()) as GeoSuggestion[]
+        setAddressSuggestions(rows)
+        setShowAddressSuggestions(rows.length > 0)
+      } catch {
+        setAddressSuggestions([])
+        setShowAddressSuggestions(false)
+      }
+    }, 220)
+
+    return () => {
+      controller.abort()
+      window.clearTimeout(timeout)
+    }
+  }, [addressQuery, apiBaseUrl])
 
   return (
     <div className={`px-6 py-8 ${theme.bg} ${theme.text} min-h-full pb-24`}>
@@ -164,15 +211,50 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
           </div>
           <div>
             <label className={`block text-xs font-bold uppercase mb-1 ${theme.textSec}`}>{t?.add?.address}</label>
-            <input
-              required
-              className={`w-full p-3 rounded-lg ${theme.input}`}
-              placeholder="..."
-              value={formData.location?.address}
-              onChange={(e) =>
-                setFormData({ ...formData, location: { ...formData.location!, address: e.target.value } })
-              }
-            />
+            <div className="relative">
+              <input
+                required
+                className={`w-full p-3 rounded-lg ${theme.input}`}
+                placeholder="..."
+                value={formData.location?.address}
+                onFocus={() => {
+                  if (addressSuggestions.length > 0) setShowAddressSuggestions(true)
+                }}
+                onBlur={() => window.setTimeout(() => setShowAddressSuggestions(false), 120)}
+                onChange={(e) => {
+                  const address = e.target.value
+                  setAddressQuery(address)
+                  setFormData({ ...formData, location: { ...formData.location!, address } })
+                }}
+              />
+              {showAddressSuggestions && (
+                <div className={`absolute left-0 right-0 mt-1 rounded-xl border ${theme.border} ${theme.card} shadow-xl max-h-56 overflow-y-auto z-20`}>
+                  {addressSuggestions.map((s) => (
+                    <button
+                      key={`${s.lat}:${s.lon}:${s.displayName}`}
+                      type="button"
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-black/5 ${theme.text}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        setFormData({
+                          ...formData,
+                          location: {
+                            ...formData.location!,
+                            address: s.displayName,
+                            lat: s.lat,
+                            lng: s.lon,
+                          },
+                        })
+                        setAddressQuery(s.displayName)
+                        setShowAddressSuggestions(false)
+                      }}
+                    >
+                      <span className="line-clamp-2">{s.displayName}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <button
