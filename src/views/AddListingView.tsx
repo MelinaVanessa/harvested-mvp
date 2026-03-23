@@ -132,7 +132,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
           setAddressQuery(resolvedAddress)
           setShowAddressSuggestions(false)
         } catch {
-          const fallbackAddress = `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+          const fallbackAddress = 'Current location'
           setFormData((prev) => ({
             ...prev,
             location: {
