@@ -34,6 +34,7 @@ jobs:
       - name: Build
         env:
           BASE_PATH: /harvested-mvp/
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: npm run build
 
       - name: Deploy dist to gh-pages
