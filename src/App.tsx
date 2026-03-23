@@ -47,6 +47,7 @@ export default function App() {
 
   const theme = isDarkMode ? THEMES.dark : THEMES.light
   const t = TRANSLATIONS[language]
+  const isAdmin = currentUser.id === 'u1'
   const currentUserWithRes = { ...currentUser, reservations }
   const showTopBar = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
   const showBottomNav = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
@@ -322,6 +323,8 @@ export default function App() {
             filterType={filterType}
             setFilterType={setFilterType}
             handleReservation={handleReservation}
+            onAdminDelete={handleDeleteListing}
+            isAdmin={isAdmin}
             onUserClick={openProfile}
             theme={theme}
             t={t}
@@ -340,6 +343,8 @@ export default function App() {
             currentUser={currentUser}
             toggleLike={toggleLike}
             toggleFollow={toggleFollow}
+            onAdminDelete={handleDeleteListing}
+            isAdmin={isAdmin}
             onToggleMenu={() => setShowMenu(true)}
             theme={theme}
             t={t}
@@ -356,6 +361,8 @@ export default function App() {
             toggleFollow={toggleFollow}
             getGardener={getGardener}
             handleReservation={handleReservation}
+            onAdminDelete={handleDeleteListing}
+            isAdmin={isAdmin}
             onUserClick={openProfile}
             theme={theme}
             t={t}

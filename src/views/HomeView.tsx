@@ -15,6 +15,8 @@ interface HomeViewProps {
   filterType: 'all' | 'pickup' | 'self_harvest'
   setFilterType: (v: 'all' | 'pickup' | 'self_harvest') => void
   handleReservation: (listingId: string, amount: number) => void
+  onAdminDelete: (listingId: string) => void
+  isAdmin: boolean
   onUserClick: (userId: string) => void
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
@@ -31,13 +33,25 @@ export function HomeView({
   filterType,
   setFilterType,
   handleReservation,
+  onAdminDelete,
+  isAdmin,
   onUserClick,
   theme,
   t,
 }: HomeViewProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [showSearch, setShowSearch] = useState(true)
+  const [isShortLandscape, setIsShortLandscape] = useState(false)
   const lastScrollY = useRef(0)
+
+  useEffect(() => {
+    const updateViewportFlags = () => {
+      setIsShortLandscape(window.innerWidth >= 900 && window.innerHeight <= 700)
+    }
+    updateViewportFlags()
+    window.addEventListener('resize', updateViewportFlags)
+    return () => window.removeEventListener('resize', updateViewportFlags)
+  }, [])
 
   useEffect(() => {
     const scrollContainer = document.querySelector('#scroll-container')
@@ -67,58 +81,66 @@ export function HomeView({
   return (
     <div className={`pt-0 ${theme.bg} min-h-full`}>
       <div className={`sticky top-0 z-50 ${theme.bg} shadow-sm transition-all duration-300`}>
-        <div
-          className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? 'max-h-20 opacity-100 py-3' : 'max-h-0 opacity-0 py-0'}`}
-        >
-          <div className="px-4">
-            <div
-              className={`flex items-center gap-2 px-4 py-3 rounded-2xl border ${theme.border} ${theme.input} shadow-sm transition-all focus-within:border-[#4A5D4E] focus-within:ring-1 focus-within:ring-[#4A5D4E]/20`}
-            >
-              <Search size={18} className={theme.textSec} />
-              <input
-                type="text"
-                className="flex-1 bg-transparent text-sm focus:outline-none"
-                placeholder={t?.home?.searchPlaceholder ?? 'Suche nach Äpfeln, Kürbis...'}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X size={16} className={theme.textSec} />
-                </button>
-              )}
+        {!isShortLandscape && (
+          <div
+            className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? 'max-h-20 opacity-100 py-3' : 'max-h-0 opacity-0 py-0'}`}
+          >
+            <div className="px-4">
+              <div
+                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border ${theme.border} ${theme.input} shadow-sm transition-all focus-within:border-[#4A5D4E] focus-within:ring-1 focus-within:ring-[#4A5D4E]/20`}
+              >
+                <Search size={18} className={theme.textSec} />
+                <input
+                  type="text"
+                  className="flex-1 bg-transparent text-sm focus:outline-none"
+                  placeholder={t?.home?.searchPlaceholder ?? 'Suche nach Äpfeln, Kürbis...'}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={16} className={theme.textSec} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className={`flex border-b ${theme.border} mb-0 px-4 ${theme.bg} relative z-40`}>
+        <div className={`flex border-b ${theme.border} mb-0 px-4 ${theme.bg} relative z-40 ${isShortLandscape ? 'pt-1' : ''}`}>
           <button
-            onClick={() => setFeedType('explore')}
-            className={`flex-1 pb-3 text-sm font-semibold transition-colors ${feedType === 'explore' ? `${theme.text} border-b-2 border-[#0D1A15]` : theme.textSec}`}
+            onClick={() => {
+              setFeedType('explore')
+              setFilterType('all')
+              setSearchTerm('')
+            }}
+            className={`flex-1 ${isShortLandscape ? 'pb-2 text-xs' : 'pb-3 text-sm'} font-semibold transition-colors ${feedType === 'explore' ? `${theme.text} border-b-2 border-[#0D1A15]` : theme.textSec}`}
           >
-            {t?.home?.explore}
+            Alle anzeigen
           </button>
           <button
             onClick={() => setFeedType('following')}
-            className={`flex-1 pb-3 text-sm font-semibold transition-colors ${feedType === 'following' ? `${theme.text} border-b-2 border-[#0D1A15]` : theme.textSec}`}
+            className={`flex-1 ${isShortLandscape ? 'pb-2 text-xs' : 'pb-3 text-sm'} font-semibold transition-colors ${feedType === 'following' ? `${theme.text} border-b-2 border-[#0D1A15]` : theme.textSec}`}
           >
             {t?.home?.following}
           </button>
         </div>
 
-        <div className={`flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar scrollbar-hide ${theme.bg} relative z-40`}>
-          <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} />
-          <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} />
-          <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} />
-        </div>
+        {!isShortLandscape && (
+          <div className={`flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar scrollbar-hide ${theme.bg} relative z-40`}>
+            <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} />
+            <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} />
+            <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} />
+          </div>
+        )}
       </div>
 
-      <div className="space-y-6 px-4 pt-2 pb-20">
+      <div className={`grid grid-cols-1 ${isShortLandscape ? 'px-5 pt-1 pb-16 gap-4' : 'px-4 pt-2 pb-20 gap-6'} [@media(min-width:900px)_and_(orientation:landscape)]:grid-cols-2 [@media(min-width:900px)_and_(orientation:landscape)]:gap-5 [@media(min-width:1200px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1200px)_and_(orientation:landscape)]:px-6 [@media(min-width:1200px)_and_(orientation:landscape)]:gap-6 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-4`}>
         {filteredListings.length === 0 ? (
-          <div className={`text-center py-10 ${theme.textSec}`}>
+          <div className={`col-span-full text-center py-10 ${theme.textSec}`}>
             <p>{t?.home?.empty}</p>
           </div>
         ) : (
@@ -131,6 +153,8 @@ export function HomeView({
               onLike={() => toggleLike(l.id)}
               onFollow={() => toggleFollow(l.gardenerId)}
               onReserve={handleReservation}
+              onAdminDelete={onAdminDelete}
+              isAdmin={isAdmin}
               onUserClick={onUserClick}
               theme={theme}
               t={t}

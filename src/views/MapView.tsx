@@ -22,6 +22,8 @@ interface MapViewProps {
   currentUser: UserProfile
   toggleLike: (listingId: string) => void
   toggleFollow: (gardenerId: string) => void
+  onAdminDelete: (listingId: string) => void
+  isAdmin: boolean
   onToggleMenu: () => void
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
@@ -38,6 +40,8 @@ export function MapView({
   currentUser,
   toggleLike,
   toggleFollow,
+  onAdminDelete,
+  isAdmin,
   theme,
   t,
 }: MapViewProps) {
@@ -364,6 +368,8 @@ export function MapView({
                   onLike={() => toggleLike(l.id)}
                   onFollow={() => toggleFollow(l.gardenerId)}
                   onReserve={handleReservation}
+                  onAdminDelete={onAdminDelete}
+                  isAdmin={isAdmin}
                   onUserClick={onUserClick}
                   theme={theme}
                   t={t}
