@@ -71,6 +71,7 @@ export function MapView({
   const [geoSuggestions, setGeoSuggestions] = useState<GeoSuggestion[]>([])
   const [isGeoLoading, setIsGeoLoading] = useState(false)
   const [showGeoSuggestions, setShowGeoSuggestions] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
 
   const handleMapReady = useCallback((map: google.maps.Map) => {
     mapInstanceRef.current = map
@@ -166,19 +167,36 @@ export function MapView({
   }
 
   const handleLocate = () => {
-    if (!navigator.geolocation) return
+    if (typeof navigator === 'undefined' || !navigator.geolocation || isLocating) return
+    setIsLocating(true)
+
+    const onSuccess = (pos: GeolocationPosition) => {
+      const lat = pos.coords.latitude
+      const lng = pos.coords.longitude
+      panTo(lat, lng)
+    }
+
+    // Phase 1: return quickly from cached/coarse position.
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude
-        const lng = pos.coords.longitude
-        if (useGoogleMap && mapInstanceRef.current) {
-          mapInstanceRef.current.panTo({ lat, lng })
-          mapInstanceRef.current.setZoom(14)
-        } else if (leafletMapRef.current) {
-          leafletMapRef.current.setView([lat, lng], 14)
-        }
+        onSuccess(pos)
+
+        // Phase 2: refine in background with high-accuracy GPS.
+        navigator.geolocation.getCurrentPosition(
+          (betterPos) => {
+            onSuccess(betterPos)
+            setIsLocating(false)
+          },
+          () => {
+            setIsLocating(false)
+          },
+          { enableHighAccuracy: true, timeout: 9000, maximumAge: 0 }
+        )
       },
-      () => {},
+      () => {
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: false, timeout: 3500, maximumAge: 300000 }
     )
   }
 
@@ -304,8 +322,11 @@ export function MapView({
         <button
           type="button"
           onClick={handleLocate}
-          disabled={typeof navigator === 'undefined' || !navigator.geolocation}
-          className={`w-12 h-12 ${theme.card} rounded-full shadow-lg flex items-center justify-center text-[#4285F4] disabled:opacity-40 disabled:pointer-events-none`}
+          disabled={typeof navigator === 'undefined' || !navigator.geolocation || isLocating}
+          className={`w-12 h-12 ${theme.card} rounded-full shadow-lg flex items-center justify-center text-[#4285F4] disabled:opacity-40 disabled:pointer-events-none ${
+            isLocating ? 'animate-pulse' : ''
+          }`}
+          aria-label={isLocating ? 'Locating…' : 'Locate me'}
         >
           <Locate size={24} fill="currentColor" style={{ fillOpacity: 0.2 }} />
         </button>
