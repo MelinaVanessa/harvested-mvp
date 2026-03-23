@@ -20,10 +20,13 @@ import type { UserProfile, Listing, Reservation, Message } from '@/types'
 
 type ActiveTab = 'home' | 'map' | 'add' | 'profile' | 'likes' | 'support' | 'settings'
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ?? ''
+const API_ENABLED = API_BASE_URL.length > 0
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home')
   const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USER)
-  const [listings, setListings] = useState<Listing[]>(INITIAL_LISTINGS)
+  const [listings, setListings] = useState<Listing[]>(API_ENABLED ? [] : INITIAL_LISTINGS)
   const [users, setUsers] = useState<Record<string, UserProfile>>(MOCK_USERS)
   const [feedType, setFeedType] = useState<'explore' | 'following'>('explore')
   const [filterType, setFilterType] = useState<'all' | 'pickup' | 'self_harvest'>('all')
@@ -54,6 +57,25 @@ export default function App() {
       setIsLoggedIn(true)
     }
   }, [])
+
+  useEffect(() => {
+    if (!API_ENABLED) return
+    let cancelled = false
+    const loadListings = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/listings`, { headers: { Accept: 'application/json' } })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = (await res.json()) as Listing[]
+        if (!cancelled) setListings(Array.isArray(data) ? data : [])
+      } catch (e) {
+        console.error('Could not load listings from API', e)
+      }
+    }
+    void loadListings()
+    return () => {
+      cancelled = true
+    }
+  }, [isLoggedIn])
 
   const getGardener = (id: string) => users[id] ?? { name: 'Unbekannt', handle: '@unknown', avatar: '', id, bio: '', role: 'gardener', isMember: false, following: [], likedListings: [] }
 
@@ -113,8 +135,29 @@ export default function App() {
     alert('Reservierung storniert.')
   }
 
-  const handleCreateListing = (newListing: Listing) => {
-    setListings((prev) => [newListing, ...prev])
+  const handleCreateListing = async (newListing: Listing) => {
+    if (API_ENABLED) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/listings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-User-Id': currentUser.id,
+          },
+          body: JSON.stringify(newListing),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const created = (await res.json()) as Listing
+        setListings((prev) => [created, ...prev])
+      } catch (e) {
+        console.error('Could not create listing via API', e)
+        alert(language === 'de' ? 'Angebot konnte nicht gespeichert werden.' : 'Could not save listing.')
+        return
+      }
+    } else {
+      setListings((prev) => [newListing, ...prev])
+    }
     if (!currentUser.isMember) {
       setCurrentUser((prev) => ({ ...prev, isMember: true }))
       alert('Glückwunsch! Deine Mitgliedschaft ist jetzt kostenlos aktiv, da du etwas geteilt hast.')
@@ -146,13 +189,40 @@ export default function App() {
     setMessages((prev) => ({ ...prev, [partnerId]: [...(prev[partnerId] ?? []), newMessage] }))
   }
 
-  const handleDeleteListing = (id: string) => {
+  const handleDeleteListing = async (id: string) => {
     if (confirm('Möchtest du diesen Beitrag wirklich löschen?')) {
+      if (API_ENABLED) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/listings/${encodeURIComponent(id)}`, { method: 'DELETE' })
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        } catch (e) {
+          console.error('Could not delete listing via API', e)
+          alert(language === 'de' ? 'Löschen fehlgeschlagen.' : 'Delete failed.')
+          return
+        }
+      }
       setListings((prev) => prev.filter((l) => l.id !== id))
     }
   }
 
-  const handleUpdateListing = (updatedListing: Listing) => {
+  const handleUpdateListing = async (updatedListing: Listing) => {
+    if (API_ENABLED) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/listings/${encodeURIComponent(updatedListing.id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(updatedListing),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const saved = (await res.json()) as Listing
+        setListings((prev) => prev.map((l) => (l.id === saved.id ? saved : l)))
+        return
+      } catch (e) {
+        console.error('Could not update listing via API', e)
+        alert(language === 'de' ? 'Speichern fehlgeschlagen.' : 'Save failed.')
+        return
+      }
+    }
     setListings((prev) => prev.map((l) => (l.id === updatedListing.id ? updatedListing : l)))
   }
 
