@@ -421,7 +421,7 @@ export function MapView({
 
       {!selectedListing && (
         <aside
-          className={`absolute top-0 right-0 h-full w-[var(--map-panel-width)] hidden lg:flex ${theme.card} border-l ${theme.border} z-[110] flex-col pointer-events-auto`}
+          className={`absolute top-0 right-0 h-full w-[var(--map-panel-width)] hidden lg:flex ${theme.card} border-l ${theme.border} z-40 flex-col pointer-events-auto`}
           style={{ ['--map-panel-width' as string]: desktopPanelWidth }}
         >
           <div className={`px-3 py-3 border-b ${theme.border} shrink-0`}>
