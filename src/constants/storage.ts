@@ -81,18 +81,30 @@ export function getRegisteredAccounts(): StoredAccount[] {
   }
 }
 
-export function upsertRegisteredAccount(account: StoredAccount): void {
+export function findRegisteredAccountByEmail(emailLower: string): StoredAccount | undefined {
+  return getRegisteredAccounts().find((a) => a.email === emailLower)
+}
+
+export function upsertRegisteredAccount(account: StoredAccount): boolean {
   try {
     const list = getRegisteredAccounts().filter((a) => a.email !== account.email)
     list.push(account)
-    localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(list))
+    const payload = JSON.stringify(list)
+    localStorage.setItem(REGISTERED_ACCOUNTS_KEY, payload)
+    const roundTrip = localStorage.getItem(REGISTERED_ACCOUNTS_KEY)
+    return roundTrip === payload && findRegisteredAccountByEmail(account.email)?.userId === account.userId
   } catch (e) {
     console.warn('Could not save registered account', e)
+    return false
   }
 }
 
-export function findRegisteredAccountByEmail(emailLower: string): StoredAccount | undefined {
-  return getRegisteredAccounts().find((a) => a.email === emailLower)
+/** Re-read disk accounts into the user map (e.g. after logout or when opening the login screen). */
+export function mergeUsersFromStorage(
+  mockUsers: Record<string, UserProfile>,
+  prev: Record<string, UserProfile>,
+): Record<string, UserProfile> {
+  return { ...mockUsers, ...registeredAccountsUserMap(), ...prev }
 }
 
 export function findRegisteredAccountByUserId(userId: string): StoredAccount | undefined {

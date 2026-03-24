@@ -26,6 +26,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const emailLower = email.trim().toLowerCase()
+    const passwordNorm = password.trim()
     if (isRegistering) {
       if (email && password && name) {
         if (emailLower === OWNER_EMAIL) {
@@ -37,24 +38,30 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
           return
         }
         const id = `u_${Date.now()}`
-        upsertRegisteredAccount({
+        const stored = upsertRegisteredAccount({
           email: emailLower,
-          password,
+          password: passwordNorm,
           userId: id,
           name: name.trim(),
           role: selectedRole,
         })
+        if (!stored) {
+          alert(
+            'Dein Konto konnte nicht gespeichert werden (z. B. privates Fenster oder Speicher voll). Ohne Speicherung funktioniert der spätere Login nicht.',
+          )
+          return
+        }
         alert(`Willkommen bei Harvested, ${name}!`)
         onLogin({ id, name: name.trim(), role: selectedRole })
       } else {
         alert('Bitte fülle alle Felder aus.')
       }
     } else {
-      if (emailLower === OWNER_EMAIL && password === OWNER_PASSWORD) {
+      if (emailLower === OWNER_EMAIL && passwordNorm === OWNER_PASSWORD) {
         onLogin({ id: 'u1', name: 'Melina Vanessa Mann', role: 'gardener' })
       } else {
         const account = findRegisteredAccountByEmail(emailLower)
-        if (account && account.password === password) {
+        if (account && account.password === passwordNorm) {
           onLogin({ id: account.userId, name: account.name, role: account.role })
         } else {
           alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')

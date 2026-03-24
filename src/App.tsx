@@ -21,7 +21,7 @@ import {
   getSavedProfile,
   setSavedProfile,
   findRegisteredAccountByUserId,
-  registeredAccountsUserMap,
+  mergeUsersFromStorage,
   storedAccountToUserProfile,
 } from '@/constants/storage'
 import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
@@ -39,10 +39,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home')
   const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USER)
   const [listings, setListings] = useState<Listing[]>(API_ENABLED ? [] : INITIAL_LISTINGS)
-  const [users, setUsers] = useState<Record<string, UserProfile>>(() => ({
-    ...MOCK_USERS,
-    ...registeredAccountsUserMap(),
-  }))
+  const [users, setUsers] = useState<Record<string, UserProfile>>(() => mergeUsersFromStorage(MOCK_USERS, {}))
   const [feedType, setFeedType] = useState<'explore' | 'following'>('explore')
   const [filterType, setFilterType] = useState<'all' | 'pickup' | 'self_harvest'>('all')
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -66,16 +63,21 @@ export default function App() {
   const showBottomNav = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
 
   useEffect(() => {
-    const mergedUsers = { ...MOCK_USERS, ...registeredAccountsUserMap() }
+    const mergedUsers = mergeUsersFromStorage(MOCK_USERS, {})
     const saved = getSavedLogin()
     if (saved?.userId && mergedUsers[saved.userId]) {
       const base = mergedUsers[saved.userId]!
       const profilePatch = getSavedProfile(saved.userId)
       setCurrentUser(profilePatch ? { ...base, ...profilePatch } : base)
-      setUsers((prev) => ({ ...mergedUsers, ...prev }))
+      setUsers((prev) => mergeUsersFromStorage(MOCK_USERS, prev))
       setIsLoggedIn(true)
     }
   }, [])
+
+  useEffect(() => {
+    if (isLoggedIn) return
+    setUsers((prev) => mergeUsersFromStorage(MOCK_USERS, prev))
+  }, [isLoggedIn])
 
   useEffect(() => {
     const updateViewportFlags = () => {
