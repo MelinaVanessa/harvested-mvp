@@ -253,7 +253,7 @@ export function MapView({
         )}
       </div>
 
-      <div className="absolute top-4 left-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none">
+      <div className="absolute top-4 left-4 right-4 lg:right-[calc(34%+1rem)] z-[100] flex flex-col gap-3 pointer-events-none">
         <div className="relative w-full pointer-events-auto">
           <div
             className={`${theme.mapFilterBg} w-full rounded-full shadow-md px-4 py-2.5 flex items-center gap-2 border ${theme.border}`}
