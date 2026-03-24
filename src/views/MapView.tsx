@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import L from 'leaflet'
 import { Search, Layers, Locate } from 'lucide-react'
-import { FilterChip } from '@/components/FilterChip'
 import { ListingCard } from '@/components/ListingCard'
 import { ListingDetailModal } from '@/components/ListingDetailModal'
 import { InteractiveGoogleMap } from '@/components/InteractiveGoogleMap'
@@ -316,9 +315,39 @@ export function MapView({
           <p className={`text-xs px-1 text-amber-700 dark:text-amber-300 pointer-events-auto`}>{t?.map?.loadError}</p>
         )}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 pointer-events-auto">
-          <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} highContrast />
-          <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} highContrast />
-          <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} highContrast />
+          <button
+            type="button"
+            onClick={() => setFilterType('all')}
+            className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border shadow-md backdrop-blur-sm transition-colors ${
+              filterType === 'all'
+                ? 'bg-[#0D1A15] text-[#FCFAF7] border-[#0D1A15]'
+                : 'bg-white text-[#0D1A15] border-black/30 hover:bg-[#F5F5F5]'
+            }`}
+          >
+            {t?.filter?.all}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterType('pickup')}
+            className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border shadow-md backdrop-blur-sm transition-colors ${
+              filterType === 'pickup'
+                ? 'bg-[#0D1A15] text-[#FCFAF7] border-[#0D1A15]'
+                : 'bg-white text-[#0D1A15] border-black/30 hover:bg-[#F5F5F5]'
+            }`}
+          >
+            {t?.filter?.pickup}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterType('self_harvest')}
+            className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border shadow-md backdrop-blur-sm transition-colors ${
+              filterType === 'self_harvest'
+                ? 'bg-[#0D1A15] text-[#FCFAF7] border-[#0D1A15]'
+                : 'bg-white text-[#0D1A15] border-black/30 hover:bg-[#F5F5F5]'
+            }`}
+          >
+            {t?.filter?.self}
+          </button>
         </div>
       </div>
 
