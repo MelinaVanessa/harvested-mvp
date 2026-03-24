@@ -316,9 +316,9 @@ export function MapView({
           <p className={`text-xs px-1 text-amber-700 dark:text-amber-300 pointer-events-auto`}>{t?.map?.loadError}</p>
         )}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 pointer-events-auto">
-          <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} />
-          <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} />
-          <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} />
+          <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} highContrast />
+          <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} highContrast />
+          <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} highContrast />
         </div>
       </div>
 
