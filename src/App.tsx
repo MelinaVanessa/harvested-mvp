@@ -446,7 +446,11 @@ export default function App() {
             onLogin={(userData) => {
               if (userData) {
                 let nextUser: UserProfile
-                if (userData.id === 'u1') {
+                if (userData.profile) {
+                  const base = userData.profile
+                  const profilePatch = getSavedProfile(base.id)
+                  nextUser = profilePatch ? { ...base, ...profilePatch } : base
+                } else if (userData.id === 'u1') {
                   const base = MOCK_USERS.u1
                   const profilePatch = getSavedProfile('u1')
                   nextUser = profilePatch ? { ...base, ...profilePatch } : base

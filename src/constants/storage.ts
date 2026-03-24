@@ -82,7 +82,8 @@ export function getRegisteredAccounts(): StoredAccount[] {
 }
 
 export function findRegisteredAccountByEmail(emailLower: string): StoredAccount | undefined {
-  return getRegisteredAccounts().find((a) => a.email === emailLower)
+  const needle = emailLower.trim().toLowerCase()
+  return getRegisteredAccounts().find((a) => a.email.trim().toLowerCase() === needle)
 }
 
 export function upsertRegisteredAccount(account: StoredAccount): boolean {

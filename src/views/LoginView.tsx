@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Sprout, ShoppingCart } from 'lucide-react'
-import type { UserRole } from '@/types'
-import type { ThemeTokens } from '@/types'
+import type { UserRole, UserProfile, ThemeTokens } from '@/types'
 import { findRegisteredAccountByEmail, upsertRegisteredAccount } from '@/constants/storage'
 
 const WALDGRUEN = '#4A5D4E'
@@ -10,8 +9,12 @@ const TEXT_MUTED = '#88887D'
 const OWNER_EMAIL = 'melina_vanessa.mann@web.de'
 const OWNER_PASSWORD = 'adminaccess'
 
+const API_BASE_URL =
+  (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ||
+  'https://harvested-mvp.onrender.com'
+
 interface LoginViewProps {
-  onLogin: (userData?: { id: string; name: string; role: UserRole }) => void
+  onLogin: (userData?: { id: string; name: string; role: UserRole; profile?: UserProfile }) => void
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
 }
@@ -23,7 +26,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const [name, setName] = useState('')
   const [selectedRole, setSelectedRole] = useState<UserRole>('gardener')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const emailLower = email.trim().toLowerCase()
     const passwordNorm = password.trim()
@@ -37,6 +40,39 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
           alert('Diese E-Mail ist bereits registriert. Bitte einloggen.')
           return
         }
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+              email: emailLower,
+              password: passwordNorm,
+              name: name.trim(),
+              role: selectedRole,
+            }),
+          })
+          if (res.ok) {
+            const data = (await res.json()) as { user: UserProfile }
+            upsertRegisteredAccount({
+              email: emailLower,
+              password: passwordNorm,
+              userId: data.user.id,
+              name: data.user.name,
+              role: data.user.role,
+            })
+            alert(`Willkommen bei Harvested, ${name}!`)
+            onLogin({ id: data.user.id, name: data.user.name, role: data.user.role, profile: data.user })
+            return
+          }
+          if (res.status === 409) {
+            alert('Diese E-Mail ist bereits registriert. Bitte einloggen.')
+            return
+          }
+        } catch {
+          /* offline / API unreachable → local-only registration below */
+        }
+
         const id = `u_${Date.now()}`
         const stored = upsertRegisteredAccount({
           email: emailLower,
@@ -57,11 +93,33 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
         alert('Bitte fülle alle Felder aus.')
       }
     } else {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ email: emailLower, password: passwordNorm }),
+        })
+        if (res.ok) {
+          const data = (await res.json()) as { user: UserProfile }
+          upsertRegisteredAccount({
+            email: emailLower,
+            password: passwordNorm,
+            userId: data.user.id,
+            name: data.user.name,
+            role: data.user.role,
+          })
+          onLogin({ id: data.user.id, name: data.user.name, role: data.user.role, profile: data.user })
+          return
+        }
+      } catch {
+        /* fall back to owner / localStorage */
+      }
+
       if (emailLower === OWNER_EMAIL && passwordNorm === OWNER_PASSWORD) {
         onLogin({ id: 'u1', name: 'Melina Vanessa Mann', role: 'gardener' })
       } else {
         const account = findRegisteredAccountByEmail(emailLower)
-        if (account && account.password === passwordNorm) {
+        if (account && (account.password === passwordNorm || account.password === password)) {
           onLogin({ id: account.userId, name: account.name, role: account.role })
         } else {
           alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')

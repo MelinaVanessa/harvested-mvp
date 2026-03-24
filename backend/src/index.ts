@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import { authRouter } from './routes/auth.js'
 import { listingsRouter } from './routes/listings.js'
 import { usersRouter } from './routes/users.js'
 import { reservationsRouter } from './routes/reservations.js'
@@ -12,6 +13,7 @@ const PORT = process.env.PORT ?? 3001
 app.use(cors({ origin: true }))
 app.use(express.json({ limit: '5mb' }))
 
+app.use('/api/auth', authRouter)
 app.use('/api/listings', listingsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/reservations', reservationsRouter)
