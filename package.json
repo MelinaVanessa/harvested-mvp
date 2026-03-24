@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "process-logo": "node scripts/process-logo.mjs"
+    "process-logo": "node scripts/process-logo.mjs",
+    "favicon-transparent": "node scripts/favicon-transparent.mjs"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
