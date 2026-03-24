@@ -1,6 +1,9 @@
 /**
  * Macht den Hintergrund der Favicon-PNG transparent — nur Waldgrün-Linien bleiben sichtbar.
  * Nutzung: node scripts/favicon-transparent.mjs
+ *
+ * Nicht auf bereits mit remove.bg o.ä. freigestellte PNGs anwenden — die Qualität ist dann
+ * meist besser ohne dieses Skript.
  */
 
 import { Jimp } from 'jimp'
