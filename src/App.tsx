@@ -24,6 +24,7 @@ const API_BASE_URL =
   (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ||
   'https://harvested-mvp.onrender.com'
 const API_ENABLED = API_BASE_URL.length > 0
+const OWNER_NAME = 'Melina Vanessa Mann'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home')
@@ -47,7 +48,7 @@ export default function App() {
 
   const theme = isDarkMode ? THEMES.dark : THEMES.light
   const t = TRANSLATIONS[language]
-  const isAdmin = currentUser.id === 'u1'
+  const isAdmin = isLoggedIn && currentUser.id === 'u1' && currentUser.name === OWNER_NAME
   const currentUserWithRes = { ...currentUser, reservations }
   const showTopBar = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
   const showBottomNav = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'

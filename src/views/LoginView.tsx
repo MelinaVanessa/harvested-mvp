@@ -6,9 +6,11 @@ import type { ThemeTokens } from '@/types'
 const WALDGRUEN = '#4A5D4E'
 const OFF_WHITE = '#FCFAF7'
 const TEXT_MUTED = '#88887D'
+const OWNER_EMAIL = 'melina_vanessa.mann@web.de'
+const OWNER_PASSWORD = 'adminaccess'
 
 interface LoginViewProps {
-  onLogin: (userData?: { name: string; role: UserRole }) => void
+  onLogin: (userData?: { id: string; name: string; role: UserRole }) => void
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
 }
@@ -25,19 +27,13 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
     if (isRegistering) {
       if (email && password && name) {
         alert(`Willkommen bei Harvested, ${name}!`)
-        onLogin({ name, role: selectedRole })
+        onLogin({ id: `u_${Date.now()}`, name, role: selectedRole })
       } else {
         alert('Bitte fülle alle Felder aus.')
       }
     } else {
-      if (email.toLowerCase() === 'melina_vanessa.mann@web.de') {
-        if (password === 'test1234') {
-          onLogin({ name: 'Melina Vanessa Mann', role: 'gardener' })
-        } else if (password === 'test12345') {
-          onLogin({ name: 'Melina Vanessa Mann', role: 'buyer' })
-        } else {
-          alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')
-        }
+      if (email.toLowerCase() === OWNER_EMAIL && password === OWNER_PASSWORD) {
+        onLogin({ id: 'u1', name: 'Melina Vanessa Mann', role: 'gardener' })
       } else {
         alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')
       }
