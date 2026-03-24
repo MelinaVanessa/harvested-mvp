@@ -70,16 +70,26 @@ export interface StoredAccount {
   role: UserRole
 }
 
-function isStoredAccount(x: unknown): x is StoredAccount {
-  if (!x || typeof x !== 'object') return false
+/** Normalize stored rows so we never drop accounts on read (strict role checks caused data loss on upsert). */
+function normalizeStoredAccount(x: unknown): StoredAccount | null {
+  if (!x || typeof x !== 'object') return null
   const o = x as Record<string, unknown>
-  return (
-    typeof o.email === 'string' &&
-    typeof o.password === 'string' &&
-    typeof o.userId === 'string' &&
-    typeof o.name === 'string' &&
-    (o.role === 'buyer' || o.role === 'gardener')
-  )
+  if (
+    typeof o.email !== 'string' ||
+    typeof o.password !== 'string' ||
+    typeof o.userId !== 'string' ||
+    typeof o.name !== 'string'
+  ) {
+    return null
+  }
+  const role: UserRole = o.role === 'buyer' ? 'buyer' : 'gardener'
+  return {
+    email: o.email.trim().toLowerCase(),
+    password: String(o.password),
+    userId: String(o.userId),
+    name: String(o.name),
+    role,
+  }
 }
 
 export function getRegisteredAccounts(): StoredAccount[] {
@@ -88,7 +98,7 @@ export function getRegisteredAccounts(): StoredAccount[] {
     if (!raw) return []
     const data = JSON.parse(raw) as unknown
     if (!Array.isArray(data)) return []
-    return data.filter(isStoredAccount)
+    return data.map(normalizeStoredAccount).filter((a): a is StoredAccount => a !== null)
   } catch {
     return []
   }

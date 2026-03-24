@@ -22,9 +22,11 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [selectedRole, setSelectedRole] = useState<UserRole>('gardener')
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setAuthError(null)
     const emailLower = email.trim().toLowerCase()
     const passwordNorm = password.trim()
     if (isRegistering) {
@@ -115,7 +117,11 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
         return
       }
 
-      alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')
+      const msg = t?.login?.error ?? 'Ungültige Anmeldedaten.'
+      setAuthError(
+        `${msg} Stelle sicher, dass du auf „Einloggen“ bist (nicht Registrieren), E-Mail und Passwort exakt wie bei der Registrierung, und kein privates Browserfenster ohne Speicher verwendest.`,
+      )
+      alert(msg)
     }
   }
 
@@ -204,7 +210,11 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
                 className={inputClass}
                 placeholder="hallo@harvested.app"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setAuthError(null)
+                }}
+                autoComplete="email"
               />
             </div>
             <div>
@@ -217,9 +227,19 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
                 className={inputClass}
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setAuthError(null)
+                }}
+                autoComplete={isRegistering ? 'new-password' : 'current-password'}
               />
             </div>
+
+            {authError && (
+              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">
+                {authError}
+              </p>
+            )}
 
             <button
               type="submit"
@@ -233,7 +253,10 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
           <div className="mt-8 text-center animate-in fade-in duration-1000 delay-300 pb-8">
             <button
               type="button"
-              onClick={() => setIsRegistering(!isRegistering)}
+              onClick={() => {
+                setIsRegistering(!isRegistering)
+                setAuthError(null)
+              }}
               className="text-sm font-medium hover:underline"
               style={{ color: WALDGRUEN }}
             >
