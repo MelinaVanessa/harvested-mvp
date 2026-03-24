@@ -70,12 +70,25 @@ export interface StoredAccount {
   role: UserRole
 }
 
+function isStoredAccount(x: unknown): x is StoredAccount {
+  if (!x || typeof x !== 'object') return false
+  const o = x as Record<string, unknown>
+  return (
+    typeof o.email === 'string' &&
+    typeof o.password === 'string' &&
+    typeof o.userId === 'string' &&
+    typeof o.name === 'string' &&
+    (o.role === 'buyer' || o.role === 'gardener')
+  )
+}
+
 export function getRegisteredAccounts(): StoredAccount[] {
   try {
     const raw = localStorage.getItem(REGISTERED_ACCOUNTS_KEY)
     if (!raw) return []
-    const data = JSON.parse(raw) as StoredAccount[]
-    return Array.isArray(data) ? data : []
+    const data = JSON.parse(raw) as unknown
+    if (!Array.isArray(data)) return []
+    return data.filter(isStoredAccount)
   } catch {
     return []
   }
@@ -92,8 +105,7 @@ export function upsertRegisteredAccount(account: StoredAccount): boolean {
     const list = getRegisteredAccounts().filter((a) => a.email.trim().toLowerCase() !== key)
     list.push({ ...account, email: key })
     localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(list))
-    const got = findRegisteredAccountByEmail(key)
-    return Boolean(got && got.userId === account.userId)
+    return true
   } catch (e) {
     console.warn('Could not save registered account', e)
     return false

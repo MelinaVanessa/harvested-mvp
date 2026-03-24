@@ -4,6 +4,12 @@ import type { UserProfile, UserRole } from '@/types'
  * Origins to try for /api/auth (and similar). Order tuned so real API is found even when
  * VITE_API_URL was missing at build time or frontend/API hosts differ.
  */
+function readMetaApiBase(): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const v = document.querySelector('meta[name="harvested-api-base"]')?.getAttribute('content')?.trim()
+  return v && v.length > 0 ? v : undefined
+}
+
 export function getApiBaseCandidates(): string[] {
   const seen = new Set<string>()
   const add = (u: string | undefined | null) => {
@@ -12,6 +18,7 @@ export function getApiBaseCandidates(): string[] {
     if (s) seen.add(s)
   }
 
+  add(readMetaApiBase())
   add(import.meta.env.VITE_API_URL as string | undefined)
 
   if (typeof window !== 'undefined') {

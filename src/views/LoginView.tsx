@@ -49,14 +49,18 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
           return
         }
         if (apiReg && 'user' in apiReg) {
-          upsertRegisteredAccount({
+          const savedLocal = upsertRegisteredAccount({
             email: emailLower,
             password: passwordNorm,
             userId: apiReg.user.id,
             name: apiReg.user.name,
             role: apiReg.user.role,
           })
-          alert(`Willkommen bei Harvested, ${name}!`)
+          alert(
+            savedLocal
+              ? `Willkommen bei Harvested, ${name}!`
+              : `Willkommen bei Harvested, ${name}!\n\nWichtig: Dieses Gerät konnte deine Zugangsdaten nicht lokal speichern (z. B. privates Fenster). Der Login kann beim nächsten Mal nur funktionieren, wenn die Verbindung zum gleichen Server klappt oder du Speicherung erlaubst.`,
+          )
           onLogin({ id: apiReg.user.id, name: apiReg.user.name, role: apiReg.user.role, profile: apiReg.user })
           return
         }
@@ -81,6 +85,23 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
         alert('Bitte fülle alle Felder aus.')
       }
     } else {
+      // Local + owner before remote API so device-stored accounts always work even if API URL is wrong
+      if (emailLower === OWNER_EMAIL && passwordNorm === OWNER_PASSWORD) {
+        onLogin({ id: 'u1', name: 'Melina Vanessa Mann', role: 'gardener' })
+        return
+      }
+
+      const localAccount = findRegisteredAccountByEmail(emailLower)
+      if (
+        localAccount &&
+        (localAccount.password === passwordNorm ||
+          localAccount.password === password ||
+          localAccount.password.trim() === passwordNorm)
+      ) {
+        onLogin({ id: localAccount.userId, name: localAccount.name, role: localAccount.role })
+        return
+      }
+
       const apiUser = await tryAuthLogin({ email: emailLower, password: passwordNorm })
       if (apiUser) {
         upsertRegisteredAccount({
@@ -94,16 +115,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
         return
       }
 
-      if (emailLower === OWNER_EMAIL && passwordNorm === OWNER_PASSWORD) {
-        onLogin({ id: 'u1', name: 'Melina Vanessa Mann', role: 'gardener' })
-      } else {
-        const account = findRegisteredAccountByEmail(emailLower)
-        if (account && (account.password === passwordNorm || account.password === password)) {
-          onLogin({ id: account.userId, name: account.name, role: account.role })
-        } else {
-          alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')
-        }
-      }
+      alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')
     }
   }
 
