@@ -2,16 +2,13 @@ import { useState } from 'react'
 import { Sprout, ShoppingCart } from 'lucide-react'
 import type { UserRole, UserProfile, ThemeTokens } from '@/types'
 import { findRegisteredAccountByEmail, upsertRegisteredAccount } from '@/constants/storage'
+import { tryAuthLogin, tryAuthRegister } from '@/constants/apiBase'
 
 const WALDGRUEN = '#4A5D4E'
 const OFF_WHITE = '#FCFAF7'
 const TEXT_MUTED = '#88887D'
 const OWNER_EMAIL = 'melina_vanessa.mann@web.de'
 const OWNER_PASSWORD = 'adminaccess'
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ||
-  'https://harvested-mvp.onrender.com'
 
 interface LoginViewProps {
   onLogin: (userData?: { id: string; name: string; role: UserRole; profile?: UserProfile }) => void
@@ -41,36 +38,27 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
           return
         }
 
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-            body: JSON.stringify({
-              email: emailLower,
-              password: passwordNorm,
-              name: name.trim(),
-              role: selectedRole,
-            }),
+        const apiReg = await tryAuthRegister({
+          email: emailLower,
+          password: passwordNorm,
+          name: name.trim(),
+          role: selectedRole,
+        })
+        if (apiReg && 'conflict' in apiReg) {
+          alert('Diese E-Mail ist bereits registriert. Bitte einloggen.')
+          return
+        }
+        if (apiReg && 'user' in apiReg) {
+          upsertRegisteredAccount({
+            email: emailLower,
+            password: passwordNorm,
+            userId: apiReg.user.id,
+            name: apiReg.user.name,
+            role: apiReg.user.role,
           })
-          if (res.ok) {
-            const data = (await res.json()) as { user: UserProfile }
-            upsertRegisteredAccount({
-              email: emailLower,
-              password: passwordNorm,
-              userId: data.user.id,
-              name: data.user.name,
-              role: data.user.role,
-            })
-            alert(`Willkommen bei Harvested, ${name}!`)
-            onLogin({ id: data.user.id, name: data.user.name, role: data.user.role, profile: data.user })
-            return
-          }
-          if (res.status === 409) {
-            alert('Diese E-Mail ist bereits registriert. Bitte einloggen.')
-            return
-          }
-        } catch {
-          /* offline / API unreachable → local-only registration below */
+          alert(`Willkommen bei Harvested, ${name}!`)
+          onLogin({ id: apiReg.user.id, name: apiReg.user.name, role: apiReg.user.role, profile: apiReg.user })
+          return
         }
 
         const id = `u_${Date.now()}`
@@ -93,26 +81,17 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
         alert('Bitte fülle alle Felder aus.')
       }
     } else {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ email: emailLower, password: passwordNorm }),
+      const apiUser = await tryAuthLogin({ email: emailLower, password: passwordNorm })
+      if (apiUser) {
+        upsertRegisteredAccount({
+          email: emailLower,
+          password: passwordNorm,
+          userId: apiUser.id,
+          name: apiUser.name,
+          role: apiUser.role,
         })
-        if (res.ok) {
-          const data = (await res.json()) as { user: UserProfile }
-          upsertRegisteredAccount({
-            email: emailLower,
-            password: passwordNorm,
-            userId: data.user.id,
-            name: data.user.name,
-            role: data.user.role,
-          })
-          onLogin({ id: data.user.id, name: data.user.name, role: data.user.role, profile: data.user })
-          return
-        }
-      } catch {
-        /* fall back to owner / localStorage */
+        onLogin({ id: apiUser.id, name: apiUser.name, role: apiUser.role, profile: apiUser })
+        return
       }
 
       if (emailLower === OWNER_EMAIL && passwordNorm === OWNER_PASSWORD) {

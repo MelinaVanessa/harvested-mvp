@@ -88,12 +88,12 @@ export function findRegisteredAccountByEmail(emailLower: string): StoredAccount 
 
 export function upsertRegisteredAccount(account: StoredAccount): boolean {
   try {
-    const list = getRegisteredAccounts().filter((a) => a.email !== account.email)
-    list.push(account)
-    const payload = JSON.stringify(list)
-    localStorage.setItem(REGISTERED_ACCOUNTS_KEY, payload)
-    const roundTrip = localStorage.getItem(REGISTERED_ACCOUNTS_KEY)
-    return roundTrip === payload && findRegisteredAccountByEmail(account.email)?.userId === account.userId
+    const key = account.email.trim().toLowerCase()
+    const list = getRegisteredAccounts().filter((a) => a.email.trim().toLowerCase() !== key)
+    list.push({ ...account, email: key })
+    localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(list))
+    const got = findRegisteredAccountByEmail(key)
+    return Boolean(got && got.userId === account.userId)
   } catch (e) {
     console.warn('Could not save registered account', e)
     return false
