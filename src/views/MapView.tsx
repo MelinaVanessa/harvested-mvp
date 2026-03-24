@@ -231,25 +231,27 @@ export function MapView({
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${isDark ? 'bg-[#050A08]' : 'bg-[#E5E0D8]'}`}>
-      {useGoogleMap && apiKey ? (
-        <InteractiveGoogleMap
-          apiKey={apiKey}
-          listings={filteredListings}
-          isDark={isDark}
-          onMarkerClick={setSelectedListing}
-          onMapReady={handleMapReady}
-          onMapFailure={() => setGoogleMapsFailed(true)}
-          loadingLabel={t?.map?.loading}
-        />
-      ) : (
-        <OpenStreetMapLayer
-          listings={filteredListings}
-          isDark={isDark}
-          onMarkerClick={setSelectedListing}
-          leafletMapRef={leafletMapRef}
-          sheetHeight={sheetHeight}
-        />
-      )}
+      <div className="absolute inset-0 lg:right-[34%]">
+        {useGoogleMap && apiKey ? (
+          <InteractiveGoogleMap
+            apiKey={apiKey}
+            listings={filteredListings}
+            isDark={isDark}
+            onMarkerClick={setSelectedListing}
+            onMapReady={handleMapReady}
+            onMapFailure={() => setGoogleMapsFailed(true)}
+            loadingLabel={t?.map?.loading}
+          />
+        ) : (
+          <OpenStreetMapLayer
+            listings={filteredListings}
+            isDark={isDark}
+            onMarkerClick={setSelectedListing}
+            leafletMapRef={leafletMapRef}
+            sheetHeight={sheetHeight}
+          />
+        )}
+      </div>
 
       <div className="absolute top-4 left-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none">
         <div className="relative w-full pointer-events-auto">
@@ -322,7 +324,10 @@ export function MapView({
         </button>
       </div>
 
-      <div className="absolute bottom-24 right-4 z-[100] transition-all duration-300 pointer-events-auto" style={{ bottom: sheetHeight + 20 }}>
+      <div
+        className="absolute z-[100] transition-all duration-300 pointer-events-auto bottom-[var(--locate-bottom)] right-4 lg:bottom-6 lg:right-[calc(34%+1rem)]"
+        style={{ ['--locate-bottom' as string]: `${sheetHeight + 20}px` }}
+      >
         <button
           type="button"
           onClick={handleLocate}
@@ -338,7 +343,7 @@ export function MapView({
 
       {!selectedListing && (
         <div
-          className={`absolute bottom-0 left-0 right-0 ${theme.card} rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[110] flex flex-col pointer-events-auto ${isDraggingState ? '' : 'transition-all duration-300 ease-out'}`}
+          className={`absolute bottom-0 left-0 right-0 lg:hidden ${theme.card} rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[110] flex flex-col pointer-events-auto ${isDraggingState ? '' : 'transition-all duration-300 ease-out'}`}
           style={{ height: `${sheetHeight}px`, maxHeight: '90%' }}
         >
           <div
@@ -379,6 +384,38 @@ export function MapView({
             </div>
           </div>
         </div>
+      )}
+
+      {!selectedListing && (
+        <aside
+          className={`absolute top-0 right-0 h-full w-[34%] min-w-[320px] max-w-[460px] hidden lg:flex ${theme.card} border-l ${theme.border} z-[110] flex-col pointer-events-auto`}
+        >
+          <div className={`px-3 py-3 border-b ${theme.border} shrink-0`}>
+            <h3 className={`text-sm font-bold ${theme.text}`}>{t?.map?.latest}</h3>
+          </div>
+          <div className="flex-1 overflow-y-auto px-2.5 py-2 no-scrollbar">
+            <div className="space-y-2.5">
+              {filteredListings.map((l) => (
+                <ListingCard
+                  key={l.id}
+                  listing={l}
+                  gardener={getGardener(l.gardenerId)}
+                  currentUser={currentUser}
+                  onLike={() => toggleLike(l.id)}
+                  onFollow={() => toggleFollow(l.gardenerId)}
+                  onReserve={handleReservation}
+                  onAdminDelete={onAdminDelete}
+                  isAdmin={isAdmin}
+                  onUserClick={onUserClick}
+                  compact
+                  theme={theme}
+                  t={t}
+                />
+              ))}
+              <div className="h-4" />
+            </div>
+          </div>
+        </aside>
       )}
 
       {selectedListing && (
