@@ -11,7 +11,7 @@ const OWNER_EMAIL = 'melina_vanessa.mann@web.de'
 const OWNER_PASSWORD = 'adminaccess'
 
 /** Public `favicon.png` — must respect Vite `base` (e.g. GitHub Pages `/harvested-mvp/`). */
-const LOGIN_LOGO_SRC = `${import.meta.env.BASE_URL}favicon.png?v=emblem`
+const LOGIN_LOGO_SRC = `${import.meta.env.BASE_URL}favicon.png?v=emblem-nomirror`
 
 interface LoginViewProps {
   onLogin: (userData?: { id: string; name: string; role: UserRole; profile?: UserProfile }) => void
@@ -142,12 +142,17 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
           <img
             src={LOGIN_LOGO_SRC}
             alt=""
-            width={128}
-            height={128}
-            className="mx-auto mb-6 h-[8.5rem] w-[8.5rem] max-w-[min(40vw,8.5rem)] object-contain select-none pointer-events-none"
+            width={112}
+            height={116}
+            className="mx-auto mb-5 h-[7rem] w-[7rem] max-w-[min(28vw,7rem)] object-contain select-none pointer-events-none"
             decoding="async"
           />
-          <h1 className="sr-only">Harvested</h1>
+          <h1
+            className="text-2xl font-serif font-semibold tracking-[0.15em] text-center mb-1"
+            style={{ color: WALDGRUEN }}
+          >
+            HARVESTED
+          </h1>
           <p className="text-sm text-center mb-8" style={{ color: TEXT_MUTED }}>
             {t.login.subtitle}
           </p>

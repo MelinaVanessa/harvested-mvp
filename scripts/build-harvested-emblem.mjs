@@ -1,10 +1,8 @@
 /**
  * Baut `public/favicon.png` aus `scripts/assets/harvested-emblem-source.png`:
- * - hellen Hintergrund entfernen
- * - Wortmarke unter dem Kreis abschneiden
- * - quadratisch zentrieren
- * - rechte Hälfte = Spiegelung der linken (symmetrische Ornamente)
- * - Ausgabe 512×512 für Tab + Login
+ * - hellen Hintergrund entfernen (falls nötig)
+ * - nur die Wortmarke „HARVESTED“ unter dem Kreis abschneiden — Grafik unverändert lassen
+ * - eng zuschneiden, quadratisch zentrieren, 512×512 für Tab + Login
  *
  * Nutzung: node scripts/build-harvested-emblem.mjs
  */
@@ -45,7 +43,6 @@ function rowOpaqueCounts(img) {
 
 /**
  * Erste Zeile der Wortmarke: deutlich mehr horizontale Deckung als im Kreis-Emblem.
- * (Schmale Kreiszeilen bleiben unter ~50 % der max. Zeilendichte.)
  */
 function findEmblemBottomY(img) {
   const { height } = img.bitmap
@@ -84,22 +81,6 @@ function contentBounds(img) {
   return { minX, minY, maxX, maxY }
 }
 
-/** Rechte Bildhälfte = horizontale Spiegelung der linken (symmetrisches Ornament). */
-function mirrorLeftToRight(img) {
-  const { data, width, height } = img.bitmap
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < Math.floor(width / 2); x++) {
-      const srcIdx = (x + y * width) * 4
-      const xr = width - 1 - x
-      const dstIdx = (xr + y * width) * 4
-      data[dstIdx] = data[srcIdx]
-      data[dstIdx + 1] = data[srcIdx + 1]
-      data[dstIdx + 2] = data[srcIdx + 2]
-      data[dstIdx + 3] = data[srcIdx + 3]
-    }
-  }
-}
-
 async function main() {
   if (!fs.existsSync(SOURCE)) {
     console.error('Fehlt:', SOURCE)
@@ -119,8 +100,8 @@ async function main() {
   }
 
   const pad = 6
-  let cw = b.maxX - b.minX + 1 + pad * 2
-  let ch = b.maxY - b.minY + 1 + pad * 2
+  const cw = b.maxX - b.minX + 1 + pad * 2
+  const ch = b.maxY - b.minY + 1 + pad * 2
   await img.crop({
     x: Math.max(0, b.minX - pad),
     y: Math.max(0, b.minY - pad),
@@ -139,12 +120,10 @@ async function main() {
   const oy = Math.floor((side - h0) / 2)
   await canvas.blit({ src: img, x: ox, y: oy })
 
-  mirrorLeftToRight(canvas)
-
   await canvas.resize({ w: 512, h: 512 })
   await canvas.write(OUT)
 
-  console.log('Geschrieben:', OUT, '(512×512, Emblem ohne Text, gespiegelt symmetrisch)')
+  console.log('Geschrieben:', OUT, '(Emblem wie im Original, nur ohne Wortmarke)')
 }
 
 main().catch((e) => {
