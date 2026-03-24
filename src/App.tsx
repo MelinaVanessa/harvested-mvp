@@ -532,7 +532,7 @@ export default function App() {
             {showBottomNav && (
               <nav
                 className={[
-                  'absolute bottom-0 left-0 right-0 z-50',
+                  'absolute bottom-0 left-0 right-0 z-[200]',
                   `${theme.nav} border-t ${theme.border} transition-colors duration-300`,
                   isShortLandscape ? 'px-2 py-0.5 pb-safe' : 'px-2 pb-safe',
                 ].join(' ')}
