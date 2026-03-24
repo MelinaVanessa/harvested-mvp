@@ -231,7 +231,10 @@ export function MapView({
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${isDark ? 'bg-[#050A08]' : 'bg-[#E5E0D8]'}`}>
-      <div className="absolute inset-0 lg:right-[var(--map-panel-width)]" style={{ ['--map-panel-width' as string]: desktopPanelWidth }}>
+      <div
+        className="absolute top-0 left-0 right-0 bottom-0 lg:right-[var(--map-panel-width)] lg:bottom-[calc(72px+env(safe-area-inset-bottom,0px))]"
+        style={{ ['--map-panel-width' as string]: desktopPanelWidth }}
+      >
         {useGoogleMap && apiKey ? (
           <InteractiveGoogleMap
             apiKey={apiKey}
@@ -358,7 +361,7 @@ export function MapView({
       </div>
 
       <div
-        className="absolute z-[100] transition-all duration-300 pointer-events-auto bottom-[var(--locate-bottom)] right-4 lg:bottom-6 lg:right-[calc(var(--map-panel-width)+1rem)]"
+        className="absolute z-[100] transition-all duration-300 pointer-events-auto bottom-[var(--locate-bottom)] right-4 lg:bottom-[calc(72px+env(safe-area-inset-bottom,0px)+1rem)] lg:right-[calc(var(--map-panel-width)+1rem)]"
         style={{ ['--locate-bottom' as string]: `${sheetHeight + 20}px`, ['--map-panel-width' as string]: desktopPanelWidth }}
       >
         <button
@@ -421,7 +424,7 @@ export function MapView({
 
       {!selectedListing && (
         <aside
-          className={`absolute top-0 right-0 h-full w-[var(--map-panel-width)] hidden lg:flex ${theme.card} border-l ${theme.border} z-[110] flex-col pointer-events-auto`}
+          className={`absolute top-0 right-0 bottom-[calc(72px+env(safe-area-inset-bottom,0px))] w-[var(--map-panel-width)] hidden lg:flex ${theme.card} border-l ${theme.border} z-[110] flex-col pointer-events-auto`}
           style={{ ['--map-panel-width' as string]: desktopPanelWidth }}
         >
           <div className={`px-3 py-3 border-b ${theme.border} shrink-0`}>
