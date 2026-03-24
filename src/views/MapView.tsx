@@ -45,6 +45,7 @@ export function MapView({
   theme,
   t,
 }: MapViewProps) {
+  const desktopPanelWidth = 'clamp(320px, 34vw, 460px)'
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const filteredListings = listings.filter((l) => filterType === 'all' || l.harvestType === filterType)
 
@@ -231,7 +232,7 @@ export function MapView({
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${isDark ? 'bg-[#050A08]' : 'bg-[#E5E0D8]'}`}>
-      <div className="absolute inset-0 lg:right-[34%]">
+      <div className="absolute inset-0 lg:right-[var(--map-panel-width)]" style={{ ['--map-panel-width' as string]: desktopPanelWidth }}>
         {useGoogleMap && apiKey ? (
           <InteractiveGoogleMap
             apiKey={apiKey}
@@ -253,7 +254,10 @@ export function MapView({
         )}
       </div>
 
-      <div className="absolute top-4 left-4 right-4 lg:right-[calc(34%+1rem)] z-[100] flex flex-col gap-3 pointer-events-none">
+      <div
+        className="absolute top-4 left-4 right-4 lg:right-[calc(var(--map-panel-width)+1rem)] z-[100] flex flex-col gap-3 pointer-events-none"
+        style={{ ['--map-panel-width' as string]: desktopPanelWidth }}
+      >
         <div className="relative w-full pointer-events-auto">
           <div
             className={`${theme.mapFilterBg} w-full rounded-full shadow-md px-4 py-2.5 flex items-center gap-2 border ${theme.border}`}
@@ -325,8 +329,8 @@ export function MapView({
       </div>
 
       <div
-        className="absolute z-[100] transition-all duration-300 pointer-events-auto bottom-[var(--locate-bottom)] right-4 lg:bottom-6 lg:right-[calc(34%+1rem)]"
-        style={{ ['--locate-bottom' as string]: `${sheetHeight + 20}px` }}
+        className="absolute z-[100] transition-all duration-300 pointer-events-auto bottom-[var(--locate-bottom)] right-4 lg:bottom-6 lg:right-[calc(var(--map-panel-width)+1rem)]"
+        style={{ ['--locate-bottom' as string]: `${sheetHeight + 20}px`, ['--map-panel-width' as string]: desktopPanelWidth }}
       >
         <button
           type="button"
@@ -388,7 +392,8 @@ export function MapView({
 
       {!selectedListing && (
         <aside
-          className={`absolute top-0 right-0 h-full w-[34%] min-w-[320px] max-w-[460px] hidden lg:flex ${theme.card} border-l ${theme.border} z-[110] flex-col pointer-events-auto`}
+          className={`absolute top-0 right-0 h-full w-[var(--map-panel-width)] hidden lg:flex ${theme.card} border-l ${theme.border} z-[110] flex-col pointer-events-auto`}
+          style={{ ['--map-panel-width' as string]: desktopPanelWidth }}
         >
           <div className={`px-3 py-3 border-b ${theme.border} shrink-0`}>
             <h3 className={`text-sm font-bold ${theme.text}`}>{t?.map?.latest}</h3>
