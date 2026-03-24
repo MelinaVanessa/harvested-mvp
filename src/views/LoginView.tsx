@@ -136,6 +136,14 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
     >
       <div className="w-full max-w-sm flex flex-col items-center">
         <div className="flex-1 flex flex-col items-center justify-center min-h-[min-content] py-8">
+          <img
+            src="/favicon.png?v=removebg"
+            alt=""
+            width={112}
+            height={116}
+            className="mx-auto mb-5 h-[7rem] w-[7rem] max-w-[min(28vw,7rem)] object-contain select-none pointer-events-none"
+            decoding="async"
+          />
           <h1
             className="text-2xl font-serif font-semibold tracking-[0.15em] text-center mb-1"
             style={{ color: WALDGRUEN }}
