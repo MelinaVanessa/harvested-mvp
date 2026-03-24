@@ -10,6 +10,9 @@ const TEXT_MUTED = '#88887D'
 const OWNER_EMAIL = 'melina_vanessa.mann@web.de'
 const OWNER_PASSWORD = 'adminaccess'
 
+/** Public `favicon.png` — must respect Vite `base` (e.g. GitHub Pages `/harvested-mvp/`). */
+const LOGIN_LOGO_SRC = `${import.meta.env.BASE_URL}favicon.png?v=removebg`
+
 interface LoginViewProps {
   onLogin: (userData?: { id: string; name: string; role: UserRole; profile?: UserProfile }) => void
   theme: ThemeTokens
@@ -137,7 +140,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
       <div className="w-full max-w-sm flex flex-col items-center">
         <div className="flex-1 flex flex-col items-center justify-center min-h-[min-content] py-8">
           <img
-            src="/favicon.png?v=removebg"
+            src={LOGIN_LOGO_SRC}
             alt=""
             width={112}
             height={116}
