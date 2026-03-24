@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Sprout, ShoppingCart } from 'lucide-react'
 import type { UserRole } from '@/types'
 import type { ThemeTokens } from '@/types'
+import { findRegisteredAccountByEmail, upsertRegisteredAccount } from '@/constants/storage'
 
 const WALDGRUEN = '#4A5D4E'
 const OFF_WHITE = '#FCFAF7'
@@ -24,18 +25,40 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const emailLower = email.trim().toLowerCase()
     if (isRegistering) {
       if (email && password && name) {
+        if (emailLower === OWNER_EMAIL) {
+          alert('Für dieses Konto bitte einloggen, nicht registrieren.')
+          return
+        }
+        if (findRegisteredAccountByEmail(emailLower)) {
+          alert('Diese E-Mail ist bereits registriert. Bitte einloggen.')
+          return
+        }
+        const id = `u_${Date.now()}`
+        upsertRegisteredAccount({
+          email: emailLower,
+          password,
+          userId: id,
+          name: name.trim(),
+          role: selectedRole,
+        })
         alert(`Willkommen bei Harvested, ${name}!`)
-        onLogin({ id: `u_${Date.now()}`, name, role: selectedRole })
+        onLogin({ id, name: name.trim(), role: selectedRole })
       } else {
         alert('Bitte fülle alle Felder aus.')
       }
     } else {
-      if (email.toLowerCase() === OWNER_EMAIL && password === OWNER_PASSWORD) {
+      if (emailLower === OWNER_EMAIL && password === OWNER_PASSWORD) {
         onLogin({ id: 'u1', name: 'Melina Vanessa Mann', role: 'gardener' })
       } else {
-        alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')
+        const account = findRegisteredAccountByEmail(emailLower)
+        if (account && account.password === password) {
+          onLogin({ id: account.userId, name: account.name, role: account.role })
+        } else {
+          alert(t?.login?.error ?? 'Ungültige Anmeldedaten.')
+        }
       }
     }
   }

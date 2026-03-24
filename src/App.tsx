@@ -14,7 +14,16 @@ import {
   ProfileView,
 } from '@/views'
 import { THEMES, TRANSLATIONS } from '@/constants'
-import { getSavedLogin, setSavedLogin, clearSavedLogin, getSavedProfile, setSavedProfile } from '@/constants/storage'
+import {
+  getSavedLogin,
+  setSavedLogin,
+  clearSavedLogin,
+  getSavedProfile,
+  setSavedProfile,
+  findRegisteredAccountByUserId,
+  registeredAccountsUserMap,
+  storedAccountToUserProfile,
+} from '@/constants/storage'
 import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
 import type { UserProfile, Listing, Reservation, Message } from '@/types'
 
@@ -30,7 +39,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home')
   const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USER)
   const [listings, setListings] = useState<Listing[]>(API_ENABLED ? [] : INITIAL_LISTINGS)
-  const [users, setUsers] = useState<Record<string, UserProfile>>(MOCK_USERS)
+  const [users, setUsers] = useState<Record<string, UserProfile>>(() => ({
+    ...MOCK_USERS,
+    ...registeredAccountsUserMap(),
+  }))
   const [feedType, setFeedType] = useState<'explore' | 'following'>('explore')
   const [filterType, setFilterType] = useState<'all' | 'pickup' | 'self_harvest'>('all')
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -54,11 +66,13 @@ export default function App() {
   const showBottomNav = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
 
   useEffect(() => {
+    const mergedUsers = { ...MOCK_USERS, ...registeredAccountsUserMap() }
     const saved = getSavedLogin()
-    if (saved?.userId && MOCK_USERS[saved.userId]) {
-      const base = MOCK_USERS[saved.userId]
+    if (saved?.userId && mergedUsers[saved.userId]) {
+      const base = mergedUsers[saved.userId]!
       const profilePatch = getSavedProfile(saved.userId)
       setCurrentUser(profilePatch ? { ...base, ...profilePatch } : base)
+      setUsers((prev) => ({ ...mergedUsers, ...prev }))
       setIsLoggedIn(true)
     }
   }, [])
@@ -429,7 +443,31 @@ export default function App() {
             <LoginView
             onLogin={(userData) => {
               if (userData) {
-                const nextUser = { ...currentUser, ...userData }
+                let nextUser: UserProfile
+                if (userData.id === 'u1') {
+                  const base = MOCK_USERS.u1
+                  const profilePatch = getSavedProfile('u1')
+                  nextUser = profilePatch ? { ...base, ...profilePatch } : base
+                } else {
+                  const acc = findRegisteredAccountByUserId(userData.id)
+                  const base = acc
+                    ? storedAccountToUserProfile(acc)
+                    : users[userData.id] ?? {
+                        id: userData.id,
+                        name: userData.name,
+                        handle: `@user_${userData.id}`,
+                        bio: '',
+                        avatar:
+                          'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+                        role: userData.role,
+                        isMember: userData.role === 'gardener',
+                        following: [],
+                        likedListings: [],
+                      }
+                  const profilePatch = getSavedProfile(userData.id)
+                  nextUser = profilePatch ? { ...base, ...profilePatch } : base
+                }
+                setUsers((prev) => ({ ...prev, [nextUser.id]: nextUser }))
                 setCurrentUser(nextUser)
                 setIsLoggedIn(true)
                 setPendingSaveUserId(nextUser.id)
