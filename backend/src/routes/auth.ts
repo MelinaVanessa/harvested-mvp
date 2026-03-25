@@ -1,8 +1,13 @@
 import { Router } from 'express'
+import { saveAuthToDisk } from '../persistAuth.js'
 import { users, credentialsByEmail } from '../store.js'
 import type { UserProfile, UserRole } from '../types.js'
 
 export const authRouter = Router()
+
+function normPassword(p: string | undefined): string {
+  return (p ?? '').normalize('NFC').trim()
+}
 
 const DEFAULT_AVATAR =
   'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'
@@ -15,7 +20,7 @@ authRouter.post('/register', (req, res) => {
     role?: UserRole
   }
   const emailRaw = body.email?.trim().toLowerCase()
-  const passwordRaw = body.password?.trim() ?? ''
+  const passwordRaw = normPassword(body.password)
   const name = body.name?.trim() ?? ''
   const role = body.role === 'buyer' ? 'buyer' : 'gardener'
 
@@ -48,6 +53,7 @@ authRouter.post('/register', (req, res) => {
 
   users[userId] = user
   credentialsByEmail[emailRaw] = { userId, password: passwordRaw }
+  saveAuthToDisk()
 
   return res.status(201).json({ user })
 })
@@ -56,9 +62,9 @@ authRouter.post('/login', (req, res) => {
   const body = req.body as { email?: string; password?: string }
   const emailRaw = body.email?.trim().toLowerCase()
   const passwordInput = body.password ?? ''
-  const passwordNorm = passwordInput.trim()
+  const passwordNorm = normPassword(passwordInput)
 
-  if (!emailRaw || !passwordInput) {
+  if (!emailRaw || !passwordNorm) {
     return res.status(400).json({ error: 'Missing email or password' })
   }
 
@@ -67,7 +73,8 @@ authRouter.post('/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid credentials' })
   }
 
-  const ok = cred.password === passwordNorm || cred.password === passwordInput
+  const stored = normPassword(cred.password)
+  const ok = stored === passwordNorm || cred.password === passwordInput
   if (!ok) {
     return res.status(401).json({ error: 'Invalid credentials' })
   }

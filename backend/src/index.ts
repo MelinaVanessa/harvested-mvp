@@ -1,6 +1,9 @@
 import express from 'express'
 import cors from 'cors'
+import { loadAuthFromDisk } from './persistAuth.js'
 import { authRouter } from './routes/auth.js'
+
+loadAuthFromDisk()
 import { listingsRouter } from './routes/listings.js'
 import { usersRouter } from './routes/users.js'
 import { reservationsRouter } from './routes/reservations.js'

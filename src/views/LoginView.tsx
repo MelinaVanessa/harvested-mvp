@@ -3,6 +3,7 @@ import { Sprout, ShoppingCart } from 'lucide-react'
 import type { UserRole, UserProfile, ThemeTokens } from '@/types'
 import { findRegisteredAccountByEmail, upsertRegisteredAccount } from '@/constants/storage'
 import { tryAuthLogin, tryAuthRegister } from '@/constants/apiBase'
+import { normalizePasswordForAuth } from '@/utils/password'
 
 const WALDGRUEN = '#4A5D4E'
 const OFF_WHITE = '#FCFAF7'
@@ -31,7 +32,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
     e.preventDefault()
     setAuthError(null)
     const emailLower = email.trim().toLowerCase()
-    const passwordNorm = password.trim()
+    const passwordNorm = normalizePasswordForAuth(password)
     if (isRegistering) {
       if (email && password && name) {
         if (emailLower === OWNER_EMAIL) {
@@ -97,12 +98,8 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
       }
 
       const localAccount = findRegisteredAccountByEmail(emailLower)
-      if (
-        localAccount &&
-        (localAccount.password === passwordNorm ||
-          localAccount.password === password ||
-          localAccount.password.trim() === passwordNorm)
-      ) {
+      const storedPw = localAccount ? normalizePasswordForAuth(localAccount.password) : ''
+      if (localAccount && storedPw === passwordNorm) {
         onLogin({ id: localAccount.userId, name: localAccount.name, role: localAccount.role })
         return
       }

@@ -41,6 +41,22 @@ export function getPrimaryApiBase(): string {
   return list[0] ?? 'https://harvested-mvp.onrender.com'
 }
 
+/**
+ * Auth requests should hit the real API before the static site origin (GitHub Pages has no /api).
+ * Dev (localhost) keeps the original order (Vite proxy + 3001 first).
+ */
+export function getAuthApiBaseCandidates(): string[] {
+  const all = getApiBaseCandidates()
+  if (typeof window === 'undefined') return all
+  const { hostname, origin } = window.location
+  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1'
+  if (isLocal) return all
+
+  const withoutOrigin = all.filter((b) => b !== origin)
+  const originOnly = all.filter((b) => b === origin)
+  return [...withoutOrigin, ...originOnly]
+}
+
 function authUrl(base: string, path: 'login' | 'register'): string {
   const suffix = path === 'login' ? '/api/auth/login' : '/api/auth/register'
   if (!base) return suffix
@@ -58,7 +74,7 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
 }
 
 export async function tryAuthLogin(body: { email: string; password: string }): Promise<UserProfile | null> {
-  for (const base of getApiBaseCandidates()) {
+  for (const base of getAuthApiBaseCandidates()) {
     try {
       const res = await fetchWithTimeout(authUrl(base, 'login'), {
         method: 'POST',
@@ -82,7 +98,7 @@ export async function tryAuthRegister(body: {
   name: string
   role: UserRole
 }): Promise<{ user: UserProfile } | { conflict: true } | null> {
-  for (const base of getApiBaseCandidates()) {
+  for (const base of getAuthApiBaseCandidates()) {
     try {
       const res = await fetchWithTimeout(authUrl(base, 'register'), {
         method: 'POST',

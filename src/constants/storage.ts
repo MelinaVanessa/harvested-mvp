@@ -2,6 +2,7 @@
  * LocalStorage: saved login (userId only) and optional profile data (avatar, name, bio, handle).
  */
 import type { UserProfile, UserRole } from '@/types'
+import { normalizePasswordForAuth } from '@/utils/password'
 
 const SAVED_LOGIN_KEY = 'harvested_saved_login'
 const PROFILE_PREFIX = 'harvested_profile_'
@@ -85,7 +86,7 @@ function normalizeStoredAccount(x: unknown): StoredAccount | null {
   const role: UserRole = o.role === 'buyer' ? 'buyer' : 'gardener'
   return {
     email: o.email.trim().toLowerCase(),
-    password: String(o.password),
+    password: normalizePasswordForAuth(String(o.password)),
     userId: String(o.userId),
     name: String(o.name),
     role,
@@ -98,7 +99,12 @@ export function getRegisteredAccounts(): StoredAccount[] {
     if (!raw) return []
     const data = JSON.parse(raw) as unknown
     if (!Array.isArray(data)) return []
-    return data.map(normalizeStoredAccount).filter((a): a is StoredAccount => a !== null)
+    const rows = data.map(normalizeStoredAccount).filter((a): a is StoredAccount => a !== null)
+    const byEmail = new Map<string, StoredAccount>()
+    for (const a of rows) {
+      byEmail.set(a.email, a)
+    }
+    return [...byEmail.values()]
   } catch {
     return []
   }
@@ -113,7 +119,11 @@ export function upsertRegisteredAccount(account: StoredAccount): boolean {
   try {
     const key = account.email.trim().toLowerCase()
     const list = getRegisteredAccounts().filter((a) => a.email.trim().toLowerCase() !== key)
-    list.push({ ...account, email: key })
+    list.push({
+      ...account,
+      email: key,
+      password: normalizePasswordForAuth(account.password),
+    })
     localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(list))
     return true
   } catch (e) {
