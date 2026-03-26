@@ -45,7 +45,7 @@ export function ListingDetailModal({
 
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in"
+      className="absolute inset-0 z-[210] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in"
       onClick={() => setSelectedPost(null)}
     >
       <div
