@@ -188,13 +188,30 @@ export function LegalView({ kind, onBack, theme, language }: LegalViewProps) {
               )}
             </Section>
 
-            <Section title={language === 'de' ? '2. Welche Daten wir verarbeiten' : '2. Data we process'} theme={theme}>
+            <Section title={language === 'de' ? '2. Verantwortlicher' : '2. Controller'} theme={theme}>
+              {language === 'de' ? (
+                <>
+                  <p>
+                    Verantwortlicher i.S.d. Art. 4 Nr. 7 DSGVO: <strong>Harvested</strong>, Hosemannstraße 21, 10409 Berlin, Deutschland
+                    (E-Mail: <strong>melina_vanessa.mann@web.de</strong>).
+                  </p>
+                </>
+              ) : (
+                <p>
+                  Controller (Art. 4(7) GDPR): <strong>Harvested</strong>, Hosemannstraße 21, 10409 Berlin, Germany
+                  (email: <strong>melina_vanessa.mann@web.de</strong>).
+                </p>
+              )}
+            </Section>
+
+            <Section title={language === 'de' ? '3. Welche Daten wir verarbeiten' : '3. Data we process'} theme={theme}>
               {language === 'de' ? (
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Profilangaben (Name, Handle, Avatar), ggf. Rolleninformationen.</li>
                   <li>Inhalte, die du veröffentlichst (Texte/Bilder) sowie Reservierungen.</li>
                   <li>Nachrichten zwischen Nutzern (z.B. im Chat).</li>
                   <li>Technische Informationen im Rahmen des Betriebs (z.B. IP-Adresse, wenn erforderlich für Sicherheit).</li>
+                  <li>Falls aktiviert/benutzt: gespeicherte Login- und Profil-Patches im Browser via <code>localStorage</code>.</li>
                 </ul>
               ) : (
                 <ul className="list-disc pl-5 space-y-1">
@@ -202,11 +219,12 @@ export function LegalView({ kind, onBack, theme, language }: LegalViewProps) {
                   <li>Content you publish (text/images) and reservations.</li>
                   <li>Messages between users (e.g., chat).</li>
                   <li>Technical information for operation (e.g., IP address where necessary).</li>
+                  <li>Where used: saved login/profile patches in your browser via <code>localStorage</code>.</li>
                 </ul>
               )}
             </Section>
 
-            <Section title={language === 'de' ? '3. Zwecke der Verarbeitung' : '3. Purposes of processing'} theme={theme}>
+            <Section title={language === 'de' ? '4. Zwecke der Verarbeitung' : '4. Purposes of processing'} theme={theme}>
               {language === 'de' ? (
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Betrieb der App und Bereitstellung von Funktionen (Angebote, Reservierungen, Chat).</li>
@@ -222,7 +240,7 @@ export function LegalView({ kind, onBack, theme, language }: LegalViewProps) {
               )}
             </Section>
 
-            <Section title={language === 'de' ? '4. Empfänger und Drittanbieter' : '4. Recipients & third parties'} theme={theme}>
+            <Section title={language === 'de' ? '5. Empfänger und Drittanbieter' : '5. Recipients & third parties'} theme={theme}>
               {language === 'de' ? (
                 <p>
                   Kartenfunktionen können je nach Konfiguration Daten an Drittanbieter übermitteln (z.B. Google Maps oder OpenStreetMap).
@@ -236,7 +254,7 @@ export function LegalView({ kind, onBack, theme, language }: LegalViewProps) {
               )}
             </Section>
 
-            <Section title={language === 'de' ? '5. Rechtsgrundlagen' : '5. Legal bases'} theme={theme}>
+            <Section title={language === 'de' ? '6. Rechtsgrundlagen' : '6. Legal bases'} theme={theme}>
               {language === 'de' ? (
                 <p>
                   Wir verarbeiten personenbezogene Daten im Rahmen der gesetzlichen Bestimmungen, z.B. zur Vertragserfüllung,
@@ -249,11 +267,11 @@ export function LegalView({ kind, onBack, theme, language }: LegalViewProps) {
               )}
             </Section>
 
-            <Section title={language === 'de' ? '6. Deine Rechte' : '6. Your rights'} theme={theme}>
+            <Section title={language === 'de' ? '7. Deine Rechte' : '7. Your rights'} theme={theme}>
               {language === 'de' ? (
                 <p>
                   Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung und Datenübertragbarkeit sowie das Recht,
-                  Widerspruch einzulegen. Dazu kannst du dich an uns wenden (siehe Kontakt im Impressum).
+                  Widerspruch einzulegen. Dazu kannst du dich an uns wenden (E-Mail: <strong>melina_vanessa.mann@web.de</strong>).
                 </p>
               ) : (
                 <p>
@@ -270,35 +288,43 @@ export function LegalView({ kind, onBack, theme, language }: LegalViewProps) {
               {language === 'de' ? (
                 <>
                   <p>
-                    Betreiberdaten: <strong>HIER BITTE AUSFÜLLEN</strong>
+                    Betreiber: <strong>Harvested</strong>
                   </p>
                   <p>
-                    Name / Organisation: <strong>Harvested</strong> (Platzhalter)
+                    Adresse: <strong>Hosemannstraße 21, 10409 Berlin, Deutschland</strong>
                   </p>
                   <p>
-                    Adresse: <strong>HIER BITTE AUSFÜLLEN</strong>
+                    E-Mail: <strong>melina_vanessa.mann@web.de</strong>
                   </p>
                   <p>
-                    E-Mail: <strong>HIER BITTE AUSFÜLLEN</strong>
+                    Umsatzsteuer-ID: <strong>nicht angegeben</strong>
+                  </p>
+                  <p>
+                    Handelsregister / Registernummer: <strong>nicht angegeben</strong> (soweit nicht zutreffend)
                   </p>
                 </>
               ) : (
                 <>
                   <p>
-                    Operator details: <strong>PLEASE FILL IN</strong>
+                    Operator: <strong>Harvested</strong>
                   </p>
-                  <p>Company/Organization: <strong>Harvested</strong> (placeholder)</p>
-                  <p>Address: <strong>PLEASE FILL IN</strong></p>
-                  <p>Email: <strong>PLEASE FILL IN</strong></p>
+                  <p>Address: <strong>Hosemannstraße 21, 10409 Berlin, Germany</strong></p>
+                  <p>Email: <strong>melina_vanessa.mann@web.de</strong></p>
+                  <p>VAT ID: <strong>not provided</strong></p>
+                  <p>Register information: <strong>not provided</strong> (if not applicable)</p>
                 </>
               )}
             </Section>
 
             <Section title={language === 'de' ? 'Kontakt' : 'Contact'} theme={theme}>
               {language === 'de' ? (
-                <p>Für Anfragen nutze bitte die Kontaktmöglichkeiten in der App bzw. ersetze den Platzhalter im Abschnitt oben.</p>
+                <p>
+                  Für rechtliche und sonstige Anfragen: <strong>melina_vanessa.mann@web.de</strong>.
+                </p>
               ) : (
-                <p>Please use the contact options in the App, or replace the placeholders above.</p>
+                <p>
+                  For legal and other inquiries: <strong>melina_vanessa.mann@web.de</strong>.
+                </p>
               )}
             </Section>
           </>
