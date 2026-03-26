@@ -294,13 +294,16 @@ export function LegalView({ kind, onBack, theme, language }: LegalViewProps) {
                     Adresse: <strong>Hosemannstraße 21, 10409 Berlin, Deutschland</strong>
                   </p>
                   <p>
+                    Unternehmensstatus: <strong>im Aufbau</strong>
+                  </p>
+                  <p>
                     E-Mail: <strong>melina_vanessa.mann@web.de</strong>
                   </p>
                   <p>
-                    Umsatzsteuer-ID: <strong>nicht angegeben</strong>
+                    Umsatzsteuer-ID: <strong>derzeit nicht vorliegend</strong>
                   </p>
                   <p>
-                    Handelsregister / Registernummer: <strong>nicht angegeben</strong> (soweit nicht zutreffend)
+                    Handelsregister / Registernummer: <strong>derzeit nicht vorliegend</strong>
                   </p>
                 </>
               ) : (
@@ -309,9 +312,10 @@ export function LegalView({ kind, onBack, theme, language }: LegalViewProps) {
                     Operator: <strong>Harvested</strong>
                   </p>
                   <p>Address: <strong>Hosemannstraße 21, 10409 Berlin, Germany</strong></p>
+                  <p>Status: <strong>in setup</strong></p>
                   <p>Email: <strong>melina_vanessa.mann@web.de</strong></p>
-                  <p>VAT ID: <strong>not provided</strong></p>
-                  <p>Register information: <strong>not provided</strong> (if not applicable)</p>
+                  <p>VAT ID: <strong>not available yet</strong></p>
+                  <p>Register information: <strong>not available yet</strong></p>
                 </>
               )}
             </Section>
