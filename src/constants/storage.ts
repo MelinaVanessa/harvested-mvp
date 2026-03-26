@@ -100,11 +100,11 @@ export function getRegisteredAccounts(): StoredAccount[] {
     const data = JSON.parse(raw) as unknown
     if (!Array.isArray(data)) return []
     const rows = data.map(normalizeStoredAccount).filter((a): a is StoredAccount => a !== null)
-    const byEmail = new Map<string, StoredAccount>()
+    const byId = new Map<string, StoredAccount>()
     for (const a of rows) {
-      byEmail.set(a.email, a)
+      byId.set(a.userId, a)
     }
-    return [...byEmail.values()]
+    return [...byId.values()]
   } catch {
     return []
   }
@@ -115,10 +115,22 @@ export function findRegisteredAccountByEmail(emailLower: string): StoredAccount 
   return getRegisteredAccounts().find((a) => a.email.trim().toLowerCase() === needle)
 }
 
+/** Alle gespeicherten Konten mit dieser E-Mail (für Mehrfach-Konten). */
+export function findRegisteredAccountsByEmail(emailLower: string): StoredAccount[] {
+  const needle = emailLower.trim().toLowerCase()
+  return getRegisteredAccounts().filter((a) => a.email.trim().toLowerCase() === needle)
+}
+
+/** Mindestens ein Konto mit dieser E-Mail (für „bereits registriert“ bei E-Mail mit nur einem Konto). */
+export function hasRegisteredAccountForEmail(emailLower: string): boolean {
+  return findRegisteredAccountsByEmail(emailLower).length > 0
+}
+
 export function upsertRegisteredAccount(account: StoredAccount): boolean {
   try {
     const key = account.email.trim().toLowerCase()
-    const list = getRegisteredAccounts().filter((a) => a.email.trim().toLowerCase() !== key)
+    const uid = account.userId
+    const list = getRegisteredAccounts().filter((a) => a.userId !== uid)
     list.push({
       ...account,
       email: key,

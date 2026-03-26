@@ -1,9 +1,14 @@
 import { Router } from 'express'
+import { allowsMultipleAccountsForEmail } from '../authPolicy.js'
 import { saveAuthToDisk } from '../persistAuth.js'
-import { users, credentialsByEmail } from '../store.js'
+import { users, credentialsByEmail, type EmailCredential } from '../store.js'
 import type { UserProfile, UserRole } from '../types.js'
 
 export const authRouter = Router()
+
+function credListFor(email: string): EmailCredential[] {
+  return credentialsByEmail[email] ?? []
+}
 
 function normPassword(p: string | undefined): string {
   return (p ?? '').normalize('NFC').trim()
@@ -28,7 +33,8 @@ authRouter.post('/register', (req, res) => {
     return res.status(400).json({ error: 'Missing email, password, or name' })
   }
 
-  if (credentialsByEmail[emailRaw]) {
+  const existing = credListFor(emailRaw)
+  if (existing.length > 0 && !allowsMultipleAccountsForEmail(emailRaw)) {
     return res.status(409).json({ error: 'Email already registered' })
   }
 
@@ -52,7 +58,7 @@ authRouter.post('/register', (req, res) => {
   }
 
   users[userId] = user
-  credentialsByEmail[emailRaw] = { userId, password: passwordRaw }
+  credentialsByEmail[emailRaw] = [...existing, { userId, password: passwordRaw }]
   saveAuthToDisk()
 
   return res.status(201).json({ user })
@@ -68,17 +74,20 @@ authRouter.post('/login', (req, res) => {
     return res.status(400).json({ error: 'Missing email or password' })
   }
 
-  const cred = credentialsByEmail[emailRaw]
-  if (!cred) {
+  const list = credListFor(emailRaw)
+  if (list.length === 0) {
     return res.status(401).json({ error: 'Invalid credentials' })
   }
 
-  const stored = normPassword(cred.password)
-  const ok = stored === passwordNorm || cred.password === passwordInput
-  if (!ok) {
+  const matches = list.filter((cred) => {
+    const stored = normPassword(cred.password)
+    return stored === passwordNorm || cred.password === passwordInput
+  })
+  if (matches.length === 0) {
     return res.status(401).json({ error: 'Invalid credentials' })
   }
 
+  const cred = matches[0]
   const user = users[cred.userId]
   if (!user) {
     return res.status(401).json({ error: 'Invalid credentials' })

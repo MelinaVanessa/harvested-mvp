@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { Sprout, ShoppingCart } from 'lucide-react'
 import type { UserRole, UserProfile, ThemeTokens } from '@/types'
-import { findRegisteredAccountByEmail, upsertRegisteredAccount } from '@/constants/storage'
+import { allowsMultipleAccountsForEmail } from '@/constants/authPolicy'
+import type { StoredAccount } from '@/constants/storage'
+import {
+  findRegisteredAccountsByEmail,
+  hasRegisteredAccountForEmail,
+  upsertRegisteredAccount,
+} from '@/constants/storage'
 import { tryAuthLogin, tryAuthRegister } from '@/constants/apiBase'
 import { normalizePasswordForAuth } from '@/utils/password'
 
@@ -27,19 +33,17 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const [name, setName] = useState('')
   const [selectedRole, setSelectedRole] = useState<UserRole>('gardener')
   const [authError, setAuthError] = useState<string | null>(null)
+  const [accountChoices, setAccountChoices] = useState<StoredAccount[] | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAuthError(null)
+    setAccountChoices(null)
     const emailLower = email.trim().toLowerCase()
     const passwordNorm = normalizePasswordForAuth(password)
     if (isRegistering) {
       if (email && password && name) {
-        if (emailLower === OWNER_EMAIL) {
-          alert('Für dieses Konto bitte einloggen, nicht registrieren.')
-          return
-        }
-        if (findRegisteredAccountByEmail(emailLower)) {
+        if (!allowsMultipleAccountsForEmail(emailLower) && hasRegisteredAccountForEmail(emailLower)) {
           alert('Diese E-Mail ist bereits registriert. Bitte einloggen.')
           return
         }
@@ -97,10 +101,16 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
         return
       }
 
-      const localAccount = findRegisteredAccountByEmail(emailLower)
-      const storedPw = localAccount ? normalizePasswordForAuth(localAccount.password) : ''
-      if (localAccount && storedPw === passwordNorm) {
-        onLogin({ id: localAccount.userId, name: localAccount.name, role: localAccount.role })
+      const localMatches = findRegisteredAccountsByEmail(emailLower).filter(
+        (a) => normalizePasswordForAuth(a.password) === passwordNorm,
+      )
+      if (localMatches.length === 1) {
+        const a = localMatches[0]
+        onLogin({ id: a.userId, name: a.name, role: a.role })
+        return
+      }
+      if (localMatches.length > 1) {
+        setAccountChoices(localMatches)
         return
       }
 
@@ -221,6 +231,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
                 onChange={(e) => {
                   setEmail(e.target.value)
                   setAuthError(null)
+                  setAccountChoices(null)
                 }}
                 autoComplete="email"
               />
@@ -238,6 +249,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
                 onChange={(e) => {
                   setPassword(e.target.value)
                   setAuthError(null)
+                  setAccountChoices(null)
                 }}
                 autoComplete={isRegistering ? 'new-password' : 'current-password'}
               />
@@ -247,6 +259,35 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
               <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">
                 {authError}
               </p>
+            )}
+
+            {accountChoices && accountChoices.length > 0 && (
+              <div
+                className="text-sm space-y-2 rounded-lg border border-[#4A5D4E]/30 bg-white/90 p-3"
+                role="group"
+                aria-label="Konto wählen"
+              >
+                <p className="font-medium text-[#0D1A15]">Mehrere Konten mit dieser E-Mail — bitte wählen:</p>
+                <ul className="space-y-2">
+                  {accountChoices.map((a) => (
+                    <li key={a.userId}>
+                      <button
+                        type="button"
+                        className="w-full rounded-lg border border-[#4A5D4E]/25 bg-[#4A5D4E]/5 px-3 py-2 text-left text-[#0D1A15] hover:bg-[#4A5D4E]/15 transition-colors"
+                        onClick={() => {
+                          setAccountChoices(null)
+                          onLogin({ id: a.userId, name: a.name, role: a.role })
+                        }}
+                      >
+                        <span className="font-medium">{a.name}</span>
+                        <span className="block text-xs text-[#88887D]">
+                          {a.role === 'buyer' ? 'Nutzer' : 'Anbieter'} · {a.userId}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             <button
@@ -264,6 +305,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
               onClick={() => {
                 setIsRegistering(!isRegistering)
                 setAuthError(null)
+                setAccountChoices(null)
               }}
               className="text-sm font-medium hover:underline"
               style={{ color: WALDGRUEN }}

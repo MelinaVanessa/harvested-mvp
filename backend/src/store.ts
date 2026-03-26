@@ -3,9 +3,11 @@
  */
 import type { UserProfile, Listing, Message, Reservation } from './types.js'
 
-/** Email (lowercase) → credentials for MVP login (not production-grade). */
-export const credentialsByEmail: Record<string, { userId: string; password: string }> = {
-  'melina_vanessa.mann@web.de': { userId: 'u1', password: 'adminaccess' },
+export type EmailCredential = { userId: string; password: string }
+
+/** Email (lowercase) → eine oder mehrere Zugänge (nur ausgewählte E-Mails dürfen mehrere haben). */
+export const credentialsByEmail: Record<string, EmailCredential[]> = {
+  'melina_vanessa.mann@web.de': [{ userId: 'u1', password: 'adminaccess' }],
 }
 
 export const users: Record<string, UserProfile> = {
