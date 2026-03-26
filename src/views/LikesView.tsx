@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { ListingCard } from '@/components/ListingCard'
+import { ListingDetailModal } from '@/components/ListingDetailModal'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
 
 interface LikesViewProps {
@@ -29,6 +31,7 @@ export function LikesView({
   theme,
   t,
 }: LikesViewProps) {
+  const [detailListing, setDetailListing] = useState<Listing | null>(null)
   const likedListings = listings.filter((l) => currentUser.likedListings.includes(l.id))
   return (
     <div className={`pt-4 px-4 [@media(min-width:1200px)_and_(orientation:landscape)]:px-6 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:px-5 space-y-6 ${theme.bg} min-h-full pb-20`}>
@@ -44,11 +47,12 @@ export function LikesView({
             <ListingCard
               key={l.id}
               listing={l}
-              gardener={getGardener(l.gardenerId)}
+              gardener={getGardener(String(l.gardenerId ?? ''))}
               currentUser={currentUser}
               onLike={() => toggleLike(l.id)}
               onFollow={() => toggleFollow(l.gardenerId)}
               onReserve={handleReservation}
+              onOpenListing={setDetailListing}
               onAdminDelete={onAdminDelete}
               isAdmin={isAdmin}
               onUserClick={onUserClick}
@@ -57,6 +61,26 @@ export function LikesView({
             />
           ))}
         </div>
+      )}
+
+      {detailListing && (
+        <ListingDetailModal
+          selectedPost={detailListing}
+          setSelectedPost={setDetailListing}
+          user={currentUser}
+          isOwnProfile={false}
+          gardener={getGardener(String(detailListing.gardenerId ?? ''))}
+          onReserve={handleReservation}
+          onEditListing={() => {}}
+          onDeleteListing={() => {}}
+          saveEditedPost={() => {}}
+          isEditingPost={false}
+          editPostData={{}}
+          setEditPostData={() => {}}
+          startEditPost={() => {}}
+          theme={theme}
+          t={t}
+        />
       )}
     </div>
   )

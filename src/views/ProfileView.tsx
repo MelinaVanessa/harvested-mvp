@@ -44,6 +44,7 @@ interface ProfileViewProps {
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
   onCancelReservation?: (id: string) => void
+  onReserve?: (listingId: string, amount: number) => void
 }
 
 export function ProfileView({
@@ -63,6 +64,7 @@ export function ProfileView({
   theme,
   t,
   onCancelReservation,
+  onReserve,
 }: ProfileViewProps) {
   const safeUser = user ?? ({} as UserProfile)
   const [isEditing, setIsEditing] = useState(false)
@@ -599,7 +601,9 @@ export function ProfileView({
         <ListingDetailModal
           selectedPost={selectedPost}
           setSelectedPost={setSelectedPost}
-          user={safeUser}
+          user={currentUser}
+          gardener={safeUser}
+          onReserve={!isOwnProfile ? onReserve : undefined}
           isOwnProfile={isOwnProfile}
           onEditListing={startEditPost}
           onDeleteListing={onDeleteListing}

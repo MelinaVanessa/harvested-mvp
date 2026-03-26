@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { X, ShoppingBag, Clock, Leaf, Edit3, Trash2, Save, Sparkles, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { X, ShoppingBag, Clock, Leaf, Edit3, Trash2, Save, Sparkles, Loader2, Minus, Plus } from 'lucide-react'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
 
 interface ListingDetailModalProps {
@@ -18,6 +19,9 @@ interface ListingDetailModalProps {
   t: Record<string, Record<string, string>>
   /** Compact viewport-friendly layout when opening from the map */
   variant?: 'default' | 'map'
+  /** Listing author — used for reserve UI (isSelf check) and contact copy */
+  gardener?: UserProfile
+  onReserve?: (listingId: string, amount: number) => void
 }
 
 export function ListingDetailModal({
@@ -34,9 +38,41 @@ export function ListingDetailModal({
   theme,
   t,
   variant = 'default',
+  gardener,
+  onReserve,
 }: ListingDetailModalProps) {
   const [recipe, setRecipe] = useState('')
   const [loadingRecipe, setLoadingRecipe] = useState(false)
+  const step = selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5
+  const [reserveAmount, setReserveAmount] = useState(() =>
+    Math.min(selectedPost.availableQuantity, selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5),
+  )
+
+  useEffect(() => {
+    const s = selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5
+    setReserveAmount(Math.min(selectedPost.availableQuantity, s))
+  }, [selectedPost.id, selectedPost.availableQuantity, selectedPost.unit])
+
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
+
+  const isMap = variant === 'map'
+  const authorId = String(selectedPost.gardenerId ?? '').trim()
+  const isSelfListing = Boolean(authorId) && String(user.id) === authorId
+  const sellerContactName = gardener?.name?.trim()
+  const contactReserveLine = sellerContactName
+    ? (t?.listing?.contactNamed ?? 'Kontaktieren Sie {{name}} für Reservierungen.').replace(
+        /\{\{name\}\}/g,
+        sellerContactName,
+      )
+    : (t?.listing?.contactUnknownSeller ?? 'Kontaktieren Sie den Anbieter für Reservierungen.')
+  /** Show stepper + Reservieren for any listing that isn’t yours (don’t gate on onReserve — props must still fire the handler). */
+  const showReserveBar = !isSelfListing && !isEditingPost
 
   const handleGenerateRecipe = async () => {
     setLoadingRecipe(true)
@@ -46,14 +82,75 @@ export function ListingDetailModal({
     }, 1500)
   }
 
-  const isMap = variant === 'map'
+  const handleDecrementReserve = () =>
+    setReserveAmount((prev) => Math.max(step, prev - step))
+  const handleIncrementReserve = () =>
+    setReserveAmount((prev) => Math.min(selectedPost.availableQuantity, prev + step))
 
-  return (
+  /** Gold CTA so the button never blends into dark green cards (`#0D1A15` on `#1A2621` was effectively invisible). */
+  const reserveCtaClass = isSelfListing
+    ? `border ${theme.border} ${theme.bg} ${theme.textSec} cursor-default`
+    : 'bg-[#C29901] text-[#0D1A15] hover:bg-[#a8840c] shadow-md ring-1 ring-black/15'
+
+  const reserveControls = showReserveBar ? (
+    <div className={`${isMap ? 'mb-3' : 'mb-6'}`}>
+      {selectedPost.availableQuantity > 0 ? (
+        <div className={`flex items-center gap-2 ${isMap ? 'flex-wrap' : ''}`}>
+          {!isSelfListing && (
+            <div
+              className={`flex items-center rounded-xl border ${theme.border} p-0.5 h-9 shrink-0 ${theme.input}`}
+            >
+              <button
+                type="button"
+                onClick={handleDecrementReserve}
+                className="w-8 h-full flex items-center justify-center rounded-lg hover:opacity-70 disabled:opacity-40"
+                disabled={reserveAmount <= step}
+              >
+                <Minus size={16} />
+              </button>
+              <span className={`min-w-[2.75rem] px-1 text-center text-xs font-bold ${theme.text}`}>
+                {reserveAmount} {selectedPost.unit}
+              </span>
+              <button
+                type="button"
+                onClick={handleIncrementReserve}
+                className="w-8 h-full flex items-center justify-center rounded-lg hover:opacity-70 disabled:opacity-40"
+                disabled={reserveAmount >= selectedPost.availableQuantity}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => onReserve?.(selectedPost.id, reserveAmount)}
+            disabled={isSelfListing}
+            className={`flex-1 min-w-[8rem] h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-1 transition-all active:scale-[0.98] ${reserveCtaClass}`}
+          >
+            {isSelfListing
+              ? t?.listing?.yourOffer ?? 'Dein Angebot'
+              : t?.listing?.reserve ?? 'Reservieren'}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className={`w-full py-2.5 rounded-xl text-xs font-semibold border ${theme.border} ${theme.bg} ${theme.textSec} opacity-80`}
+        >
+          {t?.listing?.soldOut ?? 'Leider vergriffen'}
+        </button>
+      )}
+    </div>
+  ) : null
+
+  const modal = (
     <div
-      className={`absolute inset-0 z-[210] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in ${
+      className={`fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in ${
         isMap ? 'p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'p-4'
       }`}
       onClick={() => setSelectedPost(null)}
+      role="presentation"
     >
       <div
         className={`${theme.card} ${theme.text} w-full rounded-3xl shadow-2xl flex flex-col ${
@@ -62,6 +159,9 @@ export function ListingDetailModal({
             : 'max-h-full overflow-y-auto'
         }`}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="listing-detail-title"
       >
         <div className={`relative shrink-0 ${isMap ? 'overflow-hidden rounded-t-3xl' : ''}`}>
           <img
@@ -74,6 +174,7 @@ export function ListingDetailModal({
             alt={selectedPost.title}
           />
           <button
+            type="button"
             onClick={() => setSelectedPost(null)}
             className="absolute top-3 right-3 bg-black/50 text-white p-2 rounded-full backdrop-blur-md"
           >
@@ -109,22 +210,43 @@ export function ListingDetailModal({
             </div>
           ) : (
             <>
-              <h3 className={`font-bold mb-2 ${isMap ? 'text-lg sm:text-xl' : 'text-2xl'}`}>{selectedPost.title}</h3>
-              <div className={`flex gap-4 ${isMap ? 'text-xs mb-3' : 'text-sm mb-4'} ${theme.textSec}`}>
-                <span className="flex items-center gap-1">
-                  <ShoppingBag size={14} /> {selectedPost.availableQuantity} {selectedPost.unit}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock size={14} /> {selectedPost.datePosted.split('T')[0]}
-                </span>
-              </div>
+              <h3
+                id="listing-detail-title"
+                className={`font-bold mb-2 ${isMap ? 'text-lg sm:text-xl' : 'text-2xl'}`}
+              >
+                {selectedPost.title}
+              </h3>
+              {!isSelfListing ? (
+                <div className={`flex flex-col gap-2 ${isMap ? 'mb-2' : 'mb-3'}`}>
+                  <div className={`flex items-center gap-1 text-[#4A5D4E] text-sm font-medium`}>
+                    <ShoppingBag size={14} />
+                    <span>
+                      Noch {selectedPost.availableQuantity} {selectedPost.unit}{' '}
+                      {t?.listing?.available ?? 'verfügbar'}
+                    </span>
+                  </div>
+                  <div className={`flex items-center gap-1 ${isMap ? 'text-xs' : 'text-sm'} ${theme.textSec}`}>
+                    <Clock size={14} /> {selectedPost.datePosted.split('T')[0]}
+                  </div>
+                </div>
+              ) : (
+                <div className={`flex gap-4 ${isMap ? 'text-xs mb-3' : 'text-sm mb-4'} ${theme.textSec}`}>
+                  <span className="flex items-center gap-1">
+                    <ShoppingBag size={14} /> {selectedPost.availableQuantity} {selectedPost.unit}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock size={14} /> {selectedPost.datePosted.split('T')[0]}
+                  </span>
+                </div>
+              )}
+              {reserveControls}
               <p className={`opacity-80 ${isMap ? 'text-sm mb-4' : 'mb-6'}`}>{selectedPost.description}</p>
             </>
           )}
 
-          {!isOwnProfile && !isEditingPost && (
+          {!isSelfListing && !isEditingPost && (
             <div
-              className={`${isMap ? 'mt-2 mb-3 p-3' : 'mt-4 mb-6 p-4'} rounded-xl border border-[#4A5D4E]/20 ${theme.bg === 'bg-[#0D1A15]' ? 'bg-[#1A2E35]' : 'bg-[#F2F4F0]'}`}
+              className={`${isMap ? 'mt-0 mb-3 p-3' : 'mt-4 mb-6 p-4'} rounded-xl border border-[#4A5D4E]/20 ${theme.bg === 'bg-[#0D1A15]' ? 'bg-[#1A2E35]' : 'bg-[#F2F4F0]'}`}
             >
               <div className="flex items-center gap-2 mb-2">
                 <Leaf className="text-[#4A5D4E]" size={20} />
@@ -132,6 +254,7 @@ export function ListingDetailModal({
               </div>
               {!recipe ? (
                 <button
+                  type="button"
                   onClick={handleGenerateRecipe}
                   disabled={loadingRecipe}
                   className="w-full bg-[#4A5D4E] text-white py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#3A4D3E] transition-colors disabled:opacity-70"
@@ -144,15 +267,16 @@ export function ListingDetailModal({
                   {loadingRecipe ? t?.listing?.loadingRecipes : t?.listing?.cook}
                 </button>
               ) : (
-                <div className="text-sm whitespace-pre-line leading-relaxed animate-in fade-in">{recipe}</div>
+                <div className="text-sm whitespace-pre-line leading-relaxed animate-fade-in">{recipe}</div>
               )}
             </div>
           )}
 
           {isOwnProfile ? (
-            <div className={`flex gap-3 mt-auto pt-4 border-t ${theme.border}`}>
+            <div className={`flex gap-3 mt-auto pt-4 border-t ${theme.border} shrink-0`}>
               {isEditingPost ? (
                 <button
+                  type="button"
                   onClick={saveEditedPost}
                   className="flex-1 flex items-center justify-center gap-2 bg-[#0D1A15] text-white py-3 rounded-xl font-bold active:scale-95 transition-transform"
                 >
@@ -160,6 +284,7 @@ export function ListingDetailModal({
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => startEditPost(selectedPost)}
                   className={`flex-1 flex items-center justify-center gap-2 ${theme.bg} ${theme.text} border ${theme.border} py-3 rounded-xl font-bold active:scale-95 transition-transform`}
                 >
@@ -167,6 +292,7 @@ export function ListingDetailModal({
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => {
                   onDeleteListing(selectedPost.id)
                   setSelectedPost(null)
@@ -176,13 +302,15 @@ export function ListingDetailModal({
                 <Trash2 size={18} /> Löschen
               </button>
             </div>
-          ) : (
-            <div className={`text-center ${isMap ? 'text-xs mt-2' : 'text-sm mt-4'} ${theme.textSec} italic`}>
-              Kontaktieren Sie {user.name} für Reservierungen.
+          ) : showReserveBar ? null : !isSelfListing ? (
+            <div className={`text-center ${isMap ? 'text-xs mt-2' : 'text-sm mt-4'} ${theme.textSec} italic shrink-0`}>
+              {contactReserveLine}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
   )
+
+  return createPortal(modal, document.body)
 }

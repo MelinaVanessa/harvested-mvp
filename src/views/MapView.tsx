@@ -407,11 +407,12 @@ export function MapView({
                 <ListingCard
                   key={l.id}
                   listing={l}
-                  gardener={getGardener(l.gardenerId)}
+                  gardener={getGardener(String(l.gardenerId ?? ''))}
                   currentUser={currentUser}
                   onLike={() => toggleLike(l.id)}
                   onFollow={() => toggleFollow(l.gardenerId)}
                   onReserve={handleReservation}
+                  onOpenListing={setSelectedListing}
                   onAdminDelete={onAdminDelete}
                   isAdmin={isAdmin}
                   onUserClick={onUserClick}
@@ -439,11 +440,12 @@ export function MapView({
                 <ListingCard
                   key={l.id}
                   listing={l}
-                  gardener={getGardener(l.gardenerId)}
+                  gardener={getGardener(String(l.gardenerId ?? ''))}
                   currentUser={currentUser}
                   onLike={() => toggleLike(l.id)}
                   onFollow={() => toggleFollow(l.gardenerId)}
                   onReserve={handleReservation}
+                  onOpenListing={setSelectedListing}
                   onAdminDelete={onAdminDelete}
                   isAdmin={isAdmin}
                   onUserClick={onUserClick}
@@ -465,6 +467,8 @@ export function MapView({
           setSelectedPost={setSelectedListing}
           user={currentUser}
           isOwnProfile={false}
+          gardener={getGardener(String(selectedListing.gardenerId ?? ''))}
+          onReserve={handleReservation}
           onEditListing={() => {}}
           onDeleteListing={() => {}}
           saveEditedPost={() => {}}

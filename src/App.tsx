@@ -35,6 +35,15 @@ const API_BASE_URL =
 const API_ENABLED = API_BASE_URL.length > 0
 const OWNER_NAME = 'Melina Vanessa Mann'
 
+/** API / older payloads may omit camelCase gardenerId */
+function normalizeListingGardenerId(item: Listing): Listing {
+  const row = item as unknown as Record<string, unknown>
+  const g = row.gardenerId ?? row.gardener_id ?? row.userId ?? row.user_id
+  if (g == null || g === '') return item
+  const gardenerId = typeof g === 'string' ? g : String(g)
+  return gardenerId === item.gardenerId ? item : { ...item, gardenerId }
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home')
   const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USER)
@@ -96,8 +105,15 @@ export default function App() {
       try {
         const res = await fetch(`${API_BASE_URL}/api/listings`, { headers: { Accept: 'application/json' } })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = (await res.json()) as Listing[]
-        if (!cancelled) setListings(Array.isArray(data) ? data : [])
+        const raw = (await res.json()) as unknown
+        const arr = Array.isArray(raw) ? raw : []
+        if (!cancelled) {
+          setListings(
+            arr
+              .filter((x): x is Listing => Boolean(x) && typeof x === 'object' && 'id' in (x as object))
+              .map((x) => normalizeListingGardenerId(x as Listing)),
+          )
+        }
       } catch (e) {
         console.error('Could not load listings from API', e)
       }
@@ -321,6 +337,7 @@ export default function App() {
           onDeleteListing={() => {}}
           onUpdateListing={() => {}}
           onUserClick={openProfile}
+          onReserve={handleReservation}
           theme={theme}
           t={t}
         />

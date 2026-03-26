@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
 import { FilterChip } from '@/components/FilterChip'
 import { ListingCard } from '@/components/ListingCard'
+import { ListingDetailModal } from '@/components/ListingDetailModal'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
 
 interface HomeViewProps {
@@ -39,6 +40,7 @@ export function HomeView({
   theme,
   t,
 }: HomeViewProps) {
+  const [detailListing, setDetailListing] = useState<Listing | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [showSearch, setShowSearch] = useState(true)
   const [isShortLandscape, setIsShortLandscape] = useState(false)
@@ -148,11 +150,12 @@ export function HomeView({
             <ListingCard
               key={l.id}
               listing={l}
-              gardener={getGardener(l.gardenerId)}
+              gardener={getGardener(String(l.gardenerId ?? ''))}
               currentUser={currentUser}
               onLike={() => toggleLike(l.id)}
               onFollow={() => toggleFollow(l.gardenerId)}
               onReserve={handleReservation}
+              onOpenListing={setDetailListing}
               onAdminDelete={onAdminDelete}
               isAdmin={isAdmin}
               onUserClick={onUserClick}
@@ -162,6 +165,26 @@ export function HomeView({
           ))
         )}
       </div>
+
+      {detailListing && (
+        <ListingDetailModal
+          selectedPost={detailListing}
+          setSelectedPost={setDetailListing}
+          user={currentUser}
+          isOwnProfile={false}
+          gardener={getGardener(String(detailListing.gardenerId ?? ''))}
+          onReserve={handleReservation}
+          onEditListing={() => {}}
+          onDeleteListing={() => {}}
+          saveEditedPost={() => {}}
+          isEditingPost={false}
+          editPostData={{}}
+          setEditPostData={() => {}}
+          startEditPost={() => {}}
+          theme={theme}
+          t={t}
+        />
+      )}
     </div>
   )
 }

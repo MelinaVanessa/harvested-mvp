@@ -9,6 +9,8 @@ interface ListingCardProps {
   onLike: () => void
   onFollow: () => void
   onReserve: (listingId: string, amount: number) => void
+  /** Opens full listing detail (e.g. map sheet / FYP) */
+  onOpenListing?: (listing: Listing) => void
   onUserClick: (userId: string) => void
   isAdmin?: boolean
   onAdminDelete?: (listingId: string) => void
@@ -24,6 +26,7 @@ export function ListingCard({
   onLike,
   onFollow,
   onReserve,
+  onOpenListing,
   onUserClick,
   isAdmin = false,
   onAdminDelete,
@@ -41,6 +44,8 @@ export function ListingCard({
 
   const handleIncrement = () => setAmount((prev) => Math.min(listing.availableQuantity, prev + step))
   const handleDecrement = () => setAmount((prev) => Math.max(step, prev - step))
+
+  const openListingDetail = () => onOpenListing?.(listing)
 
   return (
     <div className={`${theme.card} ${compact ? 'rounded-lg' : 'rounded-2xl [@media(min-width:1200px)_and_(orientation:landscape)]:rounded-xl [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:rounded-xl'} overflow-hidden shadow-sm border ${theme.border}`}>
@@ -95,15 +100,45 @@ export function ListingCard({
           )
         )}
       </div>
-      <div className={`relative ${compact ? 'aspect-[16/9]' : 'aspect-[4/3] [@media(min-width:900px)_and_(orientation:landscape)]:aspect-[16/10] [@media(min-width:1200px)_and_(orientation:landscape)]:aspect-[7/4] [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:aspect-[12/5]'} bg-gray-100`}>
-        <img src={listing.image} alt={listing.title} className="w-full h-full object-cover" />
-        <div className="absolute top-3 right-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:top-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:right-2 bg-white/90 backdrop-blur-sm px-2 py-1 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:px-1.5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:py-0.5 rounded-md text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[10px] font-bold shadow-sm">
+      <div
+        role={onOpenListing ? 'button' : undefined}
+        tabIndex={onOpenListing ? 0 : undefined}
+        onClick={onOpenListing ? openListingDetail : undefined}
+        onKeyDown={
+          onOpenListing
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  openListingDetail()
+                }
+              }
+            : undefined
+        }
+        className={`relative ${compact ? 'aspect-[16/9]' : 'aspect-[4/3] [@media(min-width:900px)_and_(orientation:landscape)]:aspect-[16/10] [@media(min-width:1200px)_and_(orientation:landscape)]:aspect-[7/4] [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:aspect-[12/5]'} bg-gray-100${onOpenListing ? ' cursor-pointer' : ''}`}
+      >
+        <img src={listing.image} alt={listing.title} className="w-full h-full object-cover pointer-events-none" />
+        <div className="absolute top-3 right-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:top-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:right-2 bg-white/90 backdrop-blur-sm px-2 py-1 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:px-1.5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:py-0.5 rounded-md text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[10px] font-bold shadow-sm pointer-events-none">
           {listing.harvestType === 'pickup' ? '📦 Abholbereit' : '🌾 Selbst ernten'}
         </div>
       </div>
       <div className={`${compact ? 'p-2.5' : 'p-4 [@media(min-width:900px)_and_(orientation:landscape)]:p-3 [@media(min-width:1200px)_and_(orientation:landscape)]:p-2.5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-2'}`}>
         <div className={`flex justify-between items-start ${compact ? 'mb-1.5' : 'mb-2'}`}>
-          <div>
+          <div
+            role={onOpenListing ? 'button' : undefined}
+            tabIndex={onOpenListing ? 0 : undefined}
+            onClick={onOpenListing ? openListingDetail : undefined}
+            onKeyDown={
+              onOpenListing
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      openListingDetail()
+                    }
+                  }
+                : undefined
+            }
+            className={`text-left min-w-0 flex-1${onOpenListing ? ' cursor-pointer' : ''}`}
+          >
             <h3 className={`${compact ? 'text-sm' : 'text-lg [@media(min-width:900px)_and_(orientation:landscape)]:text-base [@media(min-width:1200px)_and_(orientation:landscape)]:text-sm [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[13px]'} font-bold ${theme.text} line-clamp-1`}>{listing.title}</h3>
             <div className={`flex items-center gap-1 text-[#4A5D4E] ${compact ? 'text-xs' : 'text-sm [@media(min-width:1200px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px]'} font-medium`}>
               <ShoppingBag size={12} />
