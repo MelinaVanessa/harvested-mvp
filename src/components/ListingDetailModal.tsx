@@ -243,10 +243,16 @@ export function ListingDetailModal({
               {!isEditingPost && (
                 <div className={`space-y-2 ${isMap ? 'mb-3' : 'mb-4'}`}>
                   {selectedPost.location.address?.trim() ? (
-                    <p className={`text-sm ${theme.text} flex items-start gap-2`}>
-                      <MapPin size={16} className="shrink-0 mt-0.5 text-[#4A5D4E]" aria-hidden />
+                    <a
+                      href={getGoogleMapsUrlForListing(selectedPost)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-sm ${theme.text} flex items-start gap-2 font-medium text-[#4A5D4E] hover:text-[#C29901] underline decoration-[#C29901]/50 hover:decoration-[#C29901] underline-offset-2 transition-colors`}
+                      aria-label={t?.listing?.openMapsAria ?? 'Open in Google Maps'}
+                    >
+                      <MapPin size={16} className="shrink-0 mt-0.5" aria-hidden />
                       <span>{selectedPost.location.address.trim()}</span>
-                    </p>
+                    </a>
                   ) : null}
                   {selectedPost.pickupTimes ? (
                     <p className={`text-sm flex items-center gap-2 ${theme.textSec}`}>
@@ -254,15 +260,6 @@ export function ListingDetailModal({
                       {selectedPost.pickupTimes}
                     </p>
                   ) : null}
-                  <a
-                    href={getGoogleMapsUrlForListing(selectedPost)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border ${theme.border} py-2.5 text-sm font-semibold ${theme.text} bg-[#C29901]/15 hover:bg-[#C29901]/25 transition-colors`}
-                  >
-                    <MapPin size={18} className="text-[#C29901]" aria-hidden />
-                    {t?.listing?.openInGoogleMaps ?? 'Open in Google Maps'}
-                  </a>
                 </div>
               )}
               {reserveControls}

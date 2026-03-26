@@ -19,7 +19,12 @@ export function getListingLatLng(listing: Listing): { lat: number; lng: number }
   return { lat, lng }
 }
 
-/** Opens in Google Maps (app on mobile when installed). Prefers coordinates, then address text. */
+/**
+ * Builds a Google Maps search URL for a listing. Works for mock data, API payloads, and new posts:
+ * 1) `location.lat` + `location.lng` when set (precise pin — use this from geocoding on create)
+ * 2) else `location.address` (full street + city works best for real users)
+ * 3) else legacy `x`/`y` % fallback inside Berlin–Brandenburg bounds
+ */
 export function getGoogleMapsUrlForListing(listing: Listing): string {
   const { location } = listing
   const addr = location.address?.trim()

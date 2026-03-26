@@ -58,7 +58,13 @@ export const listings: Listing[] = [
     availableQuantity: 8.5,
     harvestType: 'pickup',
     pickupTimes: 'Mo-Fr ab 17 Uhr',
-    location: { x: 30, y: 40, address: 'Gartenweg 3', lat: 52.5412, lng: 13.3944 },
+    location: {
+      x: 42,
+      y: 48,
+      address: 'Bergmannstraße 5, 10961 Berlin',
+      lat: 52.49267,
+      lng: 13.38542,
+    },
     datePosted: '2023-10-01',
   },
   {
@@ -72,7 +78,13 @@ export const listings: Listing[] = [
     availableQuantity: 12,
     harvestType: 'self_harvest',
     pickupTimes: 'Wochenende ganztägig',
-    location: { x: 60, y: 25, address: 'Am Feldrain 9', lat: 52.5583, lng: 13.4517 },
+    location: {
+      x: 55,
+      y: 22,
+      address: 'Kollwitzstraße 87, 10435 Berlin',
+      lat: 52.53845,
+      lng: 13.41689,
+    },
     datePosted: '2023-10-02',
   },
   {
@@ -86,7 +98,13 @@ export const listings: Listing[] = [
     availableQuantity: 50,
     harvestType: 'pickup',
     pickupTimes: 'Jederzeit an der Pforte',
-    location: { x: 35, y: 45, address: 'Gartenweg 3', lat: 52.5341, lng: 13.4285 },
+    location: {
+      x: 68,
+      y: 52,
+      address: 'Maybachufer 47, 12047 Berlin',
+      lat: 52.49642,
+      lng: 13.43138,
+    },
     datePosted: '2023-10-03',
   },
 ]
