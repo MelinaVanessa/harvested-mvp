@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Heart, Clock, ShoppingBag, Minus, Plus, MoreVertical } from 'lucide-react'
+import { Heart, Clock, ShoppingBag, Minus, Plus, MoreVertical, MapPin } from 'lucide-react'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
+import { getGoogleMapsUrlForListing } from '@/utils/listingPosition'
 
 interface ListingCardProps {
   listing: Listing
@@ -52,9 +53,23 @@ export function ListingCard({
       <div className={`${compact ? 'p-2' : 'p-3 [@media(min-width:900px)_and_(orientation:landscape)]:p-2.5 [@media(min-width:1200px)_and_(orientation:landscape)]:p-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-1.5'} flex items-center justify-between relative`}>
         <div className="flex items-center gap-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2 cursor-pointer" onClick={() => onUserClick(gardener.id)}>
           <img src={gardener.avatar} alt={gardener.name} className="w-8 h-8 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:w-7 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-7 rounded-full bg-gray-100" />
-          <div className="leading-tight">
+          <div className="leading-tight min-w-0 flex-1">
             <p className={`text-sm [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] font-semibold ${theme.text} hover:underline line-clamp-1`}>{gardener.name}</p>
-            <p className={`text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[10px] ${theme.textSec} line-clamp-1`}>{listing.location.address}</p>
+            <div className="flex items-center gap-1">
+              <p className={`text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[10px] ${theme.textSec} line-clamp-1 min-w-0 flex-1`}>{listing.location.address}</p>
+              <button
+                type="button"
+                className={`shrink-0 p-1 rounded-md border ${theme.border} ${theme.textSec} hover:bg-black/5`}
+                aria-label={t?.listing?.openMapsAria ?? 'Open in Google Maps'}
+                title={t?.listing?.openInGoogleMaps ?? 'Google Maps'}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.open(getGoogleMapsUrlForListing(listing), '_blank', 'noopener,noreferrer')
+                }}
+              >
+                <MapPin size={14} />
+              </button>
+            </div>
           </div>
         </div>
         {isAdmin ? (

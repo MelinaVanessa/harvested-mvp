@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ShoppingBag, Clock, Leaf, Edit3, Trash2, Save, Sparkles, Loader2, Minus, Plus } from 'lucide-react'
+import { X, ShoppingBag, Clock, Leaf, Edit3, Trash2, Save, Sparkles, Loader2, Minus, Plus, MapPin } from 'lucide-react'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
+import { getGoogleMapsUrlForListing } from '@/utils/listingPosition'
 
 interface ListingDetailModalProps {
   selectedPost: Listing
@@ -237,6 +238,31 @@ export function ListingDetailModal({
                   <span className="flex items-center gap-1">
                     <Clock size={14} /> {selectedPost.datePosted.split('T')[0]}
                   </span>
+                </div>
+              )}
+              {!isEditingPost && (
+                <div className={`space-y-2 ${isMap ? 'mb-3' : 'mb-4'}`}>
+                  {selectedPost.location.address?.trim() ? (
+                    <p className={`text-sm ${theme.text} flex items-start gap-2`}>
+                      <MapPin size={16} className="shrink-0 mt-0.5 text-[#4A5D4E]" aria-hidden />
+                      <span>{selectedPost.location.address.trim()}</span>
+                    </p>
+                  ) : null}
+                  {selectedPost.pickupTimes ? (
+                    <p className={`text-sm flex items-center gap-2 ${theme.textSec}`}>
+                      <Clock size={14} aria-hidden />
+                      {selectedPost.pickupTimes}
+                    </p>
+                  ) : null}
+                  <a
+                    href={getGoogleMapsUrlForListing(selectedPost)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border ${theme.border} py-2.5 text-sm font-semibold ${theme.text} bg-[#C29901]/15 hover:bg-[#C29901]/25 transition-colors`}
+                  >
+                    <MapPin size={18} className="text-[#C29901]" aria-hidden />
+                    {t?.listing?.openInGoogleMaps ?? 'Open in Google Maps'}
+                  </a>
                 </div>
               )}
               {reserveControls}

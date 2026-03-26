@@ -18,3 +18,17 @@ export function getListingLatLng(listing: Listing): { lat: number; lng: number }
   const lat = FALLBACK_BOUNDS.north - (y / 100) * (FALLBACK_BOUNDS.north - FALLBACK_BOUNDS.south)
   return { lat, lng }
 }
+
+/** Opens in Google Maps (app on mobile when installed). Prefers coordinates, then address text. */
+export function getGoogleMapsUrlForListing(listing: Listing): string {
+  const { location } = listing
+  const addr = location.address?.trim()
+  if (location.lat != null && location.lng != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.lat},${location.lng}`)}`
+  }
+  if (addr) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`
+  }
+  const { lat, lng } = getListingLatLng(listing)
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`
+}
