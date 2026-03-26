@@ -7,6 +7,7 @@ import {
   InboxView,
   SettingsView,
   SupportView,
+  LegalView,
   HomeView,
   AddListingView,
   LikesView,
@@ -27,7 +28,17 @@ import {
 import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
 import type { UserProfile, Listing, Reservation, Message } from '@/types'
 
-type ActiveTab = 'home' | 'map' | 'add' | 'profile' | 'likes' | 'support' | 'settings'
+type ActiveTab =
+  | 'home'
+  | 'map'
+  | 'add'
+  | 'profile'
+  | 'likes'
+  | 'support'
+  | 'settings'
+  | 'legal_terms'
+  | 'legal_privacy'
+  | 'legal_imprint'
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ||
@@ -68,8 +79,11 @@ export default function App() {
   const t = TRANSLATIONS[language]
   const isAdmin = isLoggedIn && currentUser.id === 'u1' && currentUser.name === OWNER_NAME
   const currentUserWithRes = { ...currentUser, reservations }
-  const showTopBar = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
-  const showBottomNav = isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings'
+  const isLegalTab = activeTab === 'legal_terms' || activeTab === 'legal_privacy' || activeTab === 'legal_imprint'
+  const showTopBar =
+    isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && !isLegalTab
+  const showBottomNav =
+    isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && !isLegalTab
 
   useEffect(() => {
     const mergedUsers = mergeUsersFromStorage(MOCK_USERS, {})
@@ -294,6 +308,21 @@ export default function App() {
       setViewingProfileId(null)
       setChatPartnerId(null)
       setShowInbox(false)
+    } else if (item === 'legal_terms') {
+      setActiveTab('legal_terms')
+      setViewingProfileId(null)
+      setChatPartnerId(null)
+      setShowInbox(false)
+    } else if (item === 'legal_privacy') {
+      setActiveTab('legal_privacy')
+      setViewingProfileId(null)
+      setChatPartnerId(null)
+      setShowInbox(false)
+    } else if (item === 'legal_imprint') {
+      setActiveTab('legal_imprint')
+      setViewingProfileId(null)
+      setChatPartnerId(null)
+      setShowInbox(false)
     }
   }
 
@@ -438,6 +467,12 @@ export default function App() {
             onToggleRole={handleToggleRole}
           />
         )
+      case 'legal_terms':
+        return <LegalView kind="terms" language={language} onBack={() => setActiveTab('home')} theme={theme} />
+      case 'legal_privacy':
+        return <LegalView kind="privacy" language={language} onBack={() => setActiveTab('home')} theme={theme} />
+      case 'legal_imprint':
+        return <LegalView kind="imprint" language={language} onBack={() => setActiveTab('home')} theme={theme} />
       default:
         return null
     }
@@ -639,6 +674,24 @@ export default function App() {
                       className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
                     >
                       <Settings size={20} /> {t.settings.title}
+                    </button>
+                    <button
+                      onClick={() => handleMenuClick('legal_terms')}
+                      className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
+                    >
+                      <Leaf size={20} /> {t.legal.terms}
+                    </button>
+                    <button
+                      onClick={() => handleMenuClick('legal_privacy')}
+                      className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
+                    >
+                      <Leaf size={20} /> {t.legal.privacy}
+                    </button>
+                    <button
+                      onClick={() => handleMenuClick('legal_imprint')}
+                      className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
+                    >
+                      <Leaf size={20} /> {t.legal.imprint}
                     </button>
                   </div>
                   <div className={`pt-4 border-t ${theme.border} space-y-4`}>

@@ -16,6 +16,7 @@ export const TRANSLATIONS: Record<'de' | 'en', Record<string, Record<string, str
       loadError: 'Google Maps konnte nicht geladen werden — es wird die einfache Karte angezeigt.',
     },
     support: { title: 'Support & Kontakt', help: 'Wie können wir helfen?', sub: 'Fülle das Formular aus und unser Team meldet sich schnellstmöglich bei dir.', subject: 'Betreff', msg: 'Nachricht', send: 'Nachricht senden', thanks: 'Vielen Dank!', received: 'Wir haben deine Nachricht erhalten.' },
+    legal: { terms: 'AGB', privacy: 'Datenschutz', imprint: 'Impressum' },
     listing: {
       cook: 'Was koche ich damit?',
       recipes: 'Rezept-Ideen',
@@ -47,6 +48,7 @@ export const TRANSLATIONS: Record<'de' | 'en', Record<string, Record<string, str
       loadError: 'Google Maps could not load — showing the simple map instead.',
     },
     support: { title: 'Support & Contact', help: 'How can we help?', sub: 'Fill out the form and our team will get back to you asap.', subject: 'Subject', msg: 'Message', send: 'Send Message', thanks: 'Thank you!', received: 'We have received your message.' },
+    legal: { terms: 'Terms', privacy: 'Privacy Policy', imprint: 'Imprint' },
     listing: {
       cook: 'What can I cook?',
       recipes: 'Recipe Ideas',
