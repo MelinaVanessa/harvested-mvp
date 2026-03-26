@@ -16,6 +16,8 @@ interface ListingDetailModalProps {
   startEditPost: (post: Listing) => void
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
+  /** Compact viewport-friendly layout when opening from the map */
+  variant?: 'default' | 'map'
 }
 
 export function ListingDetailModal({
@@ -31,6 +33,7 @@ export function ListingDetailModal({
   startEditPost,
   theme,
   t,
+  variant = 'default',
 }: ListingDetailModalProps) {
   const [recipe, setRecipe] = useState('')
   const [loadingRecipe, setLoadingRecipe] = useState(false)
@@ -43,25 +46,41 @@ export function ListingDetailModal({
     }, 1500)
   }
 
+  const isMap = variant === 'map'
+
   return (
     <div
-      className="absolute inset-0 z-[210] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in"
+      className={`absolute inset-0 z-[210] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in ${
+        isMap ? 'p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'p-4'
+      }`}
       onClick={() => setSelectedPost(null)}
     >
       <div
-        className={`${theme.card} ${theme.text} w-full max-h-full overflow-y-auto rounded-3xl shadow-2xl flex flex-col`}
+        className={`${theme.card} ${theme.text} w-full rounded-3xl shadow-2xl flex flex-col ${
+          isMap
+            ? 'max-w-md max-h-[min(92dvh,calc(100svh-1.5rem))] overflow-hidden'
+            : 'max-h-full overflow-y-auto'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative">
-          <img src={selectedPost.image} className="w-full aspect-square object-cover" alt={selectedPost.title} />
+        <div className={`relative shrink-0 ${isMap ? 'overflow-hidden rounded-t-3xl' : ''}`}>
+          <img
+            src={selectedPost.image}
+            className={
+              isMap
+                ? 'w-full object-cover max-h-[min(30vh,200px)] h-[min(30vh,200px)] sm:max-h-[min(34vh,240px)] sm:h-[min(34vh,240px)]'
+                : 'w-full aspect-square object-cover'
+            }
+            alt={selectedPost.title}
+          />
           <button
             onClick={() => setSelectedPost(null)}
-            className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full backdrop-blur-md"
+            className="absolute top-3 right-3 bg-black/50 text-white p-2 rounded-full backdrop-blur-md"
           >
             <X size={20} />
           </button>
         </div>
-        <div className="p-6">
+        <div className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-4 overflow-y-auto' : 'p-6'}`}>
           {isEditingPost ? (
             <div className="space-y-4">
               <input
@@ -90,8 +109,8 @@ export function ListingDetailModal({
             </div>
           ) : (
             <>
-              <h3 className="text-2xl font-bold mb-2">{selectedPost.title}</h3>
-              <div className={`flex gap-4 text-sm ${theme.textSec} mb-4`}>
+              <h3 className={`font-bold mb-2 ${isMap ? 'text-lg sm:text-xl' : 'text-2xl'}`}>{selectedPost.title}</h3>
+              <div className={`flex gap-4 ${isMap ? 'text-xs mb-3' : 'text-sm mb-4'} ${theme.textSec}`}>
                 <span className="flex items-center gap-1">
                   <ShoppingBag size={14} /> {selectedPost.availableQuantity} {selectedPost.unit}
                 </span>
@@ -99,13 +118,13 @@ export function ListingDetailModal({
                   <Clock size={14} /> {selectedPost.datePosted.split('T')[0]}
                 </span>
               </div>
-              <p className="opacity-80 mb-6">{selectedPost.description}</p>
+              <p className={`opacity-80 ${isMap ? 'text-sm mb-4' : 'mb-6'}`}>{selectedPost.description}</p>
             </>
           )}
 
           {!isOwnProfile && !isEditingPost && (
             <div
-              className={`mt-4 mb-6 p-4 rounded-xl border border-[#4A5D4E]/20 ${theme.bg === 'bg-[#0D1A15]' ? 'bg-[#1A2E35]' : 'bg-[#F2F4F0]'}`}
+              className={`${isMap ? 'mt-2 mb-3 p-3' : 'mt-4 mb-6 p-4'} rounded-xl border border-[#4A5D4E]/20 ${theme.bg === 'bg-[#0D1A15]' ? 'bg-[#1A2E35]' : 'bg-[#F2F4F0]'}`}
             >
               <div className="flex items-center gap-2 mb-2">
                 <Leaf className="text-[#4A5D4E]" size={20} />
@@ -158,7 +177,7 @@ export function ListingDetailModal({
               </button>
             </div>
           ) : (
-            <div className={`text-center text-sm ${theme.textSec} italic mt-4`}>
+            <div className={`text-center ${isMap ? 'text-xs mt-2' : 'text-sm mt-4'} ${theme.textSec} italic`}>
               Kontaktieren Sie {user.name} für Reservierungen.
             </div>
           )}

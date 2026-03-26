@@ -460,6 +460,7 @@ export function MapView({
 
       {selectedListing && (
         <ListingDetailModal
+          variant="map"
           selectedPost={selectedListing}
           setSelectedPost={setSelectedListing}
           user={currentUser}
