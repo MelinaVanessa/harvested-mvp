@@ -512,51 +512,60 @@ export default function App() {
 
         {!isLoggedIn ? (
           <div className="flex-1 min-h-0 flex flex-col w-full">
-            <LoginView
-            onLogin={(userData) => {
-              if (userData) {
-                let nextUser: UserProfile
-                if (userData.profile) {
-                  const base = userData.profile
-                  const profilePatch = getSavedProfile(base.id)
-                  nextUser = profilePatch ? { ...base, ...profilePatch } : base
-                } else if (userData.id === 'u1') {
-                  const base = MOCK_USERS.u1
-                  const profilePatch = getSavedProfile('u1')
-                  nextUser = profilePatch ? { ...base, ...profilePatch } : base
+            {isLegalTab ? (
+              <LegalView
+                kind={activeTab === 'legal_terms' ? 'terms' : activeTab === 'legal_privacy' ? 'privacy' : 'imprint'}
+                language={language}
+                onBack={() => setActiveTab('home')}
+                theme={theme}
+              />
+            ) : (
+              <LoginView
+              onLogin={(userData) => {
+                if (userData) {
+                  let nextUser: UserProfile
+                  if (userData.profile) {
+                    const base = userData.profile
+                    const profilePatch = getSavedProfile(base.id)
+                    nextUser = profilePatch ? { ...base, ...profilePatch } : base
+                  } else if (userData.id === 'u1') {
+                    const base = MOCK_USERS.u1
+                    const profilePatch = getSavedProfile('u1')
+                    nextUser = profilePatch ? { ...base, ...profilePatch } : base
+                  } else {
+                    const acc = findRegisteredAccountByUserId(userData.id)
+                    const base = acc
+                      ? storedAccountToUserProfile(acc)
+                      : users[userData.id] ?? {
+                          id: userData.id,
+                          name: userData.name,
+                          handle: `@user_${userData.id}`,
+                          bio: '',
+                          avatar:
+                            'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+                          role: userData.role,
+                          isMember: userData.role === 'gardener',
+                          following: [],
+                          likedListings: [],
+                        }
+                    const profilePatch = getSavedProfile(userData.id)
+                    nextUser = profilePatch ? { ...base, ...profilePatch } : base
+                  }
+                  setUsers((prev) => ({ ...prev, [nextUser.id]: nextUser }))
+                  setCurrentUser(nextUser)
+                  setIsLoggedIn(true)
+                  // Persist login by default so page refresh does not log users out.
+                  setSavedLogin(nextUser.id)
+                  setPendingSaveUserId(null)
+                  setShowSaveLoginModal(false)
                 } else {
-                  const acc = findRegisteredAccountByUserId(userData.id)
-                  const base = acc
-                    ? storedAccountToUserProfile(acc)
-                    : users[userData.id] ?? {
-                        id: userData.id,
-                        name: userData.name,
-                        handle: `@user_${userData.id}`,
-                        bio: '',
-                        avatar:
-                          'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
-                        role: userData.role,
-                        isMember: userData.role === 'gardener',
-                        following: [],
-                        likedListings: [],
-                      }
-                  const profilePatch = getSavedProfile(userData.id)
-                  nextUser = profilePatch ? { ...base, ...profilePatch } : base
+                  setIsLoggedIn(true)
                 }
-                setUsers((prev) => ({ ...prev, [nextUser.id]: nextUser }))
-                setCurrentUser(nextUser)
-                setIsLoggedIn(true)
-                // Persist login by default so page refresh does not log users out.
-                setSavedLogin(nextUser.id)
-                setPendingSaveUserId(null)
-                setShowSaveLoginModal(false)
-              } else {
-                setIsLoggedIn(true)
-              }
-            }}
-            theme={theme}
-            t={t}
-          />
+              }}
+              theme={theme}
+              t={t}
+            />
+            )}
           </div>
         ) : (
           <div className="flex-1 min-h-0 flex flex-col min-w-0">
@@ -728,75 +737,66 @@ export default function App() {
                 </div>
               </div>
             )}
-
-            {!hasAcceptedLegal && (
-              <div className="absolute inset-0 z-[400] flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-black/50" />
-                <div className={`relative w-full max-w-md rounded-2xl border ${theme.border} ${theme.card} shadow-2xl p-5`}>
-                  <h3 className={`text-lg font-bold ${theme.text}`}>{t.legalConsent?.title ?? 'Legal Notice'}</h3>
-                  <p className={`text-sm mt-2 ${theme.textSec}`}>
-                    {t.legalConsent?.text ??
-                      'Please confirm that you have read the legal notices (Terms, Privacy Policy, Imprint).'}
-                  </p>
-
-                  <div className={`mt-4 text-xs ${theme.textSec} flex flex-wrap gap-2`}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('legal_terms')
-                        setShowMenu(false)
-                      }}
-                      className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
-                    >
-                      {t.legal?.terms ?? 'Terms'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('legal_privacy')
-                        setShowMenu(false)
-                      }}
-                      className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
-                    >
-                      {t.legal?.privacy ?? 'Privacy'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('legal_imprint')
-                        setShowMenu(false)
-                      }}
-                      className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
-                    >
-                      {t.legal?.imprint ?? 'Imprint'}
-                    </button>
-                  </div>
-
-                  <label className={`mt-4 flex items-start gap-2 text-sm ${theme.text}`}>
-                    <input
-                      type="checkbox"
-                      checked={legalConfirmChecked}
-                      onChange={(e) => setLegalConfirmChecked(e.target.checked)}
-                      className="mt-0.5 accent-[#4A5D4E]"
-                    />
-                    <span>{t.legalConsent?.confirm ?? 'I have read and accept these notices'}</span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleAcceptLegal}
-                    disabled={!legalConfirmChecked}
-                    className="mt-5 w-full h-11 rounded-xl bg-[#0D1A15] text-[#FCFAF7] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {t.legalConsent?.continue ?? 'Continue'}
-                  </button>
-                </div>
-              </div>
-            )}
           </>
           </div>
         )}
       </div>
+
+      {!hasAcceptedLegal && (
+        <div className="absolute inset-0 z-[400] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" />
+          <div className={`relative w-full max-w-md rounded-2xl border ${theme.border} ${theme.card} shadow-2xl p-5`}>
+            <h3 className={`text-lg font-bold ${theme.text}`}>{t.legalConsent?.title ?? 'Legal Notice'}</h3>
+            <p className={`text-sm mt-2 ${theme.textSec}`}>
+              {t.legalConsent?.text ??
+                'Please confirm that you have read the legal notices (Terms, Privacy Policy, Imprint).'}
+            </p>
+
+            <div className={`mt-4 text-xs ${theme.textSec} flex flex-wrap gap-2`}>
+              <button
+                type="button"
+                onClick={() => setActiveTab('legal_terms')}
+                className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
+              >
+                {t.legal?.terms ?? 'Terms'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('legal_privacy')}
+                className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
+              >
+                {t.legal?.privacy ?? 'Privacy'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('legal_imprint')}
+                className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
+              >
+                {t.legal?.imprint ?? 'Imprint'}
+              </button>
+            </div>
+
+            <label className={`mt-4 flex items-start gap-2 text-sm ${theme.text}`}>
+              <input
+                type="checkbox"
+                checked={legalConfirmChecked}
+                onChange={(e) => setLegalConfirmChecked(e.target.checked)}
+                className="mt-0.5 accent-[#4A5D4E]"
+              />
+              <span>{t.legalConsent?.confirm ?? 'I have read and accept these notices'}</span>
+            </label>
+
+            <button
+              type="button"
+              onClick={handleAcceptLegal}
+              disabled={!legalConfirmChecked}
+              className="mt-5 w-full h-11 rounded-xl bg-[#0D1A15] text-[#FCFAF7] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {t.legalConsent?.continue ?? 'Continue'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
