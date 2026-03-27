@@ -170,7 +170,7 @@ export function ListingDetailModal({
       <div
         className={`${theme.card} ${theme.text} w-full rounded-2xl shadow-2xl flex flex-col ${
           isMap
-            ? 'max-w-md max-h-[min(92dvh,calc(100svh-1.5rem))] overflow-hidden'
+            ? 'max-w-md max-h-[min(86dvh,calc(100svh-1rem))] overflow-hidden'
             : 'max-w-2xl max-h-[min(92dvh,calc(100svh-1rem))] overflow-hidden'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -183,7 +183,7 @@ export function ListingDetailModal({
             src={selectedPost.image}
             className={
               isMap
-                ? 'w-full object-cover max-h-[min(30vh,200px)] h-[min(30vh,200px)] sm:max-h-[min(34vh,240px)] sm:h-[min(34vh,240px)]'
+                ? 'w-full object-cover max-h-[min(22vh,160px)] h-[min(22vh,160px)] sm:max-h-[min(24vh,180px)] sm:h-[min(24vh,180px)]'
                 : 'w-full aspect-square [@media(orientation:landscape)]:aspect-[16/7] [@media(min-width:900px)_and_(orientation:landscape)]:aspect-[16/6] object-cover'
             }
             alt={selectedPost.title}
@@ -196,7 +196,7 @@ export function ListingDetailModal({
             <X size={20} />
           </button>
         </div>
-        <div className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-4 overflow-y-auto' : 'p-6 overflow-y-auto [@media(orientation:landscape)]:p-4 [@media(orientation:landscape)]:overflow-hidden'}`}>
+        <div className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-3 overflow-hidden' : 'p-6 overflow-y-auto [@media(orientation:landscape)]:p-4 [@media(orientation:landscape)]:overflow-hidden'}`}>
           {isEditingPost ? (
             <div className="space-y-4">
               <input
@@ -277,11 +277,11 @@ export function ListingDetailModal({
                 </div>
               )}
               {reserveControls}
-              <p className={`opacity-80 ${isMap ? 'text-sm mb-4' : 'mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px] [@media(orientation:landscape)]:line-clamp-3'}`}>{selectedPost.description}</p>
+              <p className={`opacity-80 ${isMap ? 'text-sm mb-3 line-clamp-2' : 'mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px] [@media(orientation:landscape)]:line-clamp-3'}`}>{selectedPost.description}</p>
             </>
           )}
 
-          {!isSelfListing && !isEditingPost && (
+          {!isMap && !isSelfListing && !isEditingPost && (
             <div className={`${isMap ? 'mt-0 mb-3 p-3' : 'mt-3 mb-4 p-3 [@media(orientation:landscape)]:mb-2'} rounded-xl border border-[#4A5D4E]/20 ${theme.bg === 'bg-[#0D1A15]' ? 'bg-[#1A2E35]' : 'bg-[#F2F4F0]'}`}>
               <div className="flex items-center gap-2 mb-2">
                 <Leaf className="text-[#4A5D4E]" size={20} />
