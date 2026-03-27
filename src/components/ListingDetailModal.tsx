@@ -196,7 +196,7 @@ export function ListingDetailModal({
             <X size={20} />
           </button>
         </div>
-        <div className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-4 overflow-y-auto' : 'p-6 [@media(orientation:landscape)]:p-4 overflow-y-auto'}`}>
+        <div className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-4 overflow-y-auto' : 'p-6 overflow-y-auto [@media(orientation:landscape)]:p-4 [@media(orientation:landscape)]:overflow-hidden'}`}>
           {isEditingPost ? (
             <div className="space-y-4">
               <input
@@ -277,7 +277,7 @@ export function ListingDetailModal({
                 </div>
               )}
               {reserveControls}
-              <p className={`opacity-80 ${isMap ? 'text-sm mb-4' : 'mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px]'}`}>{selectedPost.description}</p>
+              <p className={`opacity-80 ${isMap ? 'text-sm mb-4' : 'mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px] [@media(orientation:landscape)]:line-clamp-3'}`}>{selectedPost.description}</p>
             </>
           )}
 
