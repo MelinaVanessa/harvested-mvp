@@ -44,6 +44,7 @@ export function ListingDetailModal({
 }: ListingDetailModalProps) {
   const [recipe, setRecipe] = useState('')
   const [loadingRecipe, setLoadingRecipe] = useState(false)
+  const [isMapScrolled, setIsMapScrolled] = useState(false)
   const step = selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5
   const [reserveAmount, setReserveAmount] = useState(() =>
     Math.min(selectedPost.availableQuantity, selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5),
@@ -54,6 +55,7 @@ export function ListingDetailModal({
     const s = selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5
     setReserveAmount(Math.min(selectedPost.availableQuantity, s))
     setPickupAt('')
+    setIsMapScrolled(false)
   }, [selectedPost.id, selectedPost.availableQuantity, selectedPost.unit])
 
   useEffect(() => {
@@ -188,7 +190,7 @@ export function ListingDetailModal({
             }
             alt={selectedPost.title}
           />
-          {isMap && !isEditingPost && selectedPost.description?.trim() && (
+          {isMap && isMapScrolled && !isEditingPost && selectedPost.description?.trim() && (
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/55 via-black/25 to-transparent backdrop-blur-[1.5px] flex items-end px-4 pb-3 pointer-events-none">
               <p className="text-[13px] leading-snug text-white/95 line-clamp-4">
                 {selectedPost.description}
@@ -203,7 +205,17 @@ export function ListingDetailModal({
             <X size={20} />
           </button>
         </div>
-        <div className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-3 overflow-hidden' : 'p-6 overflow-y-auto [@media(orientation:landscape)]:p-4 [@media(orientation:landscape)]:overflow-hidden'}`}>
+        <div
+          className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-3 overflow-y-auto' : 'p-6 overflow-y-auto [@media(orientation:landscape)]:p-4 [@media(orientation:landscape)]:overflow-hidden'}`}
+          onScroll={
+            isMap
+              ? (e) => {
+                  const next = e.currentTarget.scrollTop > 6
+                  setIsMapScrolled((prev) => (prev === next ? prev : next))
+                }
+              : undefined
+          }
+        >
           {isEditingPost ? (
             <div className="space-y-4">
               <input
@@ -284,11 +296,9 @@ export function ListingDetailModal({
                 </div>
               )}
               {reserveControls}
-              {!isMap && (
-                <p className="opacity-80 mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px] [@media(orientation:landscape)]:line-clamp-3">
-                  {selectedPost.description}
-                </p>
-              )}
+              <p className={`opacity-80 ${isMap ? 'text-sm mb-3 line-clamp-2' : 'mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px] [@media(orientation:landscape)]:line-clamp-3'}`}>
+                {selectedPost.description}
+              </p>
             </>
           )}
 
