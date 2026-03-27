@@ -407,77 +407,6 @@ export function ProfileView({
         )}
       </div>
 
-      <div className="px-5 pb-2">
-        <div className={`rounded-xl border ${theme?.border} ${theme?.card} p-3`}>
-          <div className="flex items-center justify-between">
-            <h3 className={`text-sm font-bold ${theme?.text}`}>{t?.profile?.reviewsTitle ?? 'Reviews'}</h3>
-            {profileReviews.length > 0 && (
-              <span className={`text-xs ${theme?.textSec}`}>
-                {t?.profile?.averageRating ?? 'Average'}: {averageRating.toFixed(1)} / 5
-              </span>
-            )}
-          </div>
-
-          {!isOwnProfile && onAddReview && (
-            <div className={`mt-3 border-t ${theme?.border} pt-3`}>
-              <p className={`text-xs font-semibold mb-2 ${theme?.text}`}>{t?.profile?.writeReview ?? 'Write a review'}</p>
-              <div className="flex items-center gap-1 mb-2">
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setDraftRating(value)}
-                    className="p-0.5"
-                    aria-label={`Set rating ${value}`}
-                  >
-                    <Star size={16} className={value <= draftRating ? 'fill-[#C29901] text-[#C29901]' : `${theme?.textSec}`} />
-                  </button>
-                ))}
-              </div>
-              <textarea
-                value={draftReviewText}
-                onChange={(e) => setDraftReviewText(e.target.value)}
-                className={`w-full rounded-lg border ${theme?.border} ${theme?.input} p-2 text-sm focus:outline-none`}
-                rows={2}
-                placeholder={t?.profile?.reviewPlaceholder ?? 'How was your experience?'}
-              />
-              <button
-                type="button"
-                onClick={handleSubmitReview}
-                disabled={!draftReviewText.trim()}
-                className="mt-2 h-9 px-3 rounded-lg bg-[#0D1A15] text-[#FCFAF7] text-xs font-semibold disabled:opacity-40"
-              >
-                {t?.profile?.submitReview ?? 'Submit review'}
-              </button>
-            </div>
-          )}
-
-          <div className="mt-3 space-y-2">
-            {profileReviews.length > 0 ? (
-              profileReviews.map((review) => {
-                const reviewer = users[review.reviewerId]
-                return (
-                  <div key={review.id} className={`rounded-lg border ${theme?.border} p-2`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs font-semibold ${theme?.text}`}>{reviewer?.name ?? 'User'}</span>
-                      <span className={`text-[11px] ${theme?.textSec}`}>{new Date(review.timestamp).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-0.5 mt-1">
-                      {[1, 2, 3, 4, 5].map((value) => (
-                        <Star key={`${review.id}-${value}`} size={12} className={value <= review.rating ? 'fill-[#C29901] text-[#C29901]' : `${theme?.textSec}`} />
-                      ))}
-                    </div>
-                    <p className={`text-xs mt-1 ${theme?.text}`}>{review.text}</p>
-                  </div>
-                )
-              })
-            ) : (
-              <p className={`text-xs ${theme?.textSec}`}>{t?.profile?.noReviews ?? 'No reviews yet.'}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
       {isOwnProfile && (
         <div className={`flex border-b ${theme?.border} mt-4`}>
           {user.role === 'gardener' && (
@@ -581,6 +510,77 @@ export function ProfileView({
             )}
           </div>
         )}
+      </div>
+
+      <div className="px-5 pt-4 pb-2">
+        <div className={`rounded-xl border ${theme?.border} ${theme?.card} p-3`}>
+          <div className="flex items-center justify-between">
+            <h3 className={`text-sm font-bold ${theme?.text}`}>{t?.profile?.reviewsTitle ?? 'Reviews'}</h3>
+            {profileReviews.length > 0 && (
+              <span className={`text-xs ${theme?.textSec}`}>
+                {t?.profile?.averageRating ?? 'Average'}: {averageRating.toFixed(1)} / 5
+              </span>
+            )}
+          </div>
+
+          {!isOwnProfile && onAddReview && (
+            <div className={`mt-3 border-t ${theme?.border} pt-3`}>
+              <p className={`text-xs font-semibold mb-2 ${theme?.text}`}>{t?.profile?.writeReview ?? 'Write a review'}</p>
+              <div className="flex items-center gap-1 mb-2">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setDraftRating(value)}
+                    className="p-0.5"
+                    aria-label={`Set rating ${value}`}
+                  >
+                    <Star size={16} className={value <= draftRating ? 'fill-[#C29901] text-[#C29901]' : `${theme?.textSec}`} />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={draftReviewText}
+                onChange={(e) => setDraftReviewText(e.target.value)}
+                className={`w-full rounded-lg border ${theme?.border} ${theme?.input} p-2 text-sm focus:outline-none`}
+                rows={2}
+                placeholder={t?.profile?.reviewPlaceholder ?? 'How was your experience?'}
+              />
+              <button
+                type="button"
+                onClick={handleSubmitReview}
+                disabled={!draftReviewText.trim()}
+                className="mt-2 h-9 px-3 rounded-lg bg-[#0D1A15] text-[#FCFAF7] text-xs font-semibold disabled:opacity-40"
+              >
+                {t?.profile?.submitReview ?? 'Submit review'}
+              </button>
+            </div>
+          )}
+
+          <div className="mt-3 space-y-2">
+            {profileReviews.length > 0 ? (
+              profileReviews.map((review) => {
+                const reviewer = users[review.reviewerId]
+                return (
+                  <div key={review.id} className={`rounded-lg border ${theme?.border} p-2`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-semibold ${theme?.text}`}>{reviewer?.name ?? 'User'}</span>
+                      <span className={`text-[11px] ${theme?.textSec}`}>{new Date(review.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <Star key={`${review.id}-${value}`} size={12} className={value <= review.rating ? 'fill-[#C29901] text-[#C29901]' : `${theme?.textSec}`} />
+                      ))}
+                    </div>
+                    <p className={`text-xs mt-1 ${theme?.text}`}>{review.text}</p>
+                  </div>
+                )
+              })
+            ) : (
+              <p className={`text-xs ${theme?.textSec}`}>{t?.profile?.noReviews ?? 'No reviews yet.'}</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {showShareOptions && (

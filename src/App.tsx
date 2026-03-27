@@ -27,6 +27,7 @@ import {
 } from '@/constants/storage'
 import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
 import type { UserProfile, Listing, Reservation, Message, Review, InAppNotification } from '@/types'
+import { ensureBrowserNotificationPermission, showBrowserNotification } from '@/utils/browserNotifications'
 
 type ActiveTab =
   | 'home'
@@ -128,6 +129,11 @@ export default function App() {
       },
       ...prev,
     ])
+    void showBrowserNotification({
+      title: payload.title,
+      body: payload.body,
+      tag: payload.type,
+    })
   }
 
   useEffect(() => {
@@ -183,6 +189,11 @@ export default function App() {
     if (!showNotifications) return
     setNotifications((prev) => prev.map((n) => (n.read ? n : { ...n, read: true })))
   }, [showNotifications])
+
+  useEffect(() => {
+    if (!isLoggedIn || !hasAcceptedLegal) return
+    void ensureBrowserNotificationPermission()
+  }, [isLoggedIn, hasAcceptedLegal])
 
   useEffect(() => {
     const updateViewportFlags = () => {
