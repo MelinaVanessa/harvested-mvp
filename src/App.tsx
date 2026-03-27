@@ -46,6 +46,7 @@ const API_BASE_URL =
   'https://harvested-mvp.onrender.com'
 const API_ENABLED = API_BASE_URL.length > 0
 const OWNER_NAME = 'Melina Vanessa Mann'
+const ADMIN_EMAIL = 'melina_vanessa.mann@web.de'
 const LEGAL_ACK_KEY = 'harvested_legal_ack_v2'
 const NAV_STATE_KEY = 'harvested_nav_state_v1'
 const NOTIFICATION_PREFS_KEY = 'harvested_notification_prefs_v1'
@@ -596,6 +597,27 @@ export default function App() {
     setMessages((prev) => ({ ...prev, [partnerId]: [...(prev[partnerId] ?? []), newMessage] }))
   }
 
+  const handleSendSupportMessage = (subject: string, text: string) => {
+    const adminId = 'u1'
+    const supportMessage: Message = {
+      id: `m${Date.now()}`,
+      senderId: currentUser.id,
+      text: `[Support: ${subject}] ${text}`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+
+    setMessages((prev) => {
+      const next: Record<string, Message[]> = {
+        ...prev,
+        [adminId]: [...(prev[adminId] ?? []), supportMessage],
+      }
+      if (currentUser.id !== adminId) {
+        next[currentUser.id] = [...(prev[currentUser.id] ?? []), supportMessage]
+      }
+      return next
+    })
+  }
+
   const handleDeleteListing = async (id: string) => {
     if (confirm('Möchtest du diesen Beitrag wirklich löschen?')) {
       if (API_ENABLED) {
@@ -813,7 +835,15 @@ export default function App() {
           />
         )
       case 'support':
-        return <SupportView onBack={() => setActiveTab('home')} theme={theme} t={t} />
+        return (
+          <SupportView
+            onBack={() => setActiveTab('home')}
+            theme={theme}
+            t={t}
+            adminEmail={ADMIN_EMAIL}
+            onSendSupport={handleSendSupportMessage}
+          />
+        )
       case 'settings':
         return (
           <SettingsView

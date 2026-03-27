@@ -6,13 +6,21 @@ interface SupportViewProps {
   onBack: () => void
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
+  adminEmail: string
+  onSendSupport: (subject: string, message: string) => void
 }
 
-export function SupportView({ onBack, theme, t }: SupportViewProps) {
+export function SupportView({ onBack, theme, t, adminEmail, onSendSupport }: SupportViewProps) {
   const [sent, setSent] = useState(false)
+  const [subject, setSubject] = useState('Allgemeine Anfrage')
+  const [message, setMessage] = useState('')
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
+    const cleanMessage = message.trim()
+    if (!cleanMessage) return
+    onSendSupport(subject, cleanMessage)
     setSent(true)
+    setMessage('')
   }
 
   return (
@@ -28,11 +36,18 @@ export function SupportView({ onBack, theme, t }: SupportViewProps) {
         {!sent ? (
           <form onSubmit={handleSend} className="space-y-6">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-[#4A5D4E]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <a
+                href={`mailto:${adminEmail}`}
+                className="w-16 h-16 bg-[#4A5D4E]/10 rounded-full flex items-center justify-center mx-auto mb-4 hover:bg-[#4A5D4E]/20 transition-colors"
+                aria-label={`Email ${adminEmail}`}
+              >
                 <Mail size={32} className="text-[#4A5D4E]" />
-              </div>
+              </a>
               <h3 className="text-lg font-bold">{t?.support?.help}</h3>
               <p className={`text-sm ${theme.textSec} mt-2`}>{t?.support?.sub}</p>
+              <a href={`mailto:${adminEmail}`} className="text-xs text-[#4A5D4E] underline underline-offset-2 mt-1 inline-block">
+                {adminEmail}
+              </a>
             </div>
             <div className="space-y-4">
               <div>
@@ -40,6 +55,8 @@ export function SupportView({ onBack, theme, t }: SupportViewProps) {
                   {t?.support?.subject}
                 </label>
                 <select
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
                   className={`w-full p-3 rounded-lg text-sm focus:outline-none focus:border-[#4A5D4E] ${theme.input}`}
                 >
                   <option>Allgemeine Anfrage</option>
@@ -54,6 +71,8 @@ export function SupportView({ onBack, theme, t }: SupportViewProps) {
                 </label>
                 <textarea
                   required
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   className={`w-full p-3 rounded-lg h-32 resize-none text-sm focus:outline-none focus:border-[#4A5D4E] ${theme.input}`}
                   placeholder="..."
                 />
