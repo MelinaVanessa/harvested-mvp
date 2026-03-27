@@ -139,7 +139,7 @@ export function HomeView({
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 ${isShortLandscape ? 'px-5 pt-1 pb-16 gap-4' : 'px-4 pt-2 pb-20 gap-6'} [@media(min-width:900px)_and_(orientation:landscape)]:grid-cols-2 [@media(min-width:900px)_and_(orientation:landscape)]:gap-5 [@media(min-width:1200px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1200px)_and_(orientation:landscape)]:px-6 [@media(min-width:1200px)_and_(orientation:landscape)]:gap-6 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-4`}>
+      <div className={`grid grid-cols-1 ${isShortLandscape ? 'px-5 pt-1 pb-16 gap-3' : 'px-4 pt-2 pb-20 gap-5'} [@media(min-width:900px)_and_(orientation:landscape)]:grid-cols-2 [@media(min-width:900px)_and_(orientation:landscape)]:gap-4 [@media(min-width:1200px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1200px)_and_(orientation:landscape)]:px-6 [@media(min-width:1200px)_and_(orientation:landscape)]:gap-5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-3`}>
         {filteredListings.length === 0 ? (
           <div className={`col-span-full text-center py-10 ${theme.textSec}`}>
             <p>{t?.home?.empty}</p>

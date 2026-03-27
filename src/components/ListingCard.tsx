@@ -50,7 +50,7 @@ export function ListingCard({
 
   return (
     <div className={`${theme.card} ${compact ? 'rounded-lg' : 'rounded-2xl [@media(min-width:1200px)_and_(orientation:landscape)]:rounded-xl [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:rounded-xl'} overflow-hidden shadow-sm border ${theme.border}`}>
-      <div className={`${compact ? 'p-2' : 'p-3 [@media(min-width:900px)_and_(orientation:landscape)]:p-2.5 [@media(min-width:1200px)_and_(orientation:landscape)]:p-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-1.5'} flex items-center justify-between relative`}>
+      <div className={`${compact ? 'p-2' : 'p-2.5 [@media(min-width:900px)_and_(orientation:landscape)]:p-2 [@media(min-width:1200px)_and_(orientation:landscape)]:p-1.5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-1.5'} flex items-center justify-between relative`}>
         <div className="flex items-center gap-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2 cursor-pointer" onClick={() => onUserClick(gardener.id)}>
           <img src={gardener.avatar} alt={gardener.name} className="w-8 h-8 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:w-7 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-7 rounded-full bg-gray-100" />
           <div className="leading-tight min-w-0 flex-1">
@@ -126,14 +126,14 @@ export function ListingCard({
               }
             : undefined
         }
-        className={`relative ${compact ? 'aspect-[16/9]' : 'aspect-[4/3] [@media(min-width:900px)_and_(orientation:landscape)]:aspect-[16/10] [@media(min-width:1200px)_and_(orientation:landscape)]:aspect-[7/4] [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:aspect-[12/5]'} bg-gray-100${onOpenListing ? ' cursor-pointer' : ''}`}
+        className={`relative ${compact ? 'aspect-[16/9]' : 'aspect-[16/10] [@media(min-width:900px)_and_(orientation:landscape)]:aspect-[16/11] [@media(min-width:1200px)_and_(orientation:landscape)]:aspect-[2/1] [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:aspect-[13/6]'} bg-gray-100${onOpenListing ? ' cursor-pointer' : ''}`}
       >
         <img src={listing.image} alt={listing.title} className="w-full h-full object-cover pointer-events-none" />
         <div className="absolute top-3 right-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:top-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:right-2 bg-white/90 backdrop-blur-sm px-2 py-1 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:px-1.5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:py-0.5 rounded-md text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[10px] font-bold shadow-sm pointer-events-none">
           {listing.harvestType === 'pickup' ? '📦 Abholbereit' : '🌾 Selbst ernten'}
         </div>
       </div>
-      <div className={`${compact ? 'p-2.5' : 'p-4 [@media(min-width:900px)_and_(orientation:landscape)]:p-3 [@media(min-width:1200px)_and_(orientation:landscape)]:p-2.5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-2'}`}>
+      <div className={`${compact ? 'p-2.5' : 'p-3 [@media(min-width:900px)_and_(orientation:landscape)]:p-2.5 [@media(min-width:1200px)_and_(orientation:landscape)]:p-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-1.5'}`}>
         <div className={`flex justify-between items-start ${compact ? 'mb-1.5' : 'mb-2'}`}>
           <div
             role={onOpenListing ? 'button' : undefined}
@@ -151,7 +151,7 @@ export function ListingCard({
             }
             className={`text-left min-w-0 flex-1${onOpenListing ? ' cursor-pointer' : ''}`}
           >
-            <h3 className={`${compact ? 'text-sm' : 'text-lg [@media(min-width:900px)_and_(orientation:landscape)]:text-base [@media(min-width:1200px)_and_(orientation:landscape)]:text-sm [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[13px]'} font-bold ${theme.text} line-clamp-1`}>{listing.title}</h3>
+            <h3 className={`${compact ? 'text-sm' : 'text-base [@media(min-width:900px)_and_(orientation:landscape)]:text-sm [@media(min-width:1200px)_and_(orientation:landscape)]:text-sm [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[12px]'} font-bold ${theme.text} line-clamp-1`}>{listing.title}</h3>
             <div className={`flex items-center gap-1 text-[#4A5D4E] ${compact ? 'text-xs' : 'text-sm [@media(min-width:1200px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px]'} font-medium`}>
               <ShoppingBag size={12} />
               <span>Noch {listing.availableQuantity} {listing.unit} {t?.listing?.available ?? 'verfügbar'}</span>
@@ -161,13 +161,13 @@ export function ListingCard({
             <Heart size={compact ? 18 : 22} className={isLiked ? 'fill-red-500 text-red-500' : theme.text} />
           </button>
         </div>
-        <p className={`${compact ? 'text-xs mb-2 line-clamp-1' : 'text-sm opacity-80 mb-4 [@media(min-width:900px)_and_(orientation:landscape)]:mb-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:mb-1 line-clamp-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:line-clamp-1'} ${theme.text}`}>{listing.description}</p>
+        <p className={`${compact ? 'text-xs mb-2 line-clamp-1' : 'text-sm opacity-80 mb-3 [@media(min-width:900px)_and_(orientation:landscape)]:mb-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:mb-1 line-clamp-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:line-clamp-1'} ${theme.text}`}>{listing.description}</p>
         <div className={`flex items-center gap-2 text-xs ${compact ? 'mb-2 p-1.5' : '[@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:hidden mb-4 [@media(min-width:900px)_and_(orientation:landscape)]:mb-3 p-2'} ${theme.textSec} ${theme.bg === 'bg-[#0D1A15]' ? 'bg-[#2C3E34]' : 'bg-[#FCFAF7]'} rounded-lg`}>
           <Clock size={14} />
           <span>{listing.pickupTimes}</span>
         </div>
         {listing.availableQuantity > 0 ? (
-          <div className={`flex items-center ${compact ? 'gap-2 mt-2' : 'gap-3 [@media(min-width:900px)_and_(orientation:landscape)]:gap-2.5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2 mt-4 [@media(min-width:900px)_and_(orientation:landscape)]:mt-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:mt-1.5'}`}>
+          <div className={`flex items-center ${compact ? 'gap-2 mt-2' : 'gap-2.5 [@media(min-width:900px)_and_(orientation:landscape)]:gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2 mt-3 [@media(min-width:900px)_and_(orientation:landscape)]:mt-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:mt-1.5'}`}>
             {!isSelf && (
               <div className={`flex items-center rounded-xl border ${theme.border} ${compact ? 'p-0.5 h-8' : 'p-1 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-0.5 h-12 [@media(min-width:900px)_and_(orientation:landscape)]:h-10 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8'} shrink-0 ${theme.input}`}>
                 <button
@@ -192,7 +192,7 @@ export function ListingCard({
             <button
               onClick={() => onReserve(listing.id, amount)}
               disabled={isSelf}
-              className={`flex-1 ${compact ? 'h-8 text-[11px] gap-1' : 'h-12 [@media(min-width:900px)_and_(orientation:landscape)]:h-10 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-1'} rounded-xl font-bold flex items-center justify-center transition-all active:scale-[0.98] ${isSelf ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-[#0D1A15] text-[#FCFAF7] hover:bg-[#4A5D4E] shadow-lg shadow-[#0D1A15]/10'}`}
+              className={`flex-1 ${compact ? 'h-8 text-[11px] gap-1' : 'h-10 [@media(min-width:900px)_and_(orientation:landscape)]:h-9 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-1'} rounded-xl font-bold flex items-center justify-center transition-all active:scale-[0.98] ${isSelf ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-[#0D1A15] text-[#FCFAF7] hover:bg-[#4A5D4E] shadow-lg shadow-[#0D1A15]/10'}`}
             >
               {isSelf ? t?.listing?.yourOffer ?? 'Dein Angebot' : t?.listing?.reserve ?? 'Reservieren'}
             </button>
