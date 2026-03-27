@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { X, Leaf } from 'lucide-react'
 
 interface ImageCropperProps {
@@ -13,10 +13,11 @@ export function ImageCropper({ imageSrc, onCancel, onSave, t }: ImageCropperProp
   const EXPORT_SIZE = 300
   const [zoom, setZoom] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const imgRef = useRef<HTMLImageElement>(null)
   const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 })
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const dragStartRef = useRef<{ pointerX: number; pointerY: number; offsetX: number; offsetY: number } | null>(null)
+  const pinchStartRef = useRef<{ distance: number; zoom: number; midpointX: number; midpointY: number; offsetX: number; offsetY: number } | null>(null)
 
   const coverSize = useMemo(() => {
     const w = imageNaturalSize.width
@@ -29,18 +30,91 @@ export function ImageCropper({ imageSrc, onCancel, onSave, t }: ImageCropperProp
     }
   }, [imageNaturalSize.width, imageNaturalSize.height])
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    setIsDragging(true)
-    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y })
-  }
+  const clampZoom = (value: number) => Math.min(3, Math.max(0.1, value))
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (isDragging) {
-      setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
+  const handlePointerDown = (e: React.PointerEvent) => {
+    ;(e.currentTarget as Element).setPointerCapture(e.pointerId)
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const pointers = Array.from(activePointersRef.current.values())
+
+    if (pointers.length === 1) {
+      dragStartRef.current = {
+        pointerX: e.clientX,
+        pointerY: e.clientY,
+        offsetX: offset.x,
+        offsetY: offset.y,
+      }
+      pinchStartRef.current = null
+      return
+    }
+
+    if (pointers.length >= 2) {
+      const p1 = pointers[0]!
+      const p2 = pointers[1]!
+      const distance = Math.hypot(p2.x - p1.x, p2.y - p1.y)
+      const midpointX = (p1.x + p2.x) / 2
+      const midpointY = (p1.y + p2.y) / 2
+      pinchStartRef.current = {
+        distance,
+        zoom,
+        midpointX,
+        midpointY,
+        offsetX: offset.x,
+        offsetY: offset.y,
+      }
+      dragStartRef.current = null
     }
   }
 
-  const handlePointerUp = () => setIsDragging(false)
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!activePointersRef.current.has(e.pointerId)) return
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+    const pointers = Array.from(activePointersRef.current.values())
+    if (pointers.length >= 2 && pinchStartRef.current) {
+      const p1 = pointers[0]!
+      const p2 = pointers[1]!
+      const currentDistance = Math.hypot(p2.x - p1.x, p2.y - p1.y)
+      const currentMidX = (p1.x + p2.x) / 2
+      const currentMidY = (p1.y + p2.y) / 2
+      const base = pinchStartRef.current
+      const rawZoom = base.zoom * (currentDistance / Math.max(1, base.distance))
+      const nextZoom = clampZoom(rawZoom)
+      setZoom(nextZoom)
+      setOffset({
+        x: base.offsetX + (currentMidX - base.midpointX),
+        y: base.offsetY + (currentMidY - base.midpointY),
+      })
+      return
+    }
+
+    if (pointers.length === 1 && dragStartRef.current) {
+      const base = dragStartRef.current
+      setOffset({
+        x: base.offsetX + (e.clientX - base.pointerX),
+        y: base.offsetY + (e.clientY - base.pointerY),
+      })
+    }
+  }
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    activePointersRef.current.delete(e.pointerId)
+    const pointers = Array.from(activePointersRef.current.values())
+
+    if (pointers.length === 1) {
+      const p = pointers[0]!
+      dragStartRef.current = {
+        pointerX: p.x,
+        pointerY: p.y,
+        offsetX: offset.x,
+        offsetY: offset.y,
+      }
+      pinchStartRef.current = null
+    } else if (pointers.length < 1) {
+      dragStartRef.current = null
+      pinchStartRef.current = null
+    }
+  }
 
   const handleSave = () => {
     const canvas = document.createElement('canvas')
@@ -109,7 +183,7 @@ export function ImageCropper({ imageSrc, onCancel, onSave, t }: ImageCropperProp
             max="3"
             step="0.1"
             value={zoom}
-            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            onChange={(e) => setZoom(clampZoom(parseFloat(e.target.value)))}
             className="flex-1 h-2 bg-[#88887D]/20 rounded-lg appearance-none cursor-pointer accent-[#0D1A15]"
           />
           <Leaf size={24} className="text-[#0D1A15]" />
