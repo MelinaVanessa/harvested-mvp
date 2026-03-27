@@ -48,7 +48,8 @@ export function HomeView({
 
   useEffect(() => {
     const updateViewportFlags = () => {
-      setIsShortLandscape(window.innerWidth >= 900 && window.innerHeight <= 700)
+      // Keep FYP filters visible on typical laptop heights (e.g. 1366x768).
+      setIsShortLandscape(window.innerWidth >= 900 && window.innerHeight <= 620)
     }
     updateViewportFlags()
     window.addEventListener('resize', updateViewportFlags)
