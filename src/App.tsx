@@ -181,6 +181,7 @@ export default function App() {
   const [showInbox, setShowInbox] = useState(initialNavRef.current?.showInbox ?? false)
   const [showMenu, setShowMenu] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAuthBootstrapping, setIsAuthBootstrapping] = useState(true)
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [messages, setMessages] = useState<Record<string, Message[]>>(INITIAL_MESSAGES)
   const [showSaveLoginModal, setShowSaveLoginModal] = useState(false)
@@ -229,7 +230,10 @@ export default function App() {
     const restoreSavedLogin = async () => {
       const mergedUsers = mergeUsersFromStorage(MOCK_USERS, {})
       const saved = getSavedLogin()
-      if (!saved?.userId) return
+      if (!saved?.userId) {
+        if (!cancelled) setIsAuthBootstrapping(false)
+        return
+      }
 
       const profilePatch = getSavedProfile(saved.userId)
       const localBase = mergedUsers[saved.userId]
@@ -238,11 +242,13 @@ export default function App() {
         setCurrentUser(profilePatch ? { ...localBase, ...profilePatch } : localBase)
         setUsers((prev) => mergeUsersFromStorage(MOCK_USERS, prev))
         setIsLoggedIn(true)
+        setIsAuthBootstrapping(false)
         return
       }
 
       if (!API_ENABLED) {
         clearSavedLogin()
+        if (!cancelled) setIsAuthBootstrapping(false)
         return
       }
 
@@ -259,6 +265,8 @@ export default function App() {
         setIsLoggedIn(true)
       } catch {
         clearSavedLogin()
+      } finally {
+        if (!cancelled) setIsAuthBootstrapping(false)
       }
     }
 
@@ -832,6 +840,10 @@ export default function App() {
       default:
         return null
     }
+  }
+
+  if (isAuthBootstrapping) {
+    return <div className={`fixed inset-0 w-full h-[100svh] ${theme.bg}`} />
   }
 
   return (
