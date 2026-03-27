@@ -48,6 +48,8 @@ interface ProfileViewProps {
   onReserve?: (listingId: string, amount: number, pickupAt: string) => void
   reviews?: Review[]
   onAddReview?: (profileId: string, rating: number, text: string) => void
+  isAdmin?: boolean
+  onToggleCertification?: (userId: string) => void
 }
 
 export function ProfileView({
@@ -70,6 +72,8 @@ export function ProfileView({
   onReserve,
   reviews = [],
   onAddReview,
+  isAdmin = false,
+  onToggleCertification,
 }: ProfileViewProps) {
   const safeUser = user ?? ({} as UserProfile)
   const [isEditing, setIsEditing] = useState(false)
@@ -390,7 +394,8 @@ export function ProfileView({
             </button>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="space-y-2">
+            <div className="flex gap-2">
             <button
               onClick={() => onFollow?.(safeUser.id)}
               className={`flex-1 ${isFollowing ? `${theme?.card} ${theme?.text}` : 'bg-[#C29901] text-white'} active:scale-[0.98] transition-all font-semibold text-sm py-2 rounded-lg`}
@@ -403,6 +408,22 @@ export function ProfileView({
             >
               Nachricht
             </button>
+            </div>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => onToggleCertification?.(safeUser.id)}
+                className={`w-full py-2 rounded-lg text-xs font-semibold border transition-colors ${
+                  safeUser.isMember
+                    ? `border-red-300 text-red-600 hover:bg-red-50 ${theme?.bg}`
+                    : `border-[#4A5D4E]/40 text-[#4A5D4E] hover:bg-[#4A5D4E]/10 ${theme?.card}`
+                }`}
+              >
+                {safeUser.isMember
+                  ? (t?.profile?.certOff ?? 'Zertifizierung entfernen')
+                  : (t?.profile?.certOn ?? 'Als zertifiziert markieren')}
+              </button>
+            )}
           </div>
         )}
       </div>

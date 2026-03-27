@@ -47,6 +47,51 @@ const API_BASE_URL =
 const API_ENABLED = API_BASE_URL.length > 0
 const OWNER_NAME = 'Melina Vanessa Mann'
 const LEGAL_ACK_KEY = 'harvested_legal_ack_v2'
+const NAV_STATE_KEY = 'harvested_nav_state_v1'
+
+type PersistedNavState = {
+  activeTab: ActiveTab
+  viewingProfileId: string | null
+  chatPartnerId: string | null
+  showInbox: boolean
+}
+
+function readSavedNavState(): PersistedNavState | null {
+  try {
+    const raw = localStorage.getItem(NAV_STATE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<PersistedNavState>
+    const validTabs: ActiveTab[] = [
+      'home',
+      'map',
+      'add',
+      'profile',
+      'likes',
+      'support',
+      'settings',
+      'legal_terms',
+      'legal_privacy',
+      'legal_imprint',
+    ]
+    const activeTab = validTabs.includes(parsed.activeTab as ActiveTab) ? (parsed.activeTab as ActiveTab) : 'home'
+    return {
+      activeTab,
+      viewingProfileId: typeof parsed.viewingProfileId === 'string' ? parsed.viewingProfileId : null,
+      chatPartnerId: typeof parsed.chatPartnerId === 'string' ? parsed.chatPartnerId : null,
+      showInbox: Boolean(parsed.showInbox),
+    }
+  } catch {
+    return null
+  }
+}
+
+function clearSavedNavState() {
+  try {
+    localStorage.removeItem(NAV_STATE_KEY)
+  } catch {
+    // ignore
+  }
+}
 
 /** API / older payloads may omit camelCase gardenerId */
 function normalizeListingGardenerId(item: Listing): Listing {
@@ -77,6 +122,7 @@ const INITIAL_REVIEWS: Review[] = [
 ]
 
 export default function App() {
+  const initialNavRef = useRef<PersistedNavState | null>(readSavedNavState())
   const [hasAcceptedLegal, setHasAcceptedLegal] = useState<boolean>(() => {
     try {
       return localStorage.getItem(LEGAL_ACK_KEY) === '1'
@@ -85,7 +131,7 @@ export default function App() {
     }
   })
   const [legalConfirmChecked, setLegalConfirmChecked] = useState(false)
-  const [activeTab, setActiveTab] = useState<ActiveTab>('home')
+  const [activeTab, setActiveTab] = useState<ActiveTab>(initialNavRef.current?.activeTab ?? 'home')
   const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USER)
   const [listings, setListings] = useState<Listing[]>(API_ENABLED ? [] : INITIAL_LISTINGS)
   const [users, setUsers] = useState<Record<string, UserProfile>>(() => mergeUsersFromStorage(MOCK_USERS, {}))
@@ -93,9 +139,9 @@ export default function App() {
   const [filterType, setFilterType] = useState<'all' | 'pickup' | 'self_harvest'>('all')
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [language, setLanguage] = useState<'de' | 'en'>('de')
-  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null)
-  const [chatPartnerId, setChatPartnerId] = useState<string | null>(null)
-  const [showInbox, setShowInbox] = useState(false)
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(initialNavRef.current?.viewingProfileId ?? null)
+  const [chatPartnerId, setChatPartnerId] = useState<string | null>(initialNavRef.current?.chatPartnerId ?? null)
+  const [showInbox, setShowInbox] = useState(initialNavRef.current?.showInbox ?? false)
   const [showMenu, setShowMenu] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [reservations, setReservations] = useState<Reservation[]>([])
@@ -194,6 +240,23 @@ export default function App() {
     if (!isLoggedIn || !hasAcceptedLegal) return
     void ensureBrowserNotificationPermission()
   }, [isLoggedIn, hasAcceptedLegal])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+    try {
+      localStorage.setItem(
+        NAV_STATE_KEY,
+        JSON.stringify({
+          activeTab,
+          viewingProfileId,
+          chatPartnerId,
+          showInbox,
+        } satisfies PersistedNavState),
+      )
+    } catch {
+      // ignore storage errors
+    }
+  }, [isLoggedIn, activeTab, viewingProfileId, chatPartnerId, showInbox])
 
   useEffect(() => {
     const updateViewportFlags = () => {
@@ -455,6 +518,16 @@ export default function App() {
     })
   }
 
+  const handleToggleCertification = (userId: string) => {
+    if (!isAdmin) return
+    setUsers((prev) => {
+      const target = prev[userId]
+      if (!target) return prev
+      const nextTarget = { ...target, isMember: !target.isMember }
+      return { ...prev, [userId]: nextTarget }
+    })
+  }
+
   const handleSendMessage = (partnerId: string, text: string) => {
     const newMessage: Message = {
       id: `m${Date.now()}`,
@@ -593,6 +666,8 @@ export default function App() {
           onReserve={handleReservation}
           reviews={reviews}
           onAddReview={handleAddReview}
+          isAdmin={isAdmin}
+          onToggleCertification={handleToggleCertification}
           theme={theme}
           t={t}
         />
@@ -675,6 +750,8 @@ export default function App() {
             onCancelReservation={handleCancelReservation}
             onFollow={toggleFollow}
             reviews={reviews}
+            isAdmin={isAdmin}
+            onToggleCertification={handleToggleCertification}
           />
         )
       case 'support':
@@ -689,7 +766,7 @@ export default function App() {
             setLanguage={setLanguage}
             theme={theme}
             t={t}
-            onLogout={() => { setIsLoggedIn(false); clearSavedLogin() }}
+            onLogout={() => { setIsLoggedIn(false); clearSavedLogin(); clearSavedNavState() }}
             userRole={currentUser.role}
             onToggleRole={handleToggleRole}
           />
@@ -974,7 +1051,7 @@ export default function App() {
                       </button>
                     </div>
                     <button
-                      onClick={() => { setShowMenu(false); setIsLoggedIn(false); clearSavedLogin(); }}
+                      onClick={() => { setShowMenu(false); setIsLoggedIn(false); clearSavedLogin(); clearSavedNavState() }}
                       className="flex items-center gap-3 text-red-500 font-semibold px-3 h-11 hover:bg-red-50 rounded-lg w-full text-left transition-colors"
                     >
                       <LogOut size={20} /> {t.settings?.logout ?? 'Abmelden'}
