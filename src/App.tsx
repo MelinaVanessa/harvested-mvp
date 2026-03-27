@@ -675,26 +675,28 @@ export default function App() {
                     >
                       <Settings size={20} /> {t.settings.title}
                     </button>
-                    <button
-                      onClick={() => handleMenuClick('legal_terms')}
-                      className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
-                    >
-                      <Leaf size={20} /> {t.legal.terms}
-                    </button>
-                    <button
-                      onClick={() => handleMenuClick('legal_privacy')}
-                      className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
-                    >
-                      <Leaf size={20} /> {t.legal.privacy}
-                    </button>
-                    <button
-                      onClick={() => handleMenuClick('legal_imprint')}
-                      className={`flex items-center gap-3 ${theme.text} font-semibold px-3 h-11 hover:bg-gray-100/10 rounded-lg w-full text-left`}
-                    >
-                      <Leaf size={20} /> {t.legal.imprint}
-                    </button>
                   </div>
                   <div className={`pt-4 border-t ${theme.border} space-y-4`}>
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => handleMenuClick('legal_terms')}
+                        className={`flex items-center gap-2 ${theme.textSec} font-medium text-xs px-3 h-7 hover:bg-gray-100/10 rounded-lg w-full text-left opacity-85`}
+                      >
+                        <Leaf size={14} /> {t.legal.terms}
+                      </button>
+                      <button
+                        onClick={() => handleMenuClick('legal_privacy')}
+                        className={`flex items-center gap-2 ${theme.textSec} font-medium text-xs px-3 h-7 hover:bg-gray-100/10 rounded-lg w-full text-left opacity-85`}
+                      >
+                        <Leaf size={14} /> {t.legal.privacy}
+                      </button>
+                      <button
+                        onClick={() => handleMenuClick('legal_imprint')}
+                        className={`flex items-center gap-2 ${theme.textSec} font-medium text-xs px-3 h-7 hover:bg-gray-100/10 rounded-lg w-full text-left opacity-85`}
+                      >
+                        <Leaf size={14} /> {t.legal.imprint}
+                      </button>
+                    </div>
                     <button
                       onClick={() => { setShowMenu(false); setIsLoggedIn(false); clearSavedLogin(); }}
                       className="flex items-center gap-3 text-red-500 font-semibold px-3 h-11 hover:bg-red-50 rounded-lg w-full text-left transition-colors"
