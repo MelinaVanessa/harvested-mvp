@@ -253,9 +253,12 @@ export default function App() {
         return
       }
 
+      const controller = new AbortController()
+      const timeout = window.setTimeout(() => controller.abort(), 4000)
       try {
         const res = await fetch(`${API_BASE_URL}/api/users/${encodeURIComponent(saved.userId)}`, {
           headers: { Accept: 'application/json' },
+          signal: controller.signal,
         })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const remoteUser = (await res.json()) as UserProfile
@@ -267,6 +270,7 @@ export default function App() {
       } catch {
         clearSavedLogin()
       } finally {
+        window.clearTimeout(timeout)
         if (!cancelled) setIsAuthBootstrapping(false)
       }
     }
