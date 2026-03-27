@@ -171,7 +171,7 @@ export function ListingDetailModal({
         className={`${theme.card} ${theme.text} w-full rounded-2xl shadow-2xl flex flex-col ${
           isMap
             ? 'max-w-md max-h-[min(92dvh,calc(100svh-1.5rem))] overflow-hidden'
-            : 'max-h-full overflow-y-auto'
+            : 'max-w-2xl max-h-[min(92dvh,calc(100svh-1rem))] overflow-hidden'
         }`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -184,7 +184,7 @@ export function ListingDetailModal({
             className={
               isMap
                 ? 'w-full object-cover max-h-[min(30vh,200px)] h-[min(30vh,200px)] sm:max-h-[min(34vh,240px)] sm:h-[min(34vh,240px)]'
-                : 'w-full aspect-square object-cover'
+                : 'w-full aspect-square [@media(orientation:landscape)]:aspect-[16/7] [@media(min-width:900px)_and_(orientation:landscape)]:aspect-[16/6] object-cover'
             }
             alt={selectedPost.title}
           />
@@ -196,7 +196,7 @@ export function ListingDetailModal({
             <X size={20} />
           </button>
         </div>
-        <div className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-4 overflow-y-auto' : 'p-6'}`}>
+        <div className={`flex flex-col flex-1 min-h-0 ${isMap ? 'p-4 overflow-y-auto' : 'p-6 [@media(orientation:landscape)]:p-4 overflow-y-auto'}`}>
           {isEditingPost ? (
             <div className="space-y-4">
               <input
@@ -227,12 +227,12 @@ export function ListingDetailModal({
             <>
               <h3
                 id="listing-detail-title"
-                className={`font-bold mb-2 ${isMap ? 'text-lg sm:text-xl' : 'text-2xl'}`}
+                className={`font-bold mb-2 ${isMap ? 'text-lg sm:text-xl' : 'text-2xl [@media(orientation:landscape)]:text-xl'}`}
               >
                 {selectedPost.title}
               </h3>
               {!isSelfListing ? (
-                <div className={`flex flex-col gap-2 ${isMap ? 'mb-2' : 'mb-3'}`}>
+                <div className={`flex flex-col gap-2 ${isMap ? 'mb-2' : 'mb-3 [@media(orientation:landscape)]:mb-2'}`}>
                   <div className={`flex items-center gap-1 text-[#4A5D4E] text-sm font-medium`}>
                     <ShoppingBag size={14} />
                     <span>
@@ -245,7 +245,7 @@ export function ListingDetailModal({
                   </div>
                 </div>
               ) : (
-                <div className={`flex gap-4 ${isMap ? 'text-xs mb-3' : 'text-sm mb-4'} ${theme.textSec}`}>
+                <div className={`flex gap-4 ${isMap ? 'text-xs mb-3' : 'text-sm mb-4 [@media(orientation:landscape)]:mb-2'} ${theme.textSec}`}>
                   <span className="flex items-center gap-1">
                     <ShoppingBag size={14} /> {selectedPost.availableQuantity} {selectedPost.unit}
                   </span>
@@ -255,7 +255,7 @@ export function ListingDetailModal({
                 </div>
               )}
               {!isEditingPost && (
-                <div className={`space-y-2 ${isMap ? 'mb-3' : 'mb-4'}`}>
+                <div className={`space-y-2 ${isMap ? 'mb-3' : 'mb-4 [@media(orientation:landscape)]:mb-2'}`}>
                   {selectedPost.location.address?.trim() ? (
                     <a
                       href={getGoogleMapsUrlForListing(selectedPost)}
@@ -277,14 +277,12 @@ export function ListingDetailModal({
                 </div>
               )}
               {reserveControls}
-              <p className={`opacity-80 ${isMap ? 'text-sm mb-4' : 'mb-6'}`}>{selectedPost.description}</p>
+              <p className={`opacity-80 ${isMap ? 'text-sm mb-4' : 'mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px]'}`}>{selectedPost.description}</p>
             </>
           )}
 
           {!isSelfListing && !isEditingPost && (
-            <div
-              className={`${isMap ? 'mt-0 mb-3 p-3' : 'mt-4 mb-6 p-4'} rounded-xl border border-[#4A5D4E]/20 ${theme.bg === 'bg-[#0D1A15]' ? 'bg-[#1A2E35]' : 'bg-[#F2F4F0]'}`}
-            >
+            <div className={`${isMap ? 'mt-0 mb-3 p-3' : 'mt-3 mb-4 p-3 [@media(orientation:landscape)]:mb-2'} rounded-xl border border-[#4A5D4E]/20 ${theme.bg === 'bg-[#0D1A15]' ? 'bg-[#1A2E35]' : 'bg-[#F2F4F0]'}`}>
               <div className="flex items-center gap-2 mb-2">
                 <Leaf className="text-[#4A5D4E]" size={20} />
                 <h4 className="font-bold text-sm text-[#4A5D4E]">{t?.listing?.recipes}</h4>
