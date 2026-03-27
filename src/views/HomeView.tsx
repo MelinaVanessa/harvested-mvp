@@ -132,13 +132,11 @@ export function HomeView({
           </button>
         </div>
 
-        {!isShortLandscape && (
-          <div className={`flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar scrollbar-hide ${theme.bg} relative z-40`}>
-            <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} />
-            <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} />
-            <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} />
-          </div>
-        )}
+        <div className={`flex gap-2 px-4 ${isShortLandscape ? 'py-2' : 'py-3'} overflow-x-auto no-scrollbar scrollbar-hide ${theme.bg} relative z-40`}>
+          <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} />
+          <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} />
+          <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} />
+        </div>
       </div>
 
       <div className={`grid grid-cols-1 ${isShortLandscape ? 'px-5 pt-1 pb-16 gap-4' : 'px-4 pt-2 pb-20 gap-6'} [@media(min-width:900px)_and_(orientation:landscape)]:grid-cols-2 [@media(min-width:900px)_and_(orientation:landscape)]:gap-5 [@media(min-width:1200px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1200px)_and_(orientation:landscape)]:px-6 [@media(min-width:1200px)_and_(orientation:landscape)]:gap-6 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-4`}>
