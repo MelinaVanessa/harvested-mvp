@@ -445,11 +445,11 @@ export function ProfileView({
                   setSelectedPost(l)
                   setIsEditingPost(false)
                 }}
-                className="relative aspect-square bg-gray-100 cursor-pointer active:scale-95 transition-transform"
+                className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
               >
                 <img src={l.image} className="w-full h-full object-cover" alt={l.title} />
                 {l.availableQuantity === 0 && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
                     <span className="text-white text-xs font-bold">Vergeben</span>
                   </div>
                 )}
