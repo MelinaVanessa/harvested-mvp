@@ -28,6 +28,7 @@ export interface Listing {
   availableQuantity: number
   harvestType: 'pickup' | 'self_harvest'
   pickupTimes: string
+  pickupSlots?: string[]
   location: { x: number; y: number; address: string; lat?: number; lng?: number }
   datePosted: string
 }

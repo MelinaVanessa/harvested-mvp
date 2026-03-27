@@ -16,6 +16,7 @@ const defaultForm: Partial<Listing> = {
   unit: 'kg',
   harvestType: 'pickup',
   pickupTimes: '',
+  pickupSlots: [],
   location: { x: 50, y: 50, address: '' },
   image: '',
 }
@@ -36,6 +37,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
   const [addressSuggestions, setAddressSuggestions] = useState<GeoSuggestion[]>([])
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
   const [isLocating, setIsLocating] = useState(false)
+  const [pickupSlotInput, setPickupSlotInput] = useState('')
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -48,6 +50,11 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const pickupSlots = (formData.pickupSlots ?? []).filter((slot) => Number.isFinite(new Date(slot).getTime()))
+    if (pickupSlots.length === 0) {
+      window.alert('Bitte mindestens eine Abholzeit hinzufügen.')
+      return
+    }
     onAdd({
       id: `l${Date.now()}`,
       gardenerId: currentUser.id,
@@ -55,7 +62,33 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
       image: formData.image ?? 'https://images.unsplash.com/photo-1606507119036-0742d1f760da',
       datePosted: new Date().toISOString(),
       ...formData,
+      pickupSlots,
+      pickupTimes: `${pickupSlots.length} feste Abholzeit${pickupSlots.length > 1 ? 'en' : ''}`,
     } as Listing)
+  }
+
+  const addPickupSlot = () => {
+    if (!pickupSlotInput) return
+    const iso = new Date(pickupSlotInput).toISOString()
+    if (!Number.isFinite(new Date(iso).getTime())) return
+    const existing = formData.pickupSlots ?? []
+    if (existing.includes(iso)) return
+    const next = [...existing, iso].sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+    setFormData((prev) => ({
+      ...prev,
+      pickupSlots: next,
+      pickupTimes: `${next.length} feste Abholzeit${next.length > 1 ? 'en' : ''}`,
+    }))
+    setPickupSlotInput('')
+  }
+
+  const removePickupSlot = (iso: string) => {
+    const next = (formData.pickupSlots ?? []).filter((slot) => slot !== iso)
+    setFormData((prev) => ({
+      ...prev,
+      pickupSlots: next,
+      pickupTimes: next.length > 0 ? `${next.length} feste Abholzeit${next.length > 1 ? 'en' : ''}` : '',
+    }))
   }
 
   const handleOptimize = () => {
@@ -257,13 +290,42 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
           </div>
           <div>
             <label className={`block text-xs font-bold uppercase mb-1 ${theme.textSec}`}>{t?.add?.times}</label>
-            <input
-              required
-              className={`w-full p-3 rounded-lg ${theme.input}`}
-              placeholder="z.B. Mo-Fr 18-20 Uhr"
-              value={formData.pickupTimes}
-              onChange={(e) => setFormData({ ...formData, pickupTimes: e.target.value })}
-            />
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <input
+                  type="datetime-local"
+                  className={`w-full p-3 rounded-lg ${theme.input}`}
+                  value={pickupSlotInput}
+                  min={new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16)}
+                  onChange={(e) => setPickupSlotInput(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={addPickupSlot}
+                  className="px-3 rounded-lg border border-[#C29901] text-[#C29901] text-xs font-bold"
+                >
+                  Hinzufügen
+                </button>
+              </div>
+              {(formData.pickupSlots ?? []).length > 0 ? (
+                <div className={`rounded-lg border ${theme.border} p-2 space-y-1.5`}>
+                  {(formData.pickupSlots ?? []).map((slot) => (
+                    <div key={slot} className="flex items-center justify-between text-xs">
+                      <span className={theme.text}>{new Date(slot).toLocaleString()}</span>
+                      <button
+                        type="button"
+                        onClick={() => removePickupSlot(slot)}
+                        className="px-2 py-0.5 rounded-md text-red-600 border border-red-200"
+                      >
+                        Entfernen
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={`text-xs ${theme.textSec}`}>Bitte mindestens eine Abholzeit hinzufügen.</p>
+              )}
+            </div>
           </div>
           <div>
             <label className={`block text-xs font-bold uppercase mb-1 ${theme.textSec}`}>{t?.add?.address}</label>

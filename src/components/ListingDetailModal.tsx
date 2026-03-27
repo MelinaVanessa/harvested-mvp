@@ -50,6 +50,7 @@ export function ListingDetailModal({
     Math.min(selectedPost.availableQuantity, selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5),
   )
   const [pickupAt, setPickupAt] = useState('')
+  const offeredSlots = (selectedPost.pickupSlots ?? []).filter((slot) => Number.isFinite(new Date(slot).getTime()))
 
   useEffect(() => {
     const s = selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5
@@ -103,13 +104,28 @@ export function ListingDetailModal({
         <div className="space-y-2">
           <label className={`block text-xs font-semibold ${theme.textSec}`}>
             Abholzeit
-            <input
-              type="datetime-local"
-              value={pickupAt}
-              min={new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16)}
-              onChange={(e) => setPickupAt(e.target.value)}
-              className={`mt-1 w-full rounded-lg border ${theme.border} ${theme.input} px-2 py-2 text-sm ${theme.text}`}
-            />
+            {offeredSlots.length > 0 ? (
+              <select
+                value={pickupAt}
+                onChange={(e) => setPickupAt(e.target.value)}
+                className={`mt-1 w-full rounded-lg border ${theme.border} ${theme.input} px-2 py-2 text-sm ${theme.text}`}
+              >
+                <option value="">Abholzeit wählen</option>
+                {offeredSlots.map((slot) => (
+                  <option key={slot} value={slot}>
+                    {new Date(slot).toLocaleString()}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="datetime-local"
+                value={pickupAt}
+                min={new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16)}
+                onChange={(e) => setPickupAt(e.target.value)}
+                className={`mt-1 w-full rounded-lg border ${theme.border} ${theme.input} px-2 py-2 text-sm ${theme.text}`}
+              />
+            )}
           </label>
           <div className={`flex items-center gap-2 ${isMap ? 'flex-wrap' : ''}`}>
           {!isSelfListing && (
@@ -139,8 +155,8 @@ export function ListingDetailModal({
           )}
           <button
             type="button"
-            onClick={() => onReserve?.(selectedPost.id, reserveAmount, new Date(pickupAt).toISOString())}
-            disabled={isSelfListing || !pickupAt}
+            onClick={() => onReserve?.(selectedPost.id, reserveAmount, pickupAt ? new Date(pickupAt).toISOString() : '')}
+            disabled={isSelfListing}
             className={`flex-1 min-w-[8rem] h-10 rounded-lg text-sm font-bold flex items-center justify-center gap-1 transition-all active:scale-[0.98] ${reserveCtaClass}`}
           >
             {isSelfListing

@@ -52,6 +52,7 @@ interface ProfileViewProps {
   isAdmin?: boolean
   onToggleCertification?: (userId: string) => void
   onDeleteReview?: (reviewId: string) => void
+  onUpdateReservation?: (reservationId: string, amount: number, pickupAt: string) => void
 }
 
 export function ProfileView({
@@ -77,6 +78,7 @@ export function ProfileView({
   isAdmin = false,
   onToggleCertification,
   onDeleteReview,
+  onUpdateReservation,
 }: ProfileViewProps) {
   const safeUser = user ?? ({} as UserProfile)
   const [isEditing, setIsEditing] = useState(false)
@@ -91,6 +93,9 @@ export function ProfileView({
   const [showFollowingList, setShowFollowingList] = useState(false)
   const [showShareOptions, setShowShareOptions] = useState(false)
   const [activeTab, setActiveTab] = useState<'posts' | 'reservations'>('posts')
+  const [editingReservationId, setEditingReservationId] = useState<string | null>(null)
+  const [editReservationAmount, setEditReservationAmount] = useState(1)
+  const [editReservationPickupAt, setEditReservationPickupAt] = useState('')
   const [draftRating, setDraftRating] = useState(5)
   const [draftReviewText, setDraftReviewText] = useState('')
   const [snapshotFollowing, setSnapshotFollowing] = useState<string[]>([])
@@ -105,6 +110,14 @@ export function ProfileView({
   const averageRating = profileReviews.length
     ? profileReviews.reduce((sum, r) => sum + r.rating, 0) / profileReviews.length
     : 0
+
+  const toLocalInputValue = (iso?: string) => {
+    if (!iso) return ''
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ''
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    return local.toISOString().slice(0, 16)
+  }
 
   useEffect(() => {
     if (!isEditing && user) {
@@ -237,6 +250,12 @@ export function ProfileView({
     onAddReview(safeUser.id, draftRating, clean)
     setDraftReviewText('')
     setDraftRating(5)
+  }
+
+  const startEditReservation = (res: Reservation) => {
+    setEditingReservationId(res.id)
+    setEditReservationAmount(res.amount)
+    setEditReservationPickupAt(toLocalInputValue(res.pickupAt))
   }
 
   if (showFollowingList) {
@@ -501,27 +520,101 @@ export function ProfileView({
                     <img src={listing.image} className="w-16 h-16 rounded-lg object-cover bg-gray-100" alt={listing.title} />
                     <div className="flex-1 min-w-0">
                       <h4 className={`font-bold text-sm ${theme?.text} truncate`}>{listing.title}</h4>
-                      <p className={`text-xs ${theme?.textSec} flex items-center gap-1`}>
-                        <ShoppingBag size={12} /> {res.amount} {listing.unit}
-                      </p>
-                      {res.pickupAt && (
-                        <p className={`text-[10px] ${theme?.textSec} opacity-80`}>
-                          Abholung: {new Date(res.pickupAt).toLocaleString()}
-                        </p>
+                      {editingReservationId === res.id ? (
+                        <div className="space-y-1.5 mt-1">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min={listing.unit.toLowerCase() === 'stück' ? 1 : 0.5}
+                              step={listing.unit.toLowerCase() === 'stück' ? 1 : 0.5}
+                              value={editReservationAmount}
+                              onChange={(e) => setEditReservationAmount(parseFloat(e.target.value || '0'))}
+                              className={`w-20 p-1.5 rounded-md border ${theme?.border} ${theme?.input} text-xs`}
+                            />
+                            <span className={`text-xs ${theme?.textSec}`}>{listing.unit}</span>
+                          </div>
+                          {(listing.pickupSlots ?? []).length > 0 ? (
+                            <select
+                              value={editReservationPickupAt}
+                              onChange={(e) => setEditReservationPickupAt(e.target.value)}
+                              className={`w-full p-1.5 rounded-md border ${theme?.border} ${theme?.input} text-xs`}
+                            >
+                              <option value="">Abholzeit wählen</option>
+                              {(listing.pickupSlots ?? []).map((slot) => (
+                                <option key={slot} value={toLocalInputValue(slot)}>
+                                  {new Date(slot).toLocaleString()}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type="datetime-local"
+                              value={editReservationPickupAt}
+                              onChange={(e) => setEditReservationPickupAt(e.target.value)}
+                              className={`w-full p-1.5 rounded-md border ${theme?.border} ${theme?.input} text-xs`}
+                            />
+                          )}
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!onUpdateReservation || !editReservationPickupAt) return
+                                onUpdateReservation(res.id, editReservationAmount, new Date(editReservationPickupAt).toISOString())
+                                setEditingReservationId(null)
+                              }}
+                              disabled={!Number.isFinite(editReservationAmount) || editReservationAmount <= 0 || !editReservationPickupAt}
+                              className="px-2 py-1 rounded-md bg-[#0D1A15] text-white text-[10px] font-semibold disabled:opacity-40"
+                            >
+                              Speichern
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingReservationId(null)}
+                              className={`px-2 py-1 rounded-md border ${theme?.border} text-[10px] font-semibold ${theme?.text}`}
+                            >
+                              Abbrechen
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className={`text-xs ${theme?.textSec} flex items-center gap-1`}>
+                            <ShoppingBag size={12} /> {res.amount} {listing.unit}
+                          </p>
+                          {res.pickupAt && (
+                            <p className={`text-[10px] ${theme?.textSec} opacity-80`}>
+                              Abholung: {new Date(res.pickupAt).toLocaleString()}
+                            </p>
+                          )}
+                          <p className={`text-[10px] ${theme?.textSec} opacity-70`}>{new Date(res.timestamp).toLocaleDateString()}</p>
+                        </>
                       )}
-                      <p className={`text-[10px] ${theme?.textSec} opacity-70`}>{new Date(res.timestamp).toLocaleDateString()}</p>
                     </div>
-                    {onCancelReservation && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onCancelReservation(res.id)
-                        }}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                      >
-                        <XCircle size={20} />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {onUpdateReservation && editingReservationId !== res.id && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            startEditReservation(res)
+                          }}
+                          className={`px-2 py-1 rounded-md border ${theme?.border} text-[10px] font-semibold ${theme?.text}`}
+                        >
+                          Bearbeiten
+                        </button>
+                      )}
+                      {onCancelReservation && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onCancelReservation(res.id)
+                          }}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        >
+                          <XCircle size={20} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )
               })

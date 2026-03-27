@@ -73,6 +73,48 @@ const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   newPostsFromFollowing: true,
 }
 
+function isWithinPickupWindow(pickupTimes: string, isoDateTime: string): boolean {
+  const text = (pickupTimes ?? '').trim().toLowerCase()
+  if (!text) return true
+  const picked = new Date(isoDateTime)
+  if (!Number.isFinite(picked.getTime())) return false
+  const day = picked.getDay() // 0=Sun, 1=Mon, ... 6=Sat
+  const hour = picked.getHours() + picked.getMinutes() / 60
+
+  if (text.includes('jederzeit') || text.includes('ganztägig') || text.includes('ganztagig')) {
+    return true
+  }
+
+  if (text.includes('wochenende')) {
+    return day === 0 || day === 6
+  }
+
+  if ((text.includes('mo-fr') || text.includes('montag') || text.includes('werktag')) && (day < 1 || day > 5)) {
+    return false
+  }
+
+  const fromMatch = text.match(/\bab\s*(\d{1,2})(?::(\d{2}))?\s*uhr\b/)
+  if (fromMatch) {
+    const fromHour = Number(fromMatch[1]) + Number(fromMatch[2] ?? 0) / 60
+    return hour >= fromHour
+  }
+
+  const rangeMatch = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*[-–]\s*(\d{1,2})(?::(\d{2}))?\s*uhr\b/)
+  if (rangeMatch) {
+    const from = Number(rangeMatch[1]) + Number(rangeMatch[2] ?? 0) / 60
+    const to = Number(rangeMatch[3]) + Number(rangeMatch[4] ?? 0) / 60
+    return hour >= from && hour <= to
+  }
+
+  return true
+}
+
+function isInOfferedPickupSlots(slots: string[] | undefined, isoDateTime: string): boolean {
+  if (!Array.isArray(slots) || slots.length === 0) return true
+  if (!isoDateTime) return false
+  return slots.includes(isoDateTime)
+}
+
 function readSavedNavState(): PersistedNavState | null {
   try {
     const raw = localStorage.getItem(NAV_STATE_KEY)
@@ -480,6 +522,60 @@ export default function App() {
 
   const handleReservation = (listingId: string, amount: number, pickupAt: string) => {
     const reservedListing = listings.find((l) => l.id === listingId)
+    if (!reservedListing) return
+    if (!pickupAt) {
+      addNotification(
+        {
+          type: 'reservation',
+          title: language === 'de' ? 'Abholzeit fehlt' : 'Pickup time missing',
+          body:
+            language === 'de'
+              ? 'Bitte wähle zuerst eine Abholzeit. Ohne Zeit wurde nichts reserviert.'
+              : 'Please choose a pickup time first. Nothing was reserved.',
+        },
+        'reservationConfirmed',
+      )
+      alert(language === 'de' ? 'Bitte zuerst eine Abholzeit auswählen.' : 'Please choose a pickup time first.')
+      return
+    }
+    if (!isInOfferedPickupSlots(reservedListing.pickupSlots, pickupAt)) {
+      addNotification(
+        {
+          type: 'reservation',
+          title: language === 'de' ? 'Ungültige Abholzeit' : 'Invalid pickup time',
+          body:
+            language === 'de'
+              ? 'Bitte wähle eine der angebotenen Abholzeiten aus der Liste.'
+              : 'Please choose one of the offered pickup times from the list.',
+        },
+        'reservationConfirmed',
+      )
+      alert(
+        language === 'de'
+          ? 'Bitte wähle eine angebotene Abholzeit aus der Liste.'
+          : 'Please choose an offered pickup time from the list.',
+      )
+      return
+    }
+    if (!isWithinPickupWindow(reservedListing.pickupTimes, pickupAt)) {
+      addNotification(
+        {
+          type: 'reservation',
+          title: language === 'de' ? 'Ungültige Abholzeit' : 'Invalid pickup time',
+          body:
+            language === 'de'
+              ? `Bitte reserviere innerhalb der angegebenen Zeiten: ${reservedListing.pickupTimes}.`
+              : `Please reserve within the listed pickup times: ${reservedListing.pickupTimes}.`,
+        },
+        'reservationConfirmed',
+      )
+      alert(
+        language === 'de'
+          ? `Diese Abholzeit liegt außerhalb der angegebenen Zeiten: ${reservedListing.pickupTimes}.`
+          : `This pickup time is outside the listed pickup times: ${reservedListing.pickupTimes}.`,
+      )
+      return
+    }
     setListings((prev) =>
       prev.map((l) => (l.id === listingId ? { ...l, availableQuantity: Math.max(0, l.availableQuantity - amount) } : l))
     )
@@ -496,8 +592,7 @@ export default function App() {
       },
       ...prev,
     ])
-    if (reservedListing) {
-      addNotification({
+    addNotification({
         type: 'reservation',
         title: t?.notifications?.reserveTitle ?? 'Reservation successful',
         body:
@@ -506,18 +601,118 @@ export default function App() {
             .replace('{{unit}}', reservedListing.unit)
             .replace('{{title}}', reservedListing.title),
       }, 'reservationConfirmed')
-    }
     alert(`Erfolgreich ${amount} reserviert! Der Gärtner wurde benachrichtigt.`)
   }
 
   const handleCancelReservation = (reservationId: string) => {
     const res = reservations.find((r) => r.id === reservationId)
     if (!res) return
+    const listing = listings.find((l) => l.id === res.listingId)
     setListings((prev) =>
       prev.map((l) => (l.id === res.listingId ? { ...l, availableQuantity: l.availableQuantity + res.amount } : l))
     )
     setReservations((prev) => prev.filter((r) => r.id !== reservationId))
+    addNotification(
+      {
+        type: 'reservation',
+        title: language === 'de' ? 'Reservierung geändert' : 'Reservation changed',
+        body:
+          language === 'de'
+            ? `Deine Reservierung für "${listing?.title ?? 'Angebot'}" wurde storniert.`
+            : `Your reservation for "${listing?.title ?? 'listing'}" was cancelled.`,
+      },
+      'reservationConfirmed',
+    )
     alert('Reservierung storniert.')
+  }
+
+  const handleUpdateReservation = (reservationId: string, amount: number, pickupAt: string) => {
+    const existing = reservations.find((r) => r.id === reservationId)
+    if (!existing) return
+    const listing = listings.find((l) => l.id === existing.listingId)
+    if (!listing) return
+
+    if (!Number.isFinite(amount)) return
+    if (!pickupAt || !Number.isFinite(new Date(pickupAt).getTime())) {
+      addNotification(
+        {
+          type: 'reservation',
+          title: language === 'de' ? 'Abholzeit fehlt' : 'Pickup time missing',
+          body:
+            language === 'de'
+              ? 'Bitte wähle zuerst eine gültige Abholzeit. Es wurde nichts geändert.'
+              : 'Please choose a valid pickup time first. Nothing changed.',
+        },
+        'reservationConfirmed',
+      )
+      return
+    }
+    if (!isInOfferedPickupSlots(listing.pickupSlots, pickupAt)) {
+      addNotification(
+        {
+          type: 'reservation',
+          title: language === 'de' ? 'Ungültige Abholzeit' : 'Invalid pickup time',
+          body:
+            language === 'de'
+              ? 'Bitte wähle eine der angebotenen Abholzeiten aus der Liste.'
+              : 'Please choose one of the offered pickup times from the list.',
+        },
+        'reservationConfirmed',
+      )
+      return
+    }
+    if (!isWithinPickupWindow(listing.pickupTimes, pickupAt)) {
+      addNotification(
+        {
+          type: 'reservation',
+          title: language === 'de' ? 'Ungültige Abholzeit' : 'Invalid pickup time',
+          body:
+            language === 'de'
+              ? `Bitte bleibe in den angegebenen Zeiten: ${listing.pickupTimes}.`
+              : `Please stay within the listed pickup times: ${listing.pickupTimes}.`,
+        },
+        'reservationConfirmed',
+      )
+      return
+    }
+    const nextAmount = Math.max(0.5, amount)
+    const delta = nextAmount - existing.amount
+    if (delta > 0 && listing.availableQuantity < delta) {
+      alert(language === 'de' ? 'Nicht genug verfügbare Menge für diese Änderung.' : 'Not enough available quantity.')
+      return
+    }
+
+    setListings((prev) =>
+      prev.map((l) =>
+        l.id === existing.listingId ? { ...l, availableQuantity: Math.max(0, l.availableQuantity - delta) } : l,
+      ),
+    )
+
+    setReservations((prev) =>
+      prev.map((r) =>
+        r.id === reservationId
+          ? {
+              ...r,
+              amount: nextAmount,
+              pickupAt,
+              reminderDayBeforeSent: false,
+              reminderHourBeforeSent: false,
+            }
+          : r,
+      ),
+    )
+
+    addNotification(
+      {
+        type: 'reservation',
+        title: language === 'de' ? 'Reservierung geändert' : 'Reservation changed',
+        body:
+          language === 'de'
+            ? `Deine Reservierung für "${listing.title}" wurde aktualisiert.`
+            : `Your reservation for "${listing.title}" was updated.`,
+      },
+      'reservationConfirmed',
+    )
   }
 
   useEffect(() => {
@@ -924,6 +1119,7 @@ export default function App() {
             theme={theme}
             t={t}
             onCancelReservation={handleCancelReservation}
+            onUpdateReservation={handleUpdateReservation}
             onFollow={toggleFollow}
             reviews={reviews}
             isAdmin={isAdmin}
