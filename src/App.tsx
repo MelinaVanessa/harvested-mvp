@@ -48,12 +48,25 @@ const API_ENABLED = API_BASE_URL.length > 0
 const OWNER_NAME = 'Melina Vanessa Mann'
 const LEGAL_ACK_KEY = 'harvested_legal_ack_v2'
 const NAV_STATE_KEY = 'harvested_nav_state_v1'
+const NOTIFICATION_PREFS_KEY = 'harvested_notification_prefs_v1'
 
 type PersistedNavState = {
   activeTab: ActiveTab
   viewingProfileId: string | null
   chatPartnerId: string | null
   showInbox: boolean
+}
+
+type NotificationPrefs = {
+  reservationConfirmed: boolean
+  reservationReminders: boolean
+  newPostsFromFollowing: boolean
+}
+
+const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
+  reservationConfirmed: true,
+  reservationReminders: true,
+  newPostsFromFollowing: true,
 }
 
 function readSavedNavState(): PersistedNavState | null {
@@ -90,6 +103,30 @@ function clearSavedNavState() {
     localStorage.removeItem(NAV_STATE_KEY)
   } catch {
     // ignore
+  }
+}
+
+function readSavedNotificationPrefs(): NotificationPrefs {
+  try {
+    const raw = localStorage.getItem(NOTIFICATION_PREFS_KEY)
+    if (!raw) return DEFAULT_NOTIFICATION_PREFS
+    const parsed = JSON.parse(raw) as Partial<NotificationPrefs>
+    return {
+      reservationConfirmed:
+        typeof parsed.reservationConfirmed === 'boolean'
+          ? parsed.reservationConfirmed
+          : DEFAULT_NOTIFICATION_PREFS.reservationConfirmed,
+      reservationReminders:
+        typeof parsed.reservationReminders === 'boolean'
+          ? parsed.reservationReminders
+          : DEFAULT_NOTIFICATION_PREFS.reservationReminders,
+      newPostsFromFollowing:
+        typeof parsed.newPostsFromFollowing === 'boolean'
+          ? parsed.newPostsFromFollowing
+          : DEFAULT_NOTIFICATION_PREFS.newPostsFromFollowing,
+    }
+  } catch {
+    return DEFAULT_NOTIFICATION_PREFS
   }
 }
 
@@ -152,6 +189,7 @@ export default function App() {
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS)
   const [notifications, setNotifications] = useState<InAppNotification[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>(() => readSavedNotificationPrefs())
   const previousListingIdsRef = useRef<Set<string>>(new Set())
 
   const theme = isDarkMode ? THEMES.dark : THEMES.light
@@ -165,7 +203,11 @@ export default function App() {
     isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && !isLegalTab
   const unreadNotificationsCount = notifications.filter((n) => !n.read).length
 
-  const addNotification = (payload: Omit<InAppNotification, 'id' | 'timestamp' | 'read'>) => {
+  const addNotification = (
+    payload: Omit<InAppNotification, 'id' | 'timestamp' | 'read'>,
+    preferenceKey: keyof NotificationPrefs,
+  ) => {
+    if (!notificationPrefs[preferenceKey]) return
     setNotifications((prev) => [
       {
         id: `n${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -259,6 +301,14 @@ export default function App() {
   }, [isLoggedIn, activeTab, viewingProfileId, chatPartnerId, showInbox])
 
   useEffect(() => {
+    try {
+      localStorage.setItem(NOTIFICATION_PREFS_KEY, JSON.stringify(notificationPrefs))
+    } catch {
+      // ignore storage errors
+    }
+  }, [notificationPrefs])
+
+  useEffect(() => {
     const updateViewportFlags = () => {
       const shortLandscape = window.innerWidth >= 900 && window.innerHeight <= 700
       setIsShortLandscape(shortLandscape)
@@ -315,7 +365,7 @@ export default function App() {
             (t?.notifications?.newPostBody ?? '{{name}} published "{{title}}".')
               .replace('{{name}}', gardenerName)
               .replace('{{title}}', listing.title),
-        })
+        }, 'newPostsFromFollowing')
       })
     }
     previousListingIdsRef.current = new Set(listings.map((l) => l.id))
@@ -379,7 +429,7 @@ export default function App() {
             .replace('{{amount}}', String(amount))
             .replace('{{unit}}', reservedListing.unit)
             .replace('{{title}}', reservedListing.title),
-      })
+      }, 'reservationConfirmed')
     }
     alert(`Erfolgreich ${amount} reserviert! Der Gärtner wurde benachrichtigt.`)
   }
@@ -417,7 +467,7 @@ export default function App() {
                 language === 'de'
                   ? `Deine Reservierung "${listing?.title ?? 'Angebot'}" ist morgen um ${new Date(res.pickupAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`
                   : `Your reservation "${listing?.title ?? 'listing'}" is tomorrow at ${new Date(res.pickupAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-            })
+            }, 'reservationReminders')
             updated = { ...updated, reminderDayBeforeSent: true }
             changed = true
           }
@@ -430,7 +480,7 @@ export default function App() {
                 language === 'de'
                   ? `Deine Reservierung "${listing?.title ?? 'Angebot'}" ist in etwa 1 Stunde.`
                   : `Your reservation "${listing?.title ?? 'listing'}" is in about 1 hour.`,
-            })
+            }, 'reservationReminders')
             updated = { ...updated, reminderHourBeforeSent: true }
             changed = true
           }
@@ -769,6 +819,8 @@ export default function App() {
             onLogout={() => { setIsLoggedIn(false); clearSavedLogin(); clearSavedNavState() }}
             userRole={currentUser.role}
             onToggleRole={handleToggleRole}
+            notificationPrefs={notificationPrefs}
+            setNotificationPrefs={setNotificationPrefs}
           />
         )
       case 'legal_terms':
@@ -969,8 +1021,8 @@ export default function App() {
                 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide relative',
                 showBottomNav
                   ? isShortLandscape
-                    ? 'pb-[calc(52px+env(safe-area-inset-bottom,0px))]'
-                    : 'pb-[calc(72px+env(safe-area-inset-bottom,0px))]'
+                    ? 'pb-[calc(40px+env(safe-area-inset-bottom,0px))]'
+                    : 'pb-[calc(48px+env(safe-area-inset-bottom,0px))]'
                   : 'pb-safe',
               ].join(' ')}
             >
@@ -984,10 +1036,10 @@ export default function App() {
                 className={[
                   'absolute bottom-0 left-0 right-0 z-[200]',
                   `${theme.nav} border-t ${theme.border} transition-colors duration-300`,
-                  isShortLandscape ? 'px-2 py-0.5 pb-safe' : 'px-2 pb-safe',
+                  'px-2 pb-safe',
                 ].join(' ')}
               >
-                <div className={`${isShortLandscape ? 'h-[52px]' : 'h-[72px]'} flex justify-around items-center`}>
+                <div className={`${isShortLandscape ? 'h-[40px]' : 'h-[48px]'} flex justify-around items-center`}>
                 <NavButton active={activeTab === 'map'} onClick={() => setActiveTab('map')} icon={<MapIcon size={24} />} label={t.nav.map} theme={theme} compact={isShortLandscape} />
                 <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home size={24} />} label={t.nav.home} theme={theme} compact={isShortLandscape} />
                 {currentUser.role === 'gardener' && (

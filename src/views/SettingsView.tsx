@@ -13,6 +13,16 @@ interface SettingsViewProps {
   onLogout: () => void
   userRole: UserRole
   onToggleRole: () => void
+  notificationPrefs: {
+    reservationConfirmed: boolean
+    reservationReminders: boolean
+    newPostsFromFollowing: boolean
+  }
+  setNotificationPrefs: (next: {
+    reservationConfirmed: boolean
+    reservationReminders: boolean
+    newPostsFromFollowing: boolean
+  }) => void
 }
 
 export function SettingsView({
@@ -26,6 +36,8 @@ export function SettingsView({
   onLogout,
   userRole,
   onToggleRole,
+  notificationPrefs,
+  setNotificationPrefs,
 }: SettingsViewProps) {
   return (
     <div className={`h-full flex flex-col ${theme.bg} ${theme.text}`}>
@@ -84,6 +96,65 @@ export function SettingsView({
                 className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`}
               />
             </button>
+          </div>
+        </section>
+
+        <section>
+          <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSec}`}>
+            {t?.settings?.notifications ?? 'Benachrichtigungen'}
+          </h3>
+          <div className={`space-y-2 p-3 rounded-xl ${theme.card} shadow-sm`}>
+            <div className="flex items-center justify-between p-2 rounded-lg">
+              <span className="text-sm font-medium">{t?.settings?.notifReservation ?? 'Reservierungs-Bestätigungen'}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  setNotificationPrefs({
+                    ...notificationPrefs,
+                    reservationConfirmed: !notificationPrefs.reservationConfirmed,
+                  })
+                }
+                className={`w-11 h-6 rounded-full p-0.5 transition-colors ${notificationPrefs.reservationConfirmed ? 'bg-[#4A5D4E]' : 'bg-gray-300'}`}
+              >
+                <div
+                  className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notificationPrefs.reservationConfirmed ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg">
+              <span className="text-sm font-medium">{t?.settings?.notifReminders ?? 'Abhol-Erinnerungen'}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  setNotificationPrefs({
+                    ...notificationPrefs,
+                    reservationReminders: !notificationPrefs.reservationReminders,
+                  })
+                }
+                className={`w-11 h-6 rounded-full p-0.5 transition-colors ${notificationPrefs.reservationReminders ? 'bg-[#4A5D4E]' : 'bg-gray-300'}`}
+              >
+                <div
+                  className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notificationPrefs.reservationReminders ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg">
+              <span className="text-sm font-medium">{t?.settings?.notifNewPosts ?? 'Neue Beiträge von Gefolgten'}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  setNotificationPrefs({
+                    ...notificationPrefs,
+                    newPostsFromFollowing: !notificationPrefs.newPostsFromFollowing,
+                  })
+                }
+                className={`w-11 h-6 rounded-full p-0.5 transition-colors ${notificationPrefs.newPostsFromFollowing ? 'bg-[#4A5D4E]' : 'bg-gray-300'}`}
+              >
+                <div
+                  className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notificationPrefs.newPostsFromFollowing ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </button>
+            </div>
           </div>
         </section>
 
