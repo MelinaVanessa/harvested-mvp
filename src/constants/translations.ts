@@ -17,6 +17,12 @@ export const TRANSLATIONS: Record<'de' | 'en', Record<string, Record<string, str
     },
     support: { title: 'Support & Kontakt', help: 'Wie können wir helfen?', sub: 'Fülle das Formular aus und unser Team meldet sich schnellstmöglich bei dir.', subject: 'Betreff', msg: 'Nachricht', send: 'Nachricht senden', thanks: 'Vielen Dank!', received: 'Wir haben deine Nachricht erhalten.' },
     legal: { terms: 'AGB', privacy: 'Datenschutz', imprint: 'Impressum' },
+    legalConsent: {
+      title: 'Rechtliche Hinweise',
+      text: 'Bitte bestätige, dass du die rechtlichen Hinweise (AGB, Datenschutz, Impressum) gelesen hast.',
+      confirm: 'Ich habe die Hinweise gelesen und akzeptiere sie',
+      continue: 'Weiter',
+    },
     listing: {
       cook: 'Was koche ich damit?',
       recipes: 'Rezept-Ideen',
@@ -49,6 +55,12 @@ export const TRANSLATIONS: Record<'de' | 'en', Record<string, Record<string, str
     },
     support: { title: 'Support & Contact', help: 'How can we help?', sub: 'Fill out the form and our team will get back to you asap.', subject: 'Subject', msg: 'Message', send: 'Send Message', thanks: 'Thank you!', received: 'We have received your message.' },
     legal: { terms: 'Terms', privacy: 'Privacy Policy', imprint: 'Imprint' },
+    legalConsent: {
+      title: 'Legal Notice',
+      text: 'Please confirm that you have read the legal notices (Terms, Privacy Policy, Imprint).',
+      confirm: 'I have read and accept these notices',
+      continue: 'Continue',
+    },
     listing: {
       cook: 'What can I cook?',
       recipes: 'Recipe Ideas',

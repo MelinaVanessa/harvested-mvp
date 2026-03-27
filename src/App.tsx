@@ -45,6 +45,7 @@ const API_BASE_URL =
   'https://harvested-mvp.onrender.com'
 const API_ENABLED = API_BASE_URL.length > 0
 const OWNER_NAME = 'Melina Vanessa Mann'
+const LEGAL_ACK_KEY = 'harvested_legal_ack_v2'
 
 /** API / older payloads may omit camelCase gardenerId */
 function normalizeListingGardenerId(item: Listing): Listing {
@@ -56,6 +57,14 @@ function normalizeListingGardenerId(item: Listing): Listing {
 }
 
 export default function App() {
+  const [hasAcceptedLegal, setHasAcceptedLegal] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(LEGAL_ACK_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  const [legalConfirmChecked, setLegalConfirmChecked] = useState(false)
   const [activeTab, setActiveTab] = useState<ActiveTab>('home')
   const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USER)
   const [listings, setListings] = useState<Listing[]>(API_ENABLED ? [] : INITIAL_LISTINGS)
@@ -324,6 +333,15 @@ export default function App() {
       setChatPartnerId(null)
       setShowInbox(false)
     }
+  }
+
+  const handleAcceptLegal = () => {
+    try {
+      localStorage.setItem(LEGAL_ACK_KEY, '1')
+    } catch {
+      // ignore storage errors; still let user continue in current session
+    }
+    setHasAcceptedLegal(true)
   }
 
   const renderContent = () => {
@@ -705,6 +723,71 @@ export default function App() {
                     </button>
                     <p className={`text-xs ${theme.textSec} text-center`}>Version 1.0.3</p>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {!hasAcceptedLegal && (
+              <div className="absolute inset-0 z-[400] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/50" />
+                <div className={`relative w-full max-w-md rounded-2xl border ${theme.border} ${theme.card} shadow-2xl p-5`}>
+                  <h3 className={`text-lg font-bold ${theme.text}`}>{t.legalConsent?.title ?? 'Legal Notice'}</h3>
+                  <p className={`text-sm mt-2 ${theme.textSec}`}>
+                    {t.legalConsent?.text ??
+                      'Please confirm that you have read the legal notices (Terms, Privacy Policy, Imprint).'}
+                  </p>
+
+                  <div className={`mt-4 text-xs ${theme.textSec} flex flex-wrap gap-2`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('legal_terms')
+                        setShowMenu(false)
+                      }}
+                      className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
+                    >
+                      {t.legal?.terms ?? 'Terms'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('legal_privacy')
+                        setShowMenu(false)
+                      }}
+                      className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
+                    >
+                      {t.legal?.privacy ?? 'Privacy'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('legal_imprint')
+                        setShowMenu(false)
+                      }}
+                      className={`px-2.5 py-1 rounded-md border ${theme.border} hover:bg-black/5`}
+                    >
+                      {t.legal?.imprint ?? 'Imprint'}
+                    </button>
+                  </div>
+
+                  <label className={`mt-4 flex items-start gap-2 text-sm ${theme.text}`}>
+                    <input
+                      type="checkbox"
+                      checked={legalConfirmChecked}
+                      onChange={(e) => setLegalConfirmChecked(e.target.checked)}
+                      className="mt-0.5 accent-[#4A5D4E]"
+                    />
+                    <span>{t.legalConsent?.confirm ?? 'I have read and accept these notices'}</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleAcceptLegal}
+                    disabled={!legalConfirmChecked}
+                    className="mt-5 w-full h-11 rounded-xl bg-[#0D1A15] text-[#FCFAF7] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {t.legalConsent?.continue ?? 'Continue'}
+                  </button>
                 </div>
               </div>
             )}
