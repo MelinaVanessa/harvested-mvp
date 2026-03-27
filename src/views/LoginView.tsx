@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { Sprout, ShoppingCart } from 'lucide-react'
 import type { UserRole, UserProfile, ThemeTokens } from '@/types'
-import { allowsMultipleAccountsForEmail } from '@/constants/authPolicy'
 import type { StoredAccount } from '@/constants/storage'
 import {
   findRegisteredAccountsByEmail,
-  hasRegisteredAccountForEmail,
   upsertRegisteredAccount,
 } from '@/constants/storage'
 import { tryAuthLogin, tryAuthRegister } from '@/constants/apiBase'
@@ -43,11 +41,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
     const passwordNorm = normalizePasswordForAuth(password)
     if (isRegistering) {
       if (email && password && name) {
-        if (!allowsMultipleAccountsForEmail(emailLower) && hasRegisteredAccountForEmail(emailLower)) {
-          alert('Diese E-Mail ist bereits registriert. Bitte einloggen.')
-          return
-        }
-
+        // Server-first registration: rely on backend conflict detection as source of truth.
         const apiReg = await tryAuthRegister({
           email: emailLower,
           password: passwordNorm,
@@ -75,6 +69,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
           return
         }
 
+        // Fallback only if backend is currently unreachable.
         const id = `u_${Date.now()}`
         const stored = upsertRegisteredAccount({
           email: emailLower,
@@ -95,25 +90,13 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
         alert('Bitte fülle alle Felder aus.')
       }
     } else {
-      // Local + owner before remote API so device-stored accounts always work even if API URL is wrong
+      // Owner shortcut (local admin account)
       if (emailLower === OWNER_EMAIL && passwordNorm === OWNER_PASSWORD) {
         onLogin({ id: 'u1', name: 'Melina Vanessa Mann', role: 'gardener' })
         return
       }
 
-      const localMatches = findRegisteredAccountsByEmail(emailLower).filter(
-        (a) => normalizePasswordForAuth(a.password) === passwordNorm,
-      )
-      if (localMatches.length === 1) {
-        const a = localMatches[0]
-        onLogin({ id: a.userId, name: a.name, role: a.role })
-        return
-      }
-      if (localMatches.length > 1) {
-        setAccountChoices(localMatches)
-        return
-      }
-
+      // Server-first login so private/incognito windows can still authenticate.
       const apiUser = await tryAuthLogin({ email: emailLower, password: passwordNorm })
       if (apiUser) {
         upsertRegisteredAccount({
@@ -127,9 +110,23 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
         return
       }
 
+      // Local fallback if API is unavailable / unreachable.
+      const localMatches = findRegisteredAccountsByEmail(emailLower).filter(
+        (a) => normalizePasswordForAuth(a.password) === passwordNorm,
+      )
+      if (localMatches.length === 1) {
+        const a = localMatches[0]
+        onLogin({ id: a.userId, name: a.name, role: a.role })
+        return
+      }
+      if (localMatches.length > 1) {
+        setAccountChoices(localMatches)
+        return
+      }
+
       const msg = t?.login?.error ?? 'Ungültige Anmeldedaten.'
       setAuthError(
-        `${msg} Stelle sicher, dass du auf „Einloggen“ bist (nicht Registrieren), E-Mail und Passwort exakt wie bei der Registrierung, und kein privates Browserfenster ohne Speicher verwendest.`,
+        `${msg} Stelle sicher, dass du auf „Einloggen“ bist (nicht Registrieren), E-Mail und Passwort exakt wie bei der Registrierung, und dass dein Backend erreichbar ist.`,
       )
       alert(msg)
     }
