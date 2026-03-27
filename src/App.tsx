@@ -95,14 +95,46 @@ export default function App() {
     isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && !isLegalTab
 
   useEffect(() => {
-    const mergedUsers = mergeUsersFromStorage(MOCK_USERS, {})
-    const saved = getSavedLogin()
-    if (saved?.userId && mergedUsers[saved.userId]) {
-      const base = mergedUsers[saved.userId]!
+    let cancelled = false
+    const restoreSavedLogin = async () => {
+      const mergedUsers = mergeUsersFromStorage(MOCK_USERS, {})
+      const saved = getSavedLogin()
+      if (!saved?.userId) return
+
       const profilePatch = getSavedProfile(saved.userId)
-      setCurrentUser(profilePatch ? { ...base, ...profilePatch } : base)
-      setUsers((prev) => mergeUsersFromStorage(MOCK_USERS, prev))
-      setIsLoggedIn(true)
+      const localBase = mergedUsers[saved.userId]
+      if (localBase) {
+        if (cancelled) return
+        setCurrentUser(profilePatch ? { ...localBase, ...profilePatch } : localBase)
+        setUsers((prev) => mergeUsersFromStorage(MOCK_USERS, prev))
+        setIsLoggedIn(true)
+        return
+      }
+
+      if (!API_ENABLED) {
+        clearSavedLogin()
+        return
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/users/${encodeURIComponent(saved.userId)}`, {
+          headers: { Accept: 'application/json' },
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const remoteUser = (await res.json()) as UserProfile
+        if (cancelled || !remoteUser?.id) return
+        const next = profilePatch ? { ...remoteUser, ...profilePatch } : remoteUser
+        setUsers((prev) => ({ ...mergeUsersFromStorage(MOCK_USERS, prev), [next.id]: next }))
+        setCurrentUser(next)
+        setIsLoggedIn(true)
+      } catch {
+        clearSavedLogin()
+      }
+    }
+
+    void restoreSavedLogin()
+    return () => {
+      cancelled = true
     }
   }, [])
 
