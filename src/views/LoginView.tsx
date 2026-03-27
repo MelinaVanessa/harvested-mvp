@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sprout, ShoppingCart } from 'lucide-react'
+import { Sprout, ShoppingCart, Eye, EyeOff } from 'lucide-react'
 import type { UserRole, UserProfile, ThemeTokens } from '@/types'
 import { tryAuthLogin, tryAuthRegister } from '@/constants/apiBase'
 import { normalizePasswordForAuth } from '@/utils/password'
@@ -24,6 +24,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const [name, setName] = useState('')
   const [selectedRole, setSelectedRole] = useState<UserRole>('gardener')
   const [authError, setAuthError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -173,18 +174,29 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
               <label className={labelClass} style={{ color: TEXT_MUTED }}>
                 {t.login.password}
               </label>
-              <input
-                type="password"
-                required
-                className={inputClass}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value)
-                  setAuthError(null)
-                }}
-                autoComplete={isRegistering ? 'new-password' : 'current-password'}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  className={`${inputClass} pr-12`}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    setAuthError(null)
+                  }}
+                  autoComplete={isRegistering ? 'new-password' : 'current-password'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 w-11 flex items-center justify-center text-[#4A5D4E] hover:opacity-75"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {authError && (
