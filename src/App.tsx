@@ -24,6 +24,7 @@ import {
   findRegisteredAccountByUserId,
   mergeUsersFromStorage,
   storedAccountToUserProfile,
+  purgeLocalAccountsExceptAdmin,
 } from '@/constants/storage'
 import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
 import type { UserProfile, Listing, Reservation, Message, Review, InAppNotification } from '@/types'
@@ -50,6 +51,7 @@ const ADMIN_EMAIL = 'melina_vanessa.mann@web.de'
 const LEGAL_ACK_KEY = 'harvested_legal_ack_v2'
 const NAV_STATE_KEY = 'harvested_nav_state_v1'
 const NOTIFICATION_PREFS_KEY = 'harvested_notification_prefs_v1'
+const AUTH_RESET_KEY = 'harvested_auth_reset_v1'
 
 type PersistedNavState = {
   activeTab: ActiveTab
@@ -225,6 +227,17 @@ export default function App() {
       tag: payload.type,
     })
   }
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(AUTH_RESET_KEY) !== '1') {
+        purgeLocalAccountsExceptAdmin('u1')
+        localStorage.setItem(AUTH_RESET_KEY, '1')
+      }
+    } catch {
+      // ignore storage failures
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false

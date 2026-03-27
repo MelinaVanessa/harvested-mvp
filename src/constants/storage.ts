@@ -35,6 +35,39 @@ export function clearSavedLogin(): void {
   localStorage.removeItem(SAVED_LOGIN_KEY)
 }
 
+/** Hard reset local auth/profile data while preserving only the admin account. */
+export function purgeLocalAccountsExceptAdmin(adminUserId = 'u1'): void {
+  try {
+    const keptAccounts = getRegisteredAccounts().filter((a) => a.userId === adminUserId)
+    localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(keptAccounts))
+  } catch {
+    // ignore
+  }
+
+  try {
+    const keysToDelete: string[] = []
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i)
+      if (!key) continue
+      if (key.startsWith(PROFILE_PREFIX) && key !== PROFILE_PREFIX + adminUserId) {
+        keysToDelete.push(key)
+      }
+    }
+    keysToDelete.forEach((k) => localStorage.removeItem(k))
+  } catch {
+    // ignore
+  }
+
+  try {
+    const saved = getSavedLogin()
+    if (saved?.userId && saved.userId !== adminUserId) {
+      clearSavedLogin()
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export interface SavedProfilePatch {
   avatar?: string
   name?: string
