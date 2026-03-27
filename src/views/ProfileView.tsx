@@ -293,7 +293,7 @@ export function ProfileView({
   return (
     <div className={`min-h-full pb-24 overflow-y-auto ${theme?.bg} ${theme?.text}`}>
       {!isOwnProfile && onBack && (
-        <div className={`px-4 py-3 border-b ${theme?.border} flex items-center gap-3`}>
+        <div className={`px-3 py-3 border-b ${theme?.border} flex items-center gap-3`}>
           <button onClick={onBack} className={`p-1 -ml-2 ${theme?.text}`}>
             <ArrowLeft size={24} />
           </button>
@@ -301,7 +301,7 @@ export function ProfileView({
         </div>
       )}
 
-      <div className="px-5 pt-6 pb-4">
+      <div className="px-3 pt-6 pb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="relative group cursor-pointer mr-6" onClick={handlePfpClick}>
             <img
@@ -408,7 +408,7 @@ export function ProfileView({
       </div>
 
       {isOwnProfile && (
-        <div className={`flex border-b ${theme?.border} mt-4`}>
+        <div className={`flex border-b ${theme?.border} mt-4 mx-3`}>
           {user.role === 'gardener' && (
             <button
               onClick={() => setActiveTab('posts')}
@@ -432,9 +432,10 @@ export function ProfileView({
         </div>
       )}
 
-      {!isOwnProfile && <div className={`border-t ${theme?.border} mt-4`} />}
+      {!isOwnProfile && <div className={`border-t ${theme?.border} mt-4 mx-3`} />}
 
-      <div className={`grid ${activeTab === 'reservations' && isOwnProfile ? 'grid-cols-1' : 'grid-cols-3 gap-0.5'} mt-0.5`}>
+      <div className="px-3 mt-2">
+        <div className={`grid ${activeTab === 'reservations' && isOwnProfile ? 'grid-cols-1' : 'grid-cols-3 gap-1.5'}`}>
         {(activeTab === 'posts' || !isOwnProfile) && safeUser.role === 'gardener' ? (
           userListings.length > 0 ? (
             userListings.map((l) => (
@@ -510,9 +511,10 @@ export function ProfileView({
             )}
           </div>
         )}
+        </div>
       </div>
 
-      <div className="px-5 pt-4 pb-2">
+      <div className="px-3 pt-4 pb-2">
         <div className={`rounded-xl border ${theme?.border} ${theme?.card} p-3`}>
           <div className="flex items-center justify-between">
             <h3 className={`text-sm font-bold ${theme?.text}`}>{t?.profile?.reviewsTitle ?? 'Reviews'}</h3>
