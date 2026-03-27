@@ -480,7 +480,7 @@ export default function App() {
             setLanguage={setLanguage}
             theme={theme}
             t={t}
-            onLogout={() => setIsLoggedIn(false)}
+            onLogout={() => { setIsLoggedIn(false); clearSavedLogin() }}
             userRole={currentUser.role}
             onToggleRole={handleToggleRole}
           />
@@ -546,8 +546,10 @@ export default function App() {
                 setUsers((prev) => ({ ...prev, [nextUser.id]: nextUser }))
                 setCurrentUser(nextUser)
                 setIsLoggedIn(true)
-                setPendingSaveUserId(nextUser.id)
-                setShowSaveLoginModal(true)
+                // Persist login by default so page refresh does not log users out.
+                setSavedLogin(nextUser.id)
+                setPendingSaveUserId(null)
+                setShowSaveLoginModal(false)
               } else {
                 setIsLoggedIn(true)
               }
