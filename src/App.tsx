@@ -785,7 +785,7 @@ export default function App() {
   return (
     <div
       className={[
-        'fixed inset-0 w-full h-[100dvh] font-sans overflow-hidden transition-colors duration-300',
+        'fixed inset-0 w-full h-[100svh] font-sans overflow-hidden transition-colors duration-300',
         theme.bg,
       ].join(' ')}
     >
