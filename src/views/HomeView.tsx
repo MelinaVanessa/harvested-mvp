@@ -91,9 +91,9 @@ export function HomeView({
           <div
             className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? 'max-h-20 opacity-100 py-3' : 'max-h-0 opacity-0 py-0'}`}
           >
-            <div className="px-4">
+            <div className="app-gutter">
               <div
-                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border ${theme.border} ${theme.input} shadow-sm transition-all focus-within:border-[#4A5D4E] focus-within:ring-1 focus-within:ring-[#4A5D4E]/20`}
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl border ${theme.border} ${theme.input} shadow-sm transition-all focus-within:border-[#4A5D4E] focus-within:ring-1 focus-within:ring-[#4A5D4E]/20`}
               >
                 <Search size={18} className={theme.textSec} />
                 <input
@@ -116,7 +116,7 @@ export function HomeView({
           </div>
         )}
 
-        <div className={`flex border-b ${theme.border} mb-0 px-4 ${theme.bg} relative z-40 ${isShortLandscape ? 'pt-1' : ''}`}>
+        <div className={`flex border-b ${theme.border} mb-0 app-gutter ${theme.bg} relative z-40 ${isShortLandscape ? 'pt-1' : ''}`}>
           <button
             onClick={() => {
               setFeedType('explore')
@@ -135,14 +135,14 @@ export function HomeView({
           </button>
         </div>
 
-        <div className={`flex gap-2 px-4 ${isShortLandscape ? 'py-2' : 'py-3'} overflow-x-auto no-scrollbar scrollbar-hide ${theme.bg} relative z-40`}>
+        <div className={`flex gap-2 app-gutter ${isShortLandscape ? 'py-2' : 'py-3'} overflow-x-auto no-scrollbar scrollbar-hide ${theme.bg} relative z-40`}>
           <FilterChip label={t?.filter?.all} active={filterType === 'all'} onClick={() => setFilterType('all')} theme={theme} />
           <FilterChip label={t?.filter?.pickup} active={filterType === 'pickup'} onClick={() => setFilterType('pickup')} theme={theme} />
           <FilterChip label={t?.filter?.self} active={filterType === 'self_harvest'} onClick={() => setFilterType('self_harvest')} theme={theme} />
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 ${isShortLandscape ? 'px-5 pt-1 pb-16 gap-3' : 'px-4 pt-2 pb-20 gap-5'} [@media(min-width:900px)_and_(orientation:landscape)]:grid-cols-2 [@media(min-width:900px)_and_(orientation:landscape)]:gap-4 [@media(min-width:1200px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1200px)_and_(orientation:landscape)]:px-6 [@media(min-width:1200px)_and_(orientation:landscape)]:gap-5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-3`}>
+      <div className={`grid grid-cols-1 ${isShortLandscape ? 'app-gutter pt-1 pb-16 gap-3' : 'app-gutter pt-2 pb-20 gap-5'} [@media(min-width:900px)_and_(orientation:landscape)]:grid-cols-2 [@media(min-width:900px)_and_(orientation:landscape)]:gap-4 [@media(min-width:1200px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1200px)_and_(orientation:landscape)]:gap-5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:grid-cols-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-3`}>
         {filteredListings.length === 0 ? (
           <div className={`col-span-full text-center py-10 ${theme.textSec}`}>
             <p>{t?.home?.empty}</p>

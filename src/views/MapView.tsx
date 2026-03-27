@@ -255,7 +255,7 @@ export function MapView({
 
       {!selectedListing && (
       <div
-        className="absolute top-4 left-4 right-4 lg:right-[calc(var(--map-panel-width)+1rem)] z-[100] flex flex-col gap-3 pointer-events-none"
+        className="absolute top-4 left-3 right-3 lg:right-[calc(var(--map-panel-width)+0.75rem)] z-[100] flex flex-col gap-3 pointer-events-none"
         style={{ ['--map-panel-width' as string]: desktopPanelWidth }}
       >
         <div className="relative w-full pointer-events-auto">
@@ -354,7 +354,7 @@ export function MapView({
       )}
 
       {!selectedListing && (
-      <div className="absolute top-40 right-4 z-[100] flex flex-col gap-3 pointer-events-auto">
+      <div className="absolute top-40 right-3 z-[100] flex flex-col gap-3 pointer-events-auto">
         <button type="button" className={`w-10 h-10 ${theme.card} rounded-full shadow-md flex items-center justify-center ${theme.textSec}`}>
           <Layers size={20} />
         </button>
@@ -363,7 +363,7 @@ export function MapView({
 
       {!selectedListing && (
       <div
-        className="absolute z-[100] transition-all duration-300 pointer-events-auto bottom-[var(--locate-bottom)] right-4 lg:bottom-6 lg:right-[calc(var(--map-panel-width)+1rem)]"
+        className="absolute z-[100] transition-all duration-300 pointer-events-auto bottom-[var(--locate-bottom)] right-3 lg:bottom-6 lg:right-[calc(var(--map-panel-width)+0.75rem)]"
         style={{ ['--locate-bottom' as string]: `${sheetHeight + 20}px`, ['--map-panel-width' as string]: desktopPanelWidth }}
       >
         <button

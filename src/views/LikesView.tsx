@@ -45,7 +45,7 @@ export function LikesView({
   }, [])
 
   return (
-    <div className={`pt-4 px-4 [@media(min-width:1200px)_and_(orientation:landscape)]:px-6 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:px-5 space-y-5 ${theme.bg} min-h-full pb-20`}>
+    <div className={`pt-4 app-gutter space-y-5 ${theme.bg} min-h-full pb-20`}>
       <h2 className={`text-xl font-bold px-2 ${theme.text}`}>{t?.likes?.title}</h2>
       {likedListings.length === 0 ? (
         <div className={`text-center py-20 ${theme.textSec}`}>

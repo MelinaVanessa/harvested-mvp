@@ -112,7 +112,7 @@ export function ListingDetailModal({
           <div className={`flex items-center gap-2 ${isMap ? 'flex-wrap' : ''}`}>
           {!isSelfListing && (
             <div
-              className={`flex items-center rounded-xl border ${theme.border} p-0.5 h-9 shrink-0 ${theme.input}`}
+              className={`flex items-center rounded-lg border ${theme.border} p-0.5 h-9 shrink-0 ${theme.input}`}
             >
               <button
                 type="button"
@@ -139,7 +139,7 @@ export function ListingDetailModal({
             type="button"
             onClick={() => onReserve?.(selectedPost.id, reserveAmount, new Date(pickupAt).toISOString())}
             disabled={isSelfListing || !pickupAt}
-            className={`flex-1 min-w-[8rem] h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-1 transition-all active:scale-[0.98] ${reserveCtaClass}`}
+            className={`flex-1 min-w-[8rem] h-10 rounded-lg text-sm font-bold flex items-center justify-center gap-1 transition-all active:scale-[0.98] ${reserveCtaClass}`}
           >
             {isSelfListing
               ? t?.listing?.yourOffer ?? 'Dein Angebot'
@@ -151,7 +151,7 @@ export function ListingDetailModal({
         <button
           type="button"
           disabled
-          className={`w-full py-2.5 rounded-xl text-xs font-semibold border ${theme.border} ${theme.bg} ${theme.textSec} opacity-80`}
+          className={`w-full py-2.5 rounded-lg text-xs font-semibold border ${theme.border} ${theme.bg} ${theme.textSec} opacity-80`}
         >
           {t?.listing?.soldOut ?? 'Leider vergriffen'}
         </button>
@@ -168,7 +168,7 @@ export function ListingDetailModal({
       role="presentation"
     >
       <div
-        className={`${theme.card} ${theme.text} w-full rounded-3xl shadow-2xl flex flex-col ${
+        className={`${theme.card} ${theme.text} w-full rounded-2xl shadow-2xl flex flex-col ${
           isMap
             ? 'max-w-md max-h-[min(92dvh,calc(100svh-1.5rem))] overflow-hidden'
             : 'max-h-full overflow-y-auto'
@@ -178,7 +178,7 @@ export function ListingDetailModal({
         aria-modal="true"
         aria-labelledby="listing-detail-title"
       >
-        <div className={`relative shrink-0 ${isMap ? 'overflow-hidden rounded-t-3xl' : ''}`}>
+        <div className={`relative shrink-0 ${isMap ? 'overflow-hidden rounded-t-2xl' : ''}`}>
           <img
             src={selectedPost.image}
             className={
@@ -315,7 +315,7 @@ export function ListingDetailModal({
                 <button
                   type="button"
                   onClick={saveEditedPost}
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#0D1A15] text-white py-3 rounded-xl font-bold active:scale-95 transition-transform"
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#0D1A15] text-white py-3 rounded-lg font-bold active:scale-95 transition-transform"
                 >
                   <Save size={18} /> Speichern
                 </button>
@@ -323,7 +323,7 @@ export function ListingDetailModal({
                 <button
                   type="button"
                   onClick={() => startEditPost(selectedPost)}
-                  className={`flex-1 flex items-center justify-center gap-2 ${theme.bg} ${theme.text} border ${theme.border} py-3 rounded-xl font-bold active:scale-95 transition-transform`}
+                  className={`flex-1 flex items-center justify-center gap-2 ${theme.bg} ${theme.text} border ${theme.border} py-3 rounded-lg font-bold active:scale-95 transition-transform`}
                 >
                   <Edit3 size={18} /> Bearbeiten
                 </button>
@@ -334,7 +334,7 @@ export function ListingDetailModal({
                   onDeleteListing(selectedPost.id)
                   setSelectedPost(null)
                 }}
-                className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 py-3 rounded-xl font-bold active:scale-95 transition-transform"
+                className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 py-3 rounded-lg font-bold active:scale-95 transition-transform"
               >
                 <Trash2 size={18} /> Löschen
               </button>

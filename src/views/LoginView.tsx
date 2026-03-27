@@ -75,7 +75,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
 
   return (
     <div
-      className="h-full w-full flex flex-col items-center justify-center p-6 overflow-y-auto no-scrollbar"
+      className="h-full w-full flex flex-col items-center justify-center app-gutter py-6 overflow-y-auto no-scrollbar"
       style={{ backgroundColor: OFF_WHITE }}
     >
       <div className="w-full max-w-sm flex flex-col items-center">

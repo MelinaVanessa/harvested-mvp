@@ -157,7 +157,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
   }
 
   return (
-    <div className={`px-6 py-8 ${theme.bg} ${theme.text} min-h-full pb-24`}>
+    <div className={`app-gutter py-8 ${theme.bg} ${theme.text} min-h-full pb-24`}>
       <h2 className="text-2xl font-bold mb-6">{t?.add?.title}</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div
@@ -328,7 +328,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
         </div>
         <button
           type="submit"
-          className="w-full bg-[#0D1A15] text-[#FCFAF7] py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
+          className="w-full bg-[#0D1A15] text-[#FCFAF7] py-4 rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
         >
           {t?.add?.submit}
         </button>

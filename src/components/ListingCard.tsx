@@ -50,7 +50,7 @@ export function ListingCard({
   const openListingDetail = () => onOpenListing?.(listing)
 
   return (
-    <div className={`${theme.card} ${compact ? 'rounded-lg' : 'rounded-2xl [@media(min-width:1200px)_and_(orientation:landscape)]:rounded-xl [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:rounded-xl'} overflow-hidden shadow-sm border ${theme.border}`}>
+    <div className={`${theme.card} rounded-xl overflow-hidden shadow-sm border ${theme.border}`}>
       <div className={`${compact ? 'p-2' : 'p-2.5 [@media(min-width:900px)_and_(orientation:landscape)]:p-2 [@media(min-width:1200px)_and_(orientation:landscape)]:p-1.5 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-1.5'} flex items-center justify-between relative`}>
         <div className="flex items-center gap-3 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2 cursor-pointer" onClick={() => onUserClick(gardener.id)}>
           <img src={gardener.avatar} alt={gardener.name} className="w-8 h-8 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:w-7 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-7 rounded-full bg-gray-100" />
@@ -180,7 +180,7 @@ export function ListingCard({
             )}
             <div className={`flex items-center ${compact ? 'gap-2' : 'gap-2.5 [@media(min-width:900px)_and_(orientation:landscape)]:gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2'}`}>
             {!isSelf && (
-              <div className={`flex items-center rounded-xl border ${theme.border} ${compact ? 'p-0.5 h-8' : 'p-1 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-0.5 h-12 [@media(min-width:900px)_and_(orientation:landscape)]:h-10 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8'} shrink-0 ${theme.input}`}>
+              <div className={`flex items-center rounded-lg border ${theme.border} ${compact ? 'p-0.5 h-8' : 'p-1 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-0.5 h-12 [@media(min-width:900px)_and_(orientation:landscape)]:h-10 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8'} shrink-0 ${theme.input}`}>
                 <button
                   onClick={handleDecrement}
                   className={`${compact ? 'w-6' : 'w-10 [@media(min-width:900px)_and_(orientation:landscape)]:w-8 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:w-6'} h-full flex items-center justify-center ${theme.text} hover:opacity-70 rounded-lg transition-colors`}
@@ -203,14 +203,14 @@ export function ListingCard({
             <button
               onClick={() => onReserve(listing.id, amount, new Date(pickupAt).toISOString())}
               disabled={isSelf || !pickupAt}
-              className={`flex-1 ${compact ? 'h-8 text-[11px] gap-1' : 'h-10 [@media(min-width:900px)_and_(orientation:landscape)]:h-9 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-1'} rounded-xl font-bold flex items-center justify-center transition-all active:scale-[0.98] ${isSelf ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-[#0D1A15] text-[#FCFAF7] hover:bg-[#4A5D4E] shadow-lg shadow-[#0D1A15]/10'}`}
+              className={`flex-1 ${compact ? 'h-8 text-[11px] gap-1' : 'h-10 [@media(min-width:900px)_and_(orientation:landscape)]:h-9 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-1'} rounded-lg font-bold flex items-center justify-center transition-all active:scale-[0.98] ${isSelf ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-[#0D1A15] text-[#FCFAF7] hover:bg-[#4A5D4E] shadow-lg shadow-[#0D1A15]/10'}`}
             >
               {isSelf ? t?.listing?.yourOffer ?? 'Dein Angebot' : t?.listing?.reserve ?? 'Reservieren'}
             </button>
           </div>
           </div>
         ) : (
-          <button disabled className={`w-full bg-gray-200 text-gray-400 ${compact ? 'py-2 text-[11px] mt-2' : 'py-3 [@media(min-width:900px)_and_(orientation:landscape)]:py-2.5 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs mt-4 [@media(min-width:900px)_and_(orientation:landscape)]:mt-3'} rounded-xl font-semibold`}>
+          <button disabled className={`w-full bg-gray-200 text-gray-400 ${compact ? 'py-2 text-[11px] mt-2' : 'py-3 [@media(min-width:900px)_and_(orientation:landscape)]:py-2.5 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs mt-4 [@media(min-width:900px)_and_(orientation:landscape)]:mt-3'} rounded-lg font-semibold`}>
             {t?.listing?.soldOut ?? 'Leider vergriffen'}
           </button>
         )}

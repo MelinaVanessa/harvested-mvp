@@ -17,14 +17,14 @@ export function SupportView({ onBack, theme, t }: SupportViewProps) {
 
   return (
     <div className={`h-full flex flex-col ${theme.bg} ${theme.text}`}>
-      <div className={`px-4 py-3 border-b ${theme.border} flex items-center gap-3`}>
+      <div className={`app-gutter py-3 border-b ${theme.border} flex items-center gap-3`}>
         <button onClick={onBack} className={`p-1 -ml-2 ${theme.text}`}>
           <ArrowLeft size={24} />
         </button>
         <h2 className="text-xl font-bold">{t?.support?.title}</h2>
       </div>
 
-      <div className="p-6 flex-1 overflow-y-auto">
+      <div className="app-gutter py-6 flex-1 overflow-y-auto">
         {!sent ? (
           <form onSubmit={handleSend} className="space-y-6">
             <div className="text-center mb-8">
@@ -61,7 +61,7 @@ export function SupportView({ onBack, theme, t }: SupportViewProps) {
             </div>
             <button
               type="submit"
-              className="w-full bg-[#0D1A15] text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-[#4A5D4E] transition-colors"
+              className="w-full bg-[#0D1A15] text-white py-4 rounded-lg font-bold text-lg shadow-lg hover:bg-[#4A5D4E] transition-colors"
             >
               {t?.support?.send}
             </button>
@@ -73,7 +73,7 @@ export function SupportView({ onBack, theme, t }: SupportViewProps) {
             </div>
             <h3 className="text-2xl font-bold mb-2">{t?.support?.thanks}</h3>
             <p className={`${theme.textSec} mb-8`}>{t?.support?.received}</p>
-            <button onClick={onBack} className={`px-8 py-3 rounded-xl font-bold ${theme.card} ${theme.text}`}>
+            <button onClick={onBack} className={`px-8 py-3 rounded-lg font-bold ${theme.card} ${theme.text}`}>
               Zurück
             </button>
           </div>

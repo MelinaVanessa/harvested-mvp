@@ -29,14 +29,14 @@ export function SettingsView({
 }: SettingsViewProps) {
   return (
     <div className={`h-full flex flex-col ${theme.bg} ${theme.text}`}>
-      <div className={`px-4 py-3 border-b ${theme.border} flex items-center gap-3`}>
+      <div className={`app-gutter py-3 border-b ${theme.border} flex items-center gap-3`}>
         <button onClick={onBack} className={`p-1 -ml-2 ${theme.text}`}>
           <ArrowLeft size={24} />
         </button>
         <h2 className="text-xl font-bold">{t?.settings?.title}</h2>
       </div>
 
-      <div className="p-4 space-y-6 flex-1 overflow-y-auto">
+      <div className="app-gutter py-4 space-y-6 flex-1 overflow-y-auto">
         <section>
           <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${theme.textSec}`}>
             {t?.settings?.role ?? 'Modus'}
