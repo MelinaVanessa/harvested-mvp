@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Sprout, ShoppingCart, Eye, EyeOff } from 'lucide-react'
 import type { UserRole, UserProfile, ThemeTokens } from '@/types'
-import { tryAuthLogin, tryAuthRegister } from '@/constants/apiBase'
+import { tryAuthLoginDetailed, tryAuthRegister } from '@/constants/apiBase'
 import { normalizePasswordForAuth } from '@/utils/password'
 
 const WALDGRUEN = '#4A5D4E'
@@ -56,15 +56,25 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
       }
     } else {
       // Server-first login so private/incognito windows can still authenticate.
-      const apiUser = await tryAuthLogin({ email: emailLower, password: passwordNorm })
-      if (apiUser) {
-        onLogin({ id: apiUser.id, name: apiUser.name, role: apiUser.role, profile: apiUser })
+      const loginResult = await tryAuthLoginDetailed({ email: emailLower, password: passwordNorm })
+      if (loginResult.user) {
+        onLogin({
+          id: loginResult.user.id,
+          name: loginResult.user.name,
+          role: loginResult.user.role,
+          profile: loginResult.user,
+        })
         return
       }
 
-      const msg = t?.login?.error ?? 'Ungültige Anmeldedaten.'
+      const isUnreachable = loginResult.reason === 'unreachable'
+      const msg = isUnreachable
+        ? 'Backend nicht erreichbar. Bitte später erneut versuchen.'
+        : (t?.login?.error ?? 'Ungültige Anmeldedaten.')
       setAuthError(
-        `${msg} Stelle sicher, dass du auf „Einloggen“ bist (nicht Registrieren), E-Mail und Passwort exakt wie bei der Registrierung, und dass dein Backend erreichbar ist.`,
+        isUnreachable
+          ? `${msg} Prüfe Verbindung/Deploy. Deine Eingaben konnten nicht validiert werden.`
+          : `${msg} Stelle sicher, dass du auf „Einloggen“ bist (nicht Registrieren), E-Mail und Passwort exakt wie bei der Registrierung.`,
       )
       alert(msg)
     }

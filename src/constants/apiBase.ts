@@ -74,6 +74,16 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
 }
 
 export async function tryAuthLogin(body: { email: string; password: string }): Promise<UserProfile | null> {
+  const result = await tryAuthLoginDetailed(body)
+  return result.user
+}
+
+export async function tryAuthLoginDetailed(body: { email: string; password: string }): Promise<{
+  user: UserProfile | null
+  reason: 'ok' | 'invalid_credentials' | 'unreachable'
+}> {
+  let hadInvalidCredentials = false
+  let hadAnyHttpResponse = false
   for (const base of getAuthApiBaseCandidates()) {
     try {
       const res = await fetchWithTimeout(authUrl(base, 'login'), {
@@ -81,15 +91,22 @@ export async function tryAuthLogin(body: { email: string; password: string }): P
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify(body),
       })
+      hadAnyHttpResponse = true
+      if (res.status === 401 || res.status === 400) {
+        hadInvalidCredentials = true
+        continue
+      }
       const ct = res.headers.get('content-type') ?? ''
       if (!res.ok || !ct.includes('application/json')) continue
       const data = (await res.json()) as { user?: UserProfile }
-      if (data.user?.id) return data.user
+      if (data.user?.id) return { user: data.user, reason: 'ok' }
     } catch {
       /* try next base */
     }
   }
-  return null
+  if (hadInvalidCredentials) return { user: null, reason: 'invalid_credentials' }
+  if (hadAnyHttpResponse) return { user: null, reason: 'invalid_credentials' }
+  return { user: null, reason: 'unreachable' }
 }
 
 export async function tryAuthRegister(body: {
