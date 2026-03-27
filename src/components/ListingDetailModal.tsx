@@ -188,6 +188,13 @@ export function ListingDetailModal({
             }
             alt={selectedPost.title}
           />
+          {isMap && !isEditingPost && selectedPost.description?.trim() && (
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/55 via-black/25 to-transparent backdrop-blur-[1.5px] flex items-end px-4 pb-3 pointer-events-none">
+              <p className="text-[13px] leading-snug text-white/95 line-clamp-4">
+                {selectedPost.description}
+              </p>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => setSelectedPost(null)}
@@ -277,7 +284,11 @@ export function ListingDetailModal({
                 </div>
               )}
               {reserveControls}
-              <p className={`opacity-80 ${isMap ? 'text-sm mb-3 line-clamp-2' : 'mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px] [@media(orientation:landscape)]:line-clamp-3'}`}>{selectedPost.description}</p>
+              {!isMap && (
+                <p className="opacity-80 mb-6 [@media(orientation:landscape)]:mb-3 text-sm [@media(orientation:landscape)]:text-[13px] [@media(orientation:landscape)]:line-clamp-3">
+                  {selectedPost.description}
+                </p>
+              )}
             </>
           )}
 
