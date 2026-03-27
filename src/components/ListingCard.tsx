@@ -9,7 +9,7 @@ interface ListingCardProps {
   currentUser: UserProfile
   onLike: () => void
   onFollow: () => void
-  onReserve: (listingId: string, amount: number) => void
+  onReserve: (listingId: string, amount: number, pickupAt: string) => void
   /** Opens full listing detail (e.g. map sheet / FYP) */
   onOpenListing?: (listing: Listing) => void
   onUserClick: (userId: string) => void
@@ -41,6 +41,7 @@ export function ListingCard({
   const step = listing.unit.toLowerCase() === 'stück' ? 1 : 0.5
   const initialAmount = Math.min(listing.availableQuantity, step === 1 ? 1 : 1)
   const [amount, setAmount] = useState(initialAmount)
+  const [pickupAt, setPickupAt] = useState('')
   const [showAdminMenu, setShowAdminMenu] = useState(false)
 
   const handleIncrement = () => setAmount((prev) => Math.min(listing.availableQuantity, prev + step))
@@ -167,7 +168,17 @@ export function ListingCard({
           <span>{listing.pickupTimes}</span>
         </div>
         {listing.availableQuantity > 0 ? (
-          <div className={`flex items-center ${compact ? 'gap-2 mt-2' : 'gap-2.5 [@media(min-width:900px)_and_(orientation:landscape)]:gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2 mt-3 [@media(min-width:900px)_and_(orientation:landscape)]:mt-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:mt-1.5'}`}>
+          <div className={`${compact ? 'mt-2' : 'mt-3 [@media(min-width:900px)_and_(orientation:landscape)]:mt-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:mt-1.5'}`}>
+            {!isSelf && (
+              <input
+                type="datetime-local"
+                value={pickupAt}
+                min={new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16)}
+                onChange={(e) => setPickupAt(e.target.value)}
+                className={`w-full rounded-lg border ${theme.border} ${theme.input} px-2 py-1.5 text-xs ${theme.text} mb-2`}
+              />
+            )}
+            <div className={`flex items-center ${compact ? 'gap-2' : 'gap-2.5 [@media(min-width:900px)_and_(orientation:landscape)]:gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2'}`}>
             {!isSelf && (
               <div className={`flex items-center rounded-xl border ${theme.border} ${compact ? 'p-0.5 h-8' : 'p-1 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:p-0.5 h-12 [@media(min-width:900px)_and_(orientation:landscape)]:h-10 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8'} shrink-0 ${theme.input}`}>
                 <button
@@ -190,12 +201,13 @@ export function ListingCard({
               </div>
             )}
             <button
-              onClick={() => onReserve(listing.id, amount)}
-              disabled={isSelf}
+              onClick={() => onReserve(listing.id, amount, new Date(pickupAt).toISOString())}
+              disabled={isSelf || !pickupAt}
               className={`flex-1 ${compact ? 'h-8 text-[11px] gap-1' : 'h-10 [@media(min-width:900px)_and_(orientation:landscape)]:h-9 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-1'} rounded-xl font-bold flex items-center justify-center transition-all active:scale-[0.98] ${isSelf ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-[#0D1A15] text-[#FCFAF7] hover:bg-[#4A5D4E] shadow-lg shadow-[#0D1A15]/10'}`}
             >
               {isSelf ? t?.listing?.yourOffer ?? 'Dein Angebot' : t?.listing?.reserve ?? 'Reservieren'}
             </button>
+          </div>
           </div>
         ) : (
           <button disabled className={`w-full bg-gray-200 text-gray-400 ${compact ? 'py-2 text-[11px] mt-2' : 'py-3 [@media(min-width:900px)_and_(orientation:landscape)]:py-2.5 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs mt-4 [@media(min-width:900px)_and_(orientation:landscape)]:mt-3'} rounded-xl font-semibold`}>

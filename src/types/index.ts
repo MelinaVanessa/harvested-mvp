@@ -38,6 +38,27 @@ export interface Reservation {
   amount: number
   timestamp: string
   status: 'active' | 'cancelled'
+  pickupAt?: string
+  reminderDayBeforeSent?: boolean
+  reminderHourBeforeSent?: boolean
+}
+
+export interface Review {
+  id: string
+  reviewerId: string
+  profileId: string
+  rating: number
+  text: string
+  timestamp: string
+}
+
+export interface InAppNotification {
+  id: string
+  type: 'reservation' | 'new_post'
+  title: string
+  body: string
+  timestamp: string
+  read: boolean
 }
 
 export interface Message {

@@ -9,11 +9,12 @@ import {
   XCircle,
   Calendar,
   ShoppingBag,
+  Star,
 } from 'lucide-react'
 import { ListingDetailModal } from '@/components/ListingDetailModal'
 import { ImageCropper } from '@/components/ImageCropper'
 import { LOGO_URL } from '@/constants'
-import type { Listing, UserProfile, Reservation, ThemeTokens } from '@/types'
+import type { Listing, UserProfile, Reservation, ThemeTokens, Review } from '@/types'
 
 const SHARE_BRANDS = {
   link: '/brands/link.svg',
@@ -44,7 +45,9 @@ interface ProfileViewProps {
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
   onCancelReservation?: (id: string) => void
-  onReserve?: (listingId: string, amount: number) => void
+  onReserve?: (listingId: string, amount: number, pickupAt: string) => void
+  reviews?: Review[]
+  onAddReview?: (profileId: string, rating: number, text: string) => void
 }
 
 export function ProfileView({
@@ -65,6 +68,8 @@ export function ProfileView({
   t,
   onCancelReservation,
   onReserve,
+  reviews = [],
+  onAddReview,
 }: ProfileViewProps) {
   const safeUser = user ?? ({} as UserProfile)
   const [isEditing, setIsEditing] = useState(false)
@@ -79,12 +84,20 @@ export function ProfileView({
   const [showFollowingList, setShowFollowingList] = useState(false)
   const [showShareOptions, setShowShareOptions] = useState(false)
   const [activeTab, setActiveTab] = useState<'posts' | 'reservations'>('posts')
+  const [draftRating, setDraftRating] = useState(5)
+  const [draftReviewText, setDraftReviewText] = useState('')
   const [snapshotFollowing, setSnapshotFollowing] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const safeFollowing = safeUser.following ?? []
   const userListings = listings.filter((l) => l.gardenerId === safeUser.id)
   const isFollowing = !isOwnProfile && (currentUser.following ?? []).includes(safeUser.id)
   const myReservations: Reservation[] = isOwnProfile ? (safeUser.reservations ?? []) : []
+  const profileReviews = reviews
+    .filter((r) => r.profileId === safeUser.id)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+  const averageRating = profileReviews.length
+    ? profileReviews.reduce((sum, r) => sum + r.rating, 0) / profileReviews.length
+    : 0
 
   useEffect(() => {
     if (!isEditing && user) {
@@ -209,6 +222,14 @@ export function ProfileView({
   const openFollowingList = () => {
     setSnapshotFollowing(safeFollowing)
     setShowFollowingList(true)
+  }
+
+  const handleSubmitReview = () => {
+    const clean = draftReviewText.trim()
+    if (!clean || !onAddReview || isOwnProfile) return
+    onAddReview(safeUser.id, draftRating, clean)
+    setDraftReviewText('')
+    setDraftRating(5)
   }
 
   if (showFollowingList) {
@@ -386,6 +407,77 @@ export function ProfileView({
         )}
       </div>
 
+      <div className="px-5 pb-2">
+        <div className={`rounded-xl border ${theme?.border} ${theme?.card} p-3`}>
+          <div className="flex items-center justify-between">
+            <h3 className={`text-sm font-bold ${theme?.text}`}>{t?.profile?.reviewsTitle ?? 'Reviews'}</h3>
+            {profileReviews.length > 0 && (
+              <span className={`text-xs ${theme?.textSec}`}>
+                {t?.profile?.averageRating ?? 'Average'}: {averageRating.toFixed(1)} / 5
+              </span>
+            )}
+          </div>
+
+          {!isOwnProfile && onAddReview && (
+            <div className={`mt-3 border-t ${theme?.border} pt-3`}>
+              <p className={`text-xs font-semibold mb-2 ${theme?.text}`}>{t?.profile?.writeReview ?? 'Write a review'}</p>
+              <div className="flex items-center gap-1 mb-2">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setDraftRating(value)}
+                    className="p-0.5"
+                    aria-label={`Set rating ${value}`}
+                  >
+                    <Star size={16} className={value <= draftRating ? 'fill-[#C29901] text-[#C29901]' : `${theme?.textSec}`} />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={draftReviewText}
+                onChange={(e) => setDraftReviewText(e.target.value)}
+                className={`w-full rounded-lg border ${theme?.border} ${theme?.input} p-2 text-sm focus:outline-none`}
+                rows={2}
+                placeholder={t?.profile?.reviewPlaceholder ?? 'How was your experience?'}
+              />
+              <button
+                type="button"
+                onClick={handleSubmitReview}
+                disabled={!draftReviewText.trim()}
+                className="mt-2 h-9 px-3 rounded-lg bg-[#0D1A15] text-[#FCFAF7] text-xs font-semibold disabled:opacity-40"
+              >
+                {t?.profile?.submitReview ?? 'Submit review'}
+              </button>
+            </div>
+          )}
+
+          <div className="mt-3 space-y-2">
+            {profileReviews.length > 0 ? (
+              profileReviews.map((review) => {
+                const reviewer = users[review.reviewerId]
+                return (
+                  <div key={review.id} className={`rounded-lg border ${theme?.border} p-2`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-semibold ${theme?.text}`}>{reviewer?.name ?? 'User'}</span>
+                      <span className={`text-[11px] ${theme?.textSec}`}>{new Date(review.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <Star key={`${review.id}-${value}`} size={12} className={value <= review.rating ? 'fill-[#C29901] text-[#C29901]' : `${theme?.textSec}`} />
+                      ))}
+                    </div>
+                    <p className={`text-xs mt-1 ${theme?.text}`}>{review.text}</p>
+                  </div>
+                )
+              })
+            ) : (
+              <p className={`text-xs ${theme?.textSec}`}>{t?.profile?.noReviews ?? 'No reviews yet.'}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {isOwnProfile && (
         <div className={`flex border-b ${theme?.border} mt-4`}>
           {user.role === 'gardener' && (
@@ -458,6 +550,11 @@ export function ProfileView({
                       <p className={`text-xs ${theme?.textSec} flex items-center gap-1`}>
                         <ShoppingBag size={12} /> {res.amount} {listing.unit}
                       </p>
+                      {res.pickupAt && (
+                        <p className={`text-[10px] ${theme?.textSec} opacity-80`}>
+                          Abholung: {new Date(res.pickupAt).toLocaleString()}
+                        </p>
+                      )}
                       <p className={`text-[10px] ${theme?.textSec} opacity-70`}>{new Date(res.timestamp).toLocaleDateString()}</p>
                     </div>
                     {onCancelReservation && (

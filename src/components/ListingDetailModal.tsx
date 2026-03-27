@@ -22,7 +22,7 @@ interface ListingDetailModalProps {
   variant?: 'default' | 'map'
   /** Listing author — used for reserve UI (isSelf check) and contact copy */
   gardener?: UserProfile
-  onReserve?: (listingId: string, amount: number) => void
+  onReserve?: (listingId: string, amount: number, pickupAt: string) => void
 }
 
 export function ListingDetailModal({
@@ -48,10 +48,12 @@ export function ListingDetailModal({
   const [reserveAmount, setReserveAmount] = useState(() =>
     Math.min(selectedPost.availableQuantity, selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5),
   )
+  const [pickupAt, setPickupAt] = useState('')
 
   useEffect(() => {
     const s = selectedPost.unit.toLowerCase() === 'stück' ? 1 : 0.5
     setReserveAmount(Math.min(selectedPost.availableQuantity, s))
+    setPickupAt('')
   }, [selectedPost.id, selectedPost.availableQuantity, selectedPost.unit])
 
   useEffect(() => {
@@ -96,7 +98,18 @@ export function ListingDetailModal({
   const reserveControls = showReserveBar ? (
     <div className={`${isMap ? 'mb-3' : 'mb-6'}`}>
       {selectedPost.availableQuantity > 0 ? (
-        <div className={`flex items-center gap-2 ${isMap ? 'flex-wrap' : ''}`}>
+        <div className="space-y-2">
+          <label className={`block text-xs font-semibold ${theme.textSec}`}>
+            Abholzeit
+            <input
+              type="datetime-local"
+              value={pickupAt}
+              min={new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16)}
+              onChange={(e) => setPickupAt(e.target.value)}
+              className={`mt-1 w-full rounded-lg border ${theme.border} ${theme.input} px-2 py-2 text-sm ${theme.text}`}
+            />
+          </label>
+          <div className={`flex items-center gap-2 ${isMap ? 'flex-wrap' : ''}`}>
           {!isSelfListing && (
             <div
               className={`flex items-center rounded-xl border ${theme.border} p-0.5 h-9 shrink-0 ${theme.input}`}
@@ -124,14 +137,15 @@ export function ListingDetailModal({
           )}
           <button
             type="button"
-            onClick={() => onReserve?.(selectedPost.id, reserveAmount)}
-            disabled={isSelfListing}
+            onClick={() => onReserve?.(selectedPost.id, reserveAmount, new Date(pickupAt).toISOString())}
+            disabled={isSelfListing || !pickupAt}
             className={`flex-1 min-w-[8rem] h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-1 transition-all active:scale-[0.98] ${reserveCtaClass}`}
           >
             {isSelfListing
               ? t?.listing?.yourOffer ?? 'Dein Angebot'
               : t?.listing?.reserve ?? 'Reservieren'}
           </button>
+        </div>
         </div>
       ) : (
         <button

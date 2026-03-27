@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Heart } from 'lucide-react'
 import { ListingCard } from '@/components/ListingCard'
 import { ListingDetailModal } from '@/components/ListingDetailModal'
@@ -10,7 +10,7 @@ interface LikesViewProps {
   toggleLike: (listingId: string) => void
   toggleFollow: (gardenerId: string) => void
   getGardener: (id: string) => UserProfile
-  handleReservation: (listingId: string, amount: number) => void
+  handleReservation: (listingId: string, amount: number, pickupAt: string) => void
   onAdminDelete: (listingId: string) => void
   isAdmin: boolean
   onUserClick: (userId: string) => void
@@ -32,7 +32,18 @@ export function LikesView({
   t,
 }: LikesViewProps) {
   const [detailListing, setDetailListing] = useState<Listing | null>(null)
+  const [useCompactCards, setUseCompactCards] = useState(false)
   const likedListings = listings.filter((l) => currentUser.likedListings.includes(l.id))
+
+  useEffect(() => {
+    const updateViewportFlags = () => {
+      setUseCompactCards(window.innerWidth >= 900 && window.innerHeight <= 860)
+    }
+    updateViewportFlags()
+    window.addEventListener('resize', updateViewportFlags)
+    return () => window.removeEventListener('resize', updateViewportFlags)
+  }, [])
+
   return (
     <div className={`pt-4 px-4 [@media(min-width:1200px)_and_(orientation:landscape)]:px-6 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:px-5 space-y-5 ${theme.bg} min-h-full pb-20`}>
       <h2 className={`text-xl font-bold px-2 ${theme.text}`}>{t?.likes?.title}</h2>
@@ -56,6 +67,7 @@ export function LikesView({
               onAdminDelete={onAdminDelete}
               isAdmin={isAdmin}
               onUserClick={onUserClick}
+              compact={useCompactCards}
               theme={theme}
               t={t}
             />

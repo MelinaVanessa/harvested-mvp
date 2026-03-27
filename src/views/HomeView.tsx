@@ -15,7 +15,7 @@ interface HomeViewProps {
   getGardener: (id: string) => UserProfile
   filterType: 'all' | 'pickup' | 'self_harvest'
   setFilterType: (v: 'all' | 'pickup' | 'self_harvest') => void
-  handleReservation: (listingId: string, amount: number) => void
+  handleReservation: (listingId: string, amount: number, pickupAt: string) => void
   onAdminDelete: (listingId: string) => void
   isAdmin: boolean
   onUserClick: (userId: string) => void
@@ -44,12 +44,15 @@ export function HomeView({
   const [searchTerm, setSearchTerm] = useState('')
   const [showSearch, setShowSearch] = useState(true)
   const [isShortLandscape, setIsShortLandscape] = useState(false)
+  const [useCompactCards, setUseCompactCards] = useState(false)
   const lastScrollY = useRef(0)
 
   useEffect(() => {
     const updateViewportFlags = () => {
       // Keep FYP filters visible on typical laptop heights (e.g. 1366x768).
       setIsShortLandscape(window.innerWidth >= 900 && window.innerHeight <= 620)
+      // On laptop heights, enforce compact cards so a full post stays visible with extra space.
+      setUseCompactCards(window.innerWidth >= 900 && window.innerHeight <= 860)
     }
     updateViewportFlags()
     window.addEventListener('resize', updateViewportFlags)
@@ -158,6 +161,7 @@ export function HomeView({
               onAdminDelete={onAdminDelete}
               isAdmin={isAdmin}
               onUserClick={onUserClick}
+              compact={useCompactCards}
               theme={theme}
               t={t}
             />

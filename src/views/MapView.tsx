@@ -14,7 +14,7 @@ interface MapViewProps {
   listings: Listing[]
   filterType: 'all' | 'pickup' | 'self_harvest'
   setFilterType: (v: 'all' | 'pickup' | 'self_harvest') => void
-  handleReservation: (listingId: string, amount: number) => void
+  handleReservation: (listingId: string, amount: number, pickupAt: string) => void
   getGardener: (id: string) => UserProfile
   onUserClick: (userId: string) => void
   setActiveTab: (tab: 'home' | 'map' | 'add' | 'profile' | 'likes') => void

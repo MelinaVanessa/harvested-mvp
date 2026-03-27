@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Map as MapIcon, Home, PlusCircle, User, Heart, MessageCircle, Menu, Leaf, Settings, LogOut, HelpCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Map as MapIcon, Home, PlusCircle, User, Heart, MessageCircle, Menu, Leaf, Settings, LogOut, HelpCircle, Bell } from 'lucide-react'
 import { ErrorBoundary, NavButton } from '@/components'
 import {
   LoginView,
@@ -26,7 +26,7 @@ import {
   storedAccountToUserProfile,
 } from '@/constants/storage'
 import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
-import type { UserProfile, Listing, Reservation, Message } from '@/types'
+import type { UserProfile, Listing, Reservation, Message, Review, InAppNotification } from '@/types'
 
 type ActiveTab =
   | 'home'
@@ -56,6 +56,25 @@ function normalizeListingGardenerId(item: Listing): Listing {
   return gardenerId === item.gardenerId ? item : { ...item, gardenerId }
 }
 
+const INITIAL_REVIEWS: Review[] = [
+  {
+    id: 'rev1',
+    reviewerId: 'u1',
+    profileId: 'u2',
+    rating: 5,
+    text: 'Super freundlich und alles wie beschrieben.',
+    timestamp: new Date('2026-01-15T09:30:00Z').toISOString(),
+  },
+  {
+    id: 'rev2',
+    reviewerId: 'u1',
+    profileId: 'u3',
+    rating: 4,
+    text: 'Tolle Kürbisse, gerne wieder.',
+    timestamp: new Date('2026-02-03T16:10:00Z').toISOString(),
+  },
+]
+
 export default function App() {
   const [hasAcceptedLegal, setHasAcceptedLegal] = useState<boolean>(() => {
     try {
@@ -83,6 +102,10 @@ export default function App() {
   const [showSaveLoginModal, setShowSaveLoginModal] = useState(false)
   const [pendingSaveUserId, setPendingSaveUserId] = useState<string | null>(null)
   const [isShortLandscape, setIsShortLandscape] = useState(false)
+  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS)
+  const [notifications, setNotifications] = useState<InAppNotification[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
+  const previousListingIdsRef = useRef<Set<string>>(new Set())
 
   const theme = isDarkMode ? THEMES.dark : THEMES.light
   const t = TRANSLATIONS[language]
@@ -93,6 +116,19 @@ export default function App() {
     isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && !isLegalTab
   const showBottomNav =
     isLoggedIn && !chatPartnerId && !viewingProfileId && !showInbox && activeTab !== 'support' && activeTab !== 'settings' && !isLegalTab
+  const unreadNotificationsCount = notifications.filter((n) => !n.read).length
+
+  const addNotification = (payload: Omit<InAppNotification, 'id' | 'timestamp' | 'read'>) => {
+    setNotifications((prev) => [
+      {
+        id: `n${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        timestamp: new Date().toISOString(),
+        read: false,
+        ...payload,
+      },
+      ...prev,
+    ])
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -144,6 +180,11 @@ export default function App() {
   }, [isLoggedIn])
 
   useEffect(() => {
+    if (!showNotifications) return
+    setNotifications((prev) => prev.map((n) => (n.read ? n : { ...n, read: true })))
+  }, [showNotifications])
+
+  useEffect(() => {
     const updateViewportFlags = () => {
       const shortLandscape = window.innerWidth >= 900 && window.innerHeight <= 700
       setIsShortLandscape(shortLandscape)
@@ -179,6 +220,33 @@ export default function App() {
     }
   }, [isLoggedIn])
 
+  useEffect(() => {
+    const previousIds = previousListingIdsRef.current
+    if (previousIds.size === 0) {
+      previousListingIdsRef.current = new Set(listings.map((l) => l.id))
+      return
+    }
+
+    const newListings = listings.filter((l) => !previousIds.has(l.id))
+    if (newListings.length > 0) {
+      newListings.forEach((listing) => {
+        const isFromFollowedGardener = currentUser.following.includes(listing.gardenerId)
+        const isOwnListing = listing.gardenerId === currentUser.id
+        if (!isFromFollowedGardener || isOwnListing) return
+        const gardenerName = users[listing.gardenerId]?.name ?? 'User'
+        addNotification({
+          type: 'new_post',
+          title: t?.notifications?.newPostTitle ?? 'New post',
+          body:
+            (t?.notifications?.newPostBody ?? '{{name}} published "{{title}}".')
+              .replace('{{name}}', gardenerName)
+              .replace('{{title}}', listing.title),
+        })
+      })
+    }
+    previousListingIdsRef.current = new Set(listings.map((l) => l.id))
+  }, [listings, currentUser.following, currentUser.id, t, users])
+
   const getGardener = (id: string) => users[id] ?? { name: 'Unbekannt', handle: '@unknown', avatar: '', id, bio: '', role: 'gardener', isMember: false, following: [], likedListings: [] }
 
   const toggleLike = (listingId: string) => {
@@ -210,7 +278,8 @@ export default function App() {
     }))
   }
 
-  const handleReservation = (listingId: string, amount: number) => {
+  const handleReservation = (listingId: string, amount: number, pickupAt: string) => {
+    const reservedListing = listings.find((l) => l.id === listingId)
     setListings((prev) =>
       prev.map((l) => (l.id === listingId ? { ...l, availableQuantity: Math.max(0, l.availableQuantity - amount) } : l))
     )
@@ -221,9 +290,23 @@ export default function App() {
         amount,
         timestamp: new Date().toISOString(),
         status: 'active',
+        pickupAt,
+        reminderDayBeforeSent: false,
+        reminderHourBeforeSent: false,
       },
       ...prev,
     ])
+    if (reservedListing) {
+      addNotification({
+        type: 'reservation',
+        title: t?.notifications?.reserveTitle ?? 'Reservation successful',
+        body:
+          (t?.notifications?.reserveBody ?? 'You reserved {{amount}} {{unit}} of "{{title}}".')
+            .replace('{{amount}}', String(amount))
+            .replace('{{unit}}', reservedListing.unit)
+            .replace('{{title}}', reservedListing.title),
+      })
+    }
     alert(`Erfolgreich ${amount} reserviert! Der Gärtner wurde benachrichtigt.`)
   }
 
@@ -236,6 +319,57 @@ export default function App() {
     setReservations((prev) => prev.filter((r) => r.id !== reservationId))
     alert('Reservierung storniert.')
   }
+
+  useEffect(() => {
+    const evaluateReservationReminders = () => {
+      const now = Date.now()
+      setReservations((prev) => {
+        let changed = false
+        const next = prev.map((res) => {
+          if (res.status !== 'active' || !res.pickupAt) return res
+          const pickupMs = new Date(res.pickupAt).getTime()
+          if (!Number.isFinite(pickupMs)) return res
+          const diff = pickupMs - now
+          const shouldSendDay = diff <= 24 * 60 * 60 * 1000 && diff > 23 * 60 * 60 * 1000
+          const shouldSendHour = diff <= 60 * 60 * 1000 && diff > 55 * 60 * 1000
+
+          let updated = res
+          if (shouldSendDay && !res.reminderDayBeforeSent) {
+            const listing = listings.find((l) => l.id === res.listingId)
+            addNotification({
+              type: 'reservation',
+              title: language === 'de' ? 'Erinnerung: morgen abholen' : 'Reminder: pickup tomorrow',
+              body:
+                language === 'de'
+                  ? `Deine Reservierung "${listing?.title ?? 'Angebot'}" ist morgen um ${new Date(res.pickupAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`
+                  : `Your reservation "${listing?.title ?? 'listing'}" is tomorrow at ${new Date(res.pickupAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
+            })
+            updated = { ...updated, reminderDayBeforeSent: true }
+            changed = true
+          }
+          if (shouldSendHour && !updated.reminderHourBeforeSent) {
+            const listing = listings.find((l) => l.id === res.listingId)
+            addNotification({
+              type: 'reservation',
+              title: language === 'de' ? 'Erinnerung: in 1 Stunde' : 'Reminder: in 1 hour',
+              body:
+                language === 'de'
+                  ? `Deine Reservierung "${listing?.title ?? 'Angebot'}" ist in etwa 1 Stunde.`
+                  : `Your reservation "${listing?.title ?? 'listing'}" is in about 1 hour.`,
+            })
+            updated = { ...updated, reminderHourBeforeSent: true }
+            changed = true
+          }
+          return updated
+        })
+        return changed ? next : prev
+      })
+    }
+
+    evaluateReservationReminders()
+    const timer = window.setInterval(evaluateReservationReminders, 60 * 1000)
+    return () => window.clearInterval(timer)
+  }, [listings, language])
 
   const handleCreateListing = async (newListing: Listing) => {
     if (API_ENABLED) {
@@ -278,6 +412,35 @@ export default function App() {
         handle: next.handle,
       })
       return next
+    })
+  }
+
+  const handleAddReview = (profileId: string, rating: number, text: string) => {
+    setReviews((prev) => {
+      const existing = prev.find((r) => r.profileId === profileId && r.reviewerId === currentUser.id)
+      if (existing) {
+        return prev.map((r) =>
+          r.id === existing.id
+            ? {
+                ...r,
+                rating: Math.max(1, Math.min(5, Math.round(rating))),
+                text,
+                timestamp: new Date().toISOString(),
+              }
+            : r,
+        )
+      }
+      return [
+        {
+          id: `rev${Date.now()}`,
+          reviewerId: currentUser.id,
+          profileId,
+          rating: Math.max(1, Math.min(5, Math.round(rating))),
+          text,
+          timestamp: new Date().toISOString(),
+        },
+        ...prev,
+      ]
     })
   }
 
@@ -417,6 +580,8 @@ export default function App() {
           onUpdateListing={() => {}}
           onUserClick={openProfile}
           onReserve={handleReservation}
+          reviews={reviews}
+          onAddReview={handleAddReview}
           theme={theme}
           t={t}
         />
@@ -498,6 +663,7 @@ export default function App() {
             t={t}
             onCancelReservation={handleCancelReservation}
             onFollow={toggleFollow}
+            reviews={reviews}
           />
         )
       case 'support':
@@ -654,6 +820,18 @@ export default function App() {
                   </div>
                   <div className="flex items-center gap-3">
                     <button
+                      onClick={() => setShowNotifications((prev) => !prev)}
+                      className={`relative ${isShortLandscape ? 'p-1.5 -m-1.5' : 'p-2 -m-2'} rounded-lg hover:bg-black/5 ${isDarkMode ? 'hover:bg-white/10' : ''} ${theme.text}`}
+                      aria-label="Open notifications"
+                    >
+                      <Bell size={isShortLandscape ? 21 : 24} />
+                      {unreadNotificationsCount > 0 && (
+                        <div className={`absolute top-0 right-0 min-w-4 h-4 px-1 bg-[#C29901] text-[#0D1A15] text-[10px] font-bold rounded-full flex items-center justify-center border ${isDarkMode ? 'border-[#0D1A15]' : 'border-[#FCFAF7]'}`}>
+                          {Math.min(unreadNotificationsCount, 9)}
+                        </div>
+                      )}
+                    </button>
+                    <button
                       onClick={() => setShowInbox(true)}
                       className={`relative ${isShortLandscape ? 'p-1.5 -m-1.5' : 'p-2 -m-2'} rounded-lg hover:bg-black/5 ${isDarkMode ? 'hover:bg-white/10' : ''} ${theme.text}`}
                       aria-label="Open inbox"
@@ -667,6 +845,32 @@ export default function App() {
                       <img src={currentUser.avatar} alt="Profile" className="w-full h-full object-cover" />
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {showNotifications && (
+              <div className="absolute inset-0 z-[115]" onClick={() => setShowNotifications(false)}>
+                <div
+                  className={`absolute right-3 top-14 w-[min(360px,calc(100vw-1.5rem))] max-h-[65vh] overflow-y-auto rounded-2xl border ${theme.border} ${theme.card} shadow-2xl p-3`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className={`text-sm font-bold mb-2 ${theme.text}`}>{t?.notifications?.title ?? 'Notifications'}</h3>
+                  {notifications.length === 0 ? (
+                    <p className={`text-xs ${theme.textSec}`}>{t?.notifications?.empty ?? 'No notifications yet.'}</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {notifications.map((n) => (
+                        <div key={n.id} className={`rounded-lg border ${theme.border} p-2 ${n.read ? '' : 'ring-1 ring-[#C29901]/40'}`}>
+                          <p className={`text-xs font-semibold ${theme.text}`}>{n.title}</p>
+                          <p className={`text-xs ${theme.textSec} mt-0.5`}>{n.body}</p>
+                          <p className={`text-[10px] ${theme.textSec} mt-1 opacity-80`}>
+                            {new Date(n.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
