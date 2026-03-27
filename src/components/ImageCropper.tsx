@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { X, Leaf } from 'lucide-react'
 
 interface ImageCropperProps {
@@ -9,11 +9,25 @@ interface ImageCropperProps {
 }
 
 export function ImageCropper({ imageSrc, onCancel, onSave, t }: ImageCropperProps) {
+  const PREVIEW_SIZE = 250
+  const EXPORT_SIZE = 300
   const [zoom, setZoom] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const imgRef = useRef<HTMLImageElement>(null)
+  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 })
+
+  const coverSize = useMemo(() => {
+    const w = imageNaturalSize.width
+    const h = imageNaturalSize.height
+    if (!w || !h) return { width: PREVIEW_SIZE, height: PREVIEW_SIZE }
+    const coverScale = Math.max(PREVIEW_SIZE / w, PREVIEW_SIZE / h)
+    return {
+      width: w * coverScale,
+      height: h * coverScale,
+    }
+  }, [imageNaturalSize.width, imageNaturalSize.height])
 
   const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true)
@@ -31,20 +45,19 @@ export function ImageCropper({ imageSrc, onCancel, onSave, t }: ImageCropperProp
   const handleSave = () => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
-    const size = 300
-    canvas.width = size
-    canvas.height = size
+    canvas.width = EXPORT_SIZE
+    canvas.height = EXPORT_SIZE
     if (ctx && imgRef.current) {
       ctx.fillStyle = '#FCFAF7'
-      ctx.fillRect(0, 0, size, size)
-      const scaleFactor = size / 250
-      ctx.save()
-      ctx.translate(size / 2, size / 2)
-      ctx.scale(zoom, zoom)
-      ctx.translate(offset.x * scaleFactor, offset.y * scaleFactor)
+      ctx.fillRect(0, 0, EXPORT_SIZE, EXPORT_SIZE)
+
+      const scaleFactor = EXPORT_SIZE / PREVIEW_SIZE
+      const drawnWidth = coverSize.width * zoom * scaleFactor
+      const drawnHeight = coverSize.height * zoom * scaleFactor
+      const x = EXPORT_SIZE / 2 - drawnWidth / 2 + offset.x * scaleFactor
+      const y = EXPORT_SIZE / 2 - drawnHeight / 2 + offset.y * scaleFactor
       const img = imgRef.current
-      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2)
-      ctx.restore()
+      ctx.drawImage(img, x, y, drawnWidth, drawnHeight)
       onSave(canvas.toDataURL('image/jpeg', 0.9))
     }
   }
@@ -74,11 +87,17 @@ export function ImageCropper({ imageSrc, onCancel, onSave, t }: ImageCropperProp
             src={imageSrc}
             alt="To Crop"
             draggable={false}
+            onLoad={(e) => {
+              const el = e.currentTarget
+              setImageNaturalSize({ width: el.naturalWidth, height: el.naturalHeight })
+            }}
             className="absolute max-w-none origin-center"
             style={{
               transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
               left: '50%',
               top: '50%',
+              width: `${coverSize.width}px`,
+              height: `${coverSize.height}px`,
             }}
           />
         </div>
