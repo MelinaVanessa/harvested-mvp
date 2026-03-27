@@ -10,6 +10,7 @@ import {
   Calendar,
   ShoppingBag,
   Star,
+  Trash2,
 } from 'lucide-react'
 import { ListingDetailModal } from '@/components/ListingDetailModal'
 import { ImageCropper } from '@/components/ImageCropper'
@@ -50,6 +51,7 @@ interface ProfileViewProps {
   onAddReview?: (profileId: string, rating: number, text: string) => void
   isAdmin?: boolean
   onToggleCertification?: (userId: string) => void
+  onDeleteReview?: (reviewId: string) => void
 }
 
 export function ProfileView({
@@ -74,6 +76,7 @@ export function ProfileView({
   onAddReview,
   isAdmin = false,
   onToggleCertification,
+  onDeleteReview,
 }: ProfileViewProps) {
   const safeUser = user ?? ({} as UserProfile)
   const [isEditing, setIsEditing] = useState(false)
@@ -588,7 +591,20 @@ export function ProfileView({
                   <div key={review.id} className={`rounded-lg border ${theme?.border} p-2`}>
                     <div className="flex items-center justify-between">
                       <span className={`text-xs font-semibold ${theme?.text}`}>{reviewer?.name ?? 'User'}</span>
-                      <span className={`text-[11px] ${theme?.textSec}`}>{new Date(review.timestamp).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[11px] ${theme?.textSec}`}>{new Date(review.timestamp).toLocaleDateString()}</span>
+                        {isAdmin && onDeleteReview && (
+                          <button
+                            type="button"
+                            onClick={() => onDeleteReview(review.id)}
+                            className="p-1 rounded-md text-red-500 hover:bg-red-50/60 transition-colors"
+                            aria-label={t?.profile?.deleteReview ?? 'Delete review'}
+                            title={t?.profile?.deleteReview ?? 'Delete review'}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-0.5 mt-1">
                       {[1, 2, 3, 4, 5].map((value) => (

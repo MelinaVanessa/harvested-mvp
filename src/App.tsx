@@ -52,6 +52,7 @@ const LEGAL_ACK_KEY = 'harvested_legal_ack_v2'
 const NAV_STATE_KEY = 'harvested_nav_state_v1'
 const NOTIFICATION_PREFS_KEY = 'harvested_notification_prefs_v1'
 const AUTH_RESET_KEY = 'harvested_auth_reset_v1'
+const ADMIN_UPLOAD_NOTIFICATIONS_KEY = 'harvested_admin_upload_notifications_v1'
 
 type PersistedNavState = {
   activeTab: ActiveTab
@@ -130,6 +131,35 @@ function readSavedNotificationPrefs(): NotificationPrefs {
     }
   } catch {
     return DEFAULT_NOTIFICATION_PREFS
+  }
+}
+
+type QueuedAdminUploadNotification = {
+  title: string
+  body: string
+  timestamp: string
+}
+
+function enqueueAdminUploadNotification(item: QueuedAdminUploadNotification): void {
+  try {
+    const raw = localStorage.getItem(ADMIN_UPLOAD_NOTIFICATIONS_KEY)
+    const list = raw ? (JSON.parse(raw) as QueuedAdminUploadNotification[]) : []
+    list.push(item)
+    localStorage.setItem(ADMIN_UPLOAD_NOTIFICATIONS_KEY, JSON.stringify(list))
+  } catch {
+    // ignore
+  }
+}
+
+function takeQueuedAdminUploadNotifications(): QueuedAdminUploadNotification[] {
+  try {
+    const raw = localStorage.getItem(ADMIN_UPLOAD_NOTIFICATIONS_KEY)
+    if (!raw) return []
+    const list = JSON.parse(raw) as QueuedAdminUploadNotification[]
+    localStorage.removeItem(ADMIN_UPLOAD_NOTIFICATIONS_KEY)
+    return Array.isArray(list) ? list : []
+  } catch {
+    return []
   }
 }
 
@@ -303,6 +333,26 @@ export default function App() {
     if (!showNotifications) return
     setNotifications((prev) => prev.map((n) => (n.read ? n : { ...n, read: true })))
   }, [showNotifications])
+
+  useEffect(() => {
+    if (!isLoggedIn || currentUser.id !== 'u1') return
+    const queued = takeQueuedAdminUploadNotifications()
+    if (queued.length === 0) return
+    setNotifications((prev) => [
+      ...queued
+        .slice()
+        .reverse()
+        .map((q) => ({
+          id: `n_admin_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          type: 'new_post' as const,
+          title: q.title,
+          body: q.body,
+          timestamp: q.timestamp,
+          read: false,
+        })),
+      ...prev,
+    ])
+  }, [isLoggedIn, currentUser.id])
 
   useEffect(() => {
     if (!isLoggedIn || !hasAcceptedLegal) return
@@ -544,6 +594,29 @@ export default function App() {
     } else {
       setListings((prev) => [newListing, ...prev])
     }
+
+    const adminTitle = language === 'de' ? 'Neuer Upload' : 'New upload'
+    const adminBody =
+      language === 'de'
+        ? `${currentUser.name} hat "${newListing.title}" hochgeladen.`
+        : `${currentUser.name} uploaded "${newListing.title}".`
+    if (currentUser.id === 'u1') {
+      addNotification(
+        {
+          type: 'new_post',
+          title: adminTitle,
+          body: adminBody,
+        },
+        'newPostsFromFollowing',
+      )
+    } else {
+      enqueueAdminUploadNotification({
+        title: adminTitle,
+        body: adminBody,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
     if (!currentUser.isMember) {
       setCurrentUser((prev) => ({ ...prev, isMember: true }))
       alert('Glückwunsch! Deine Mitgliedschaft ist jetzt kostenlos aktiv, da du etwas geteilt hast.')
@@ -592,6 +665,11 @@ export default function App() {
         ...prev,
       ]
     })
+  }
+
+  const handleDeleteReview = (reviewId: string) => {
+    if (!isAdmin) return
+    setReviews((prev) => prev.filter((r) => r.id !== reviewId))
   }
 
   const handleToggleCertification = (userId: string) => {
@@ -765,6 +843,7 @@ export default function App() {
           onAddReview={handleAddReview}
           isAdmin={isAdmin}
           onToggleCertification={handleToggleCertification}
+          onDeleteReview={handleDeleteReview}
           theme={theme}
           t={t}
         />
@@ -849,6 +928,7 @@ export default function App() {
             reviews={reviews}
             isAdmin={isAdmin}
             onToggleCertification={handleToggleCertification}
+            onDeleteReview={handleDeleteReview}
           />
         )
       case 'support':
