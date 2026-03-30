@@ -110,7 +110,8 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
       style={{ backgroundColor: OFF_WHITE }}
     >
       <div className="w-full max-w-sm flex flex-col items-center">
-        <div className="flex-1 flex flex-col items-center justify-center min-h-[min-content] py-8">
+        {/* justify-start: avoids re-centering the whole column when the error block gains height */}
+        <div className="flex-1 flex flex-col items-center justify-start min-h-[min-content] py-8 pt-12 sm:pt-16">
           <img
             src={LOGIN_LOGO_SRC}
             alt=""
@@ -229,11 +230,11 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
               </div>
             </div>
 
-            {authError && (
-              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">
+            {authError ? (
+              <p className="w-full text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert" aria-live="polite">
                 {authError}
               </p>
-            )}
+            ) : null}
 
             <button
               type="submit"
