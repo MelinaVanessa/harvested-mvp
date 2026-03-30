@@ -148,8 +148,4 @@ export const INITIAL_LISTINGS: Listing[] = [
   },
 ]
 
-export const INITIAL_MESSAGES: Record<string, Message[]> = {
-  u2: [
-    { id: 'm1', senderId: 'u2', text: 'Hallo Anna! Wann möchtest du die Äpfel holen?', timestamp: '10:00' },
-  ],
-}
+export const INITIAL_MESSAGES: Record<string, Message[]> = {}

@@ -845,6 +845,46 @@ export default function App() {
     })
   }
 
+  const ensureAdminWelcomeThread = (user: UserProfile) => {
+    const adminId = 'u1'
+    if (!user?.id || user.id === adminId) return
+
+    const welcomeText =
+      language === 'de'
+        ? `Hi ${user.name || 'du'}! Ich bin ${OWNER_NAME}. Schreib mir hier jederzeit direkt Feedback oder Fragen zur App.`
+        : `Hi ${user.name || 'there'}! I am ${OWNER_NAME}. Feel free to send direct feedback or questions here anytime.`
+
+    const welcomeMessage: Message = {
+      id: `m_welcome_${Date.now()}`,
+      senderId: adminId,
+      text: welcomeText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+
+    setMessages((prev) => {
+      const adminThreadKey = user.id
+      const userThreadKey = adminId
+      const adminThread = prev[adminThreadKey] ?? []
+      const userThread = prev[userThreadKey] ?? []
+
+      // If a thread already exists, keep data and just mirror missing side.
+      if (adminThread.length > 0 || userThread.length > 0) {
+        const source = adminThread.length > 0 ? adminThread : userThread
+        return {
+          ...prev,
+          [adminThreadKey]: adminThread.length > 0 ? adminThread : source,
+          [userThreadKey]: userThread.length > 0 ? userThread : source,
+        }
+      }
+
+      return {
+        ...prev,
+        [adminThreadKey]: [welcomeMessage],
+        [userThreadKey]: [welcomeMessage],
+      }
+    })
+  }
+
   const handleSendMessage = (partnerId: string, text: string) => {
     const newMessage: Message = {
       id: `m${Date.now()}`,
@@ -852,7 +892,17 @@ export default function App() {
       text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
-    setMessages((prev) => ({ ...prev, [partnerId]: [...(prev[partnerId] ?? []), newMessage] }))
+    setMessages((prev) => {
+      const next: Record<string, Message[]> = {
+        ...prev,
+        [partnerId]: [...(prev[partnerId] ?? []), newMessage],
+      }
+      // Mirror admin<->user chats so both inboxes can see the same thread key they use.
+      if (partnerId === 'u1' && currentUser.id !== 'u1') {
+        next[currentUser.id] = [...(prev[currentUser.id] ?? []), newMessage]
+      }
+      return next
+    })
   }
 
   const handleSendSupportMessage = (subject: string, text: string) => {
@@ -1195,6 +1245,7 @@ export default function App() {
                   setUsers((prev) => ({ ...prev, [nextUser.id]: nextUser }))
                   setCurrentUser(nextUser)
                   setIsLoggedIn(true)
+                  ensureAdminWelcomeThread(nextUser)
                   // Persist login by default so page refresh does not log users out.
                   setSavedLogin(nextUser.id)
                   setPendingSaveUserId(null)
