@@ -83,7 +83,7 @@ export async function tryAuthLoginDetailed(body: { email: string; password: stri
   reason: 'ok' | 'invalid_credentials' | 'unreachable'
 }> {
   let hadInvalidCredentials = false
-  let hadAnyHttpResponse = false
+  let hadReachableAuthServer = false
   for (const base of getAuthApiBaseCandidates()) {
     try {
       const res = await fetchWithTimeout(authUrl(base, 'login'), {
@@ -91,13 +91,16 @@ export async function tryAuthLoginDetailed(body: { email: string; password: stri
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify(body),
       })
-      hadAnyHttpResponse = true
+      // Only real auth responses should influence credential verdicts.
+      // A 404/HTML from a static origin must not become "invalid credentials".
       if (res.status === 401 || res.status === 400) {
+        hadReachableAuthServer = true
         hadInvalidCredentials = true
         continue
       }
       const ct = res.headers.get('content-type') ?? ''
       if (!res.ok || !ct.includes('application/json')) continue
+      hadReachableAuthServer = true
       const data = (await res.json()) as { user?: UserProfile }
       if (data.user?.id) return { user: data.user, reason: 'ok' }
     } catch {
@@ -105,7 +108,7 @@ export async function tryAuthLoginDetailed(body: { email: string; password: stri
     }
   }
   if (hadInvalidCredentials) return { user: null, reason: 'invalid_credentials' }
-  if (hadAnyHttpResponse) return { user: null, reason: 'invalid_credentials' }
+  if (hadReachableAuthServer) return { user: null, reason: 'invalid_credentials' }
   return { user: null, reason: 'unreachable' }
 }
 

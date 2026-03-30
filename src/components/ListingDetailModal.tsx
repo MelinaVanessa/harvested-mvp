@@ -118,13 +118,7 @@ export function ListingDetailModal({
                 ))}
               </select>
             ) : (
-              <input
-                type="datetime-local"
-                value={pickupAt}
-                min={new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16)}
-                onChange={(e) => setPickupAt(e.target.value)}
-                className={`mt-1 w-full rounded-lg border ${theme.border} ${theme.input} px-2 py-2 text-sm ${theme.text}`}
-              />
+              <p className={`mt-1 text-sm ${theme.textSec}`}>Keine buchbaren Abholzeiten</p>
             )}
           </label>
           <div className={`flex items-center gap-2 ${isMap ? 'flex-wrap' : ''}`}>
@@ -156,8 +150,8 @@ export function ListingDetailModal({
           <button
             type="button"
             onClick={() => onReserve?.(selectedPost.id, reserveAmount, pickupAt ? new Date(pickupAt).toISOString() : '')}
-            disabled={isSelfListing}
-            className={`flex-1 min-w-[8rem] h-10 rounded-lg text-sm font-bold flex items-center justify-center gap-1 transition-all active:scale-[0.98] ${reserveCtaClass}`}
+            disabled={isSelfListing || offeredSlots.length === 0 || !pickupAt}
+            className={`flex-1 min-w-[8rem] h-10 rounded-lg text-sm font-bold flex items-center justify-center gap-1 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${reserveCtaClass}`}
           >
             {isSelfListing
               ? t?.listing?.yourOffer ?? 'Dein Angebot'

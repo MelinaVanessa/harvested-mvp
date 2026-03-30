@@ -547,12 +547,7 @@ export function ProfileView({
                               ))}
                             </select>
                           ) : (
-                            <input
-                              type="datetime-local"
-                              value={editReservationPickupAt}
-                              onChange={(e) => setEditReservationPickupAt(e.target.value)}
-                              className={`w-full p-1.5 rounded-md border ${theme?.border} ${theme?.input} text-xs`}
-                            />
+                            <p className={`text-xs ${theme?.textSec}`}>Keine Abholtermine für dieses Angebot hinterlegt.</p>
                           )}
                           <div className="flex gap-1">
                             <button
@@ -562,7 +557,12 @@ export function ProfileView({
                                 onUpdateReservation(res.id, editReservationAmount, new Date(editReservationPickupAt).toISOString())
                                 setEditingReservationId(null)
                               }}
-                              disabled={!Number.isFinite(editReservationAmount) || editReservationAmount <= 0 || !editReservationPickupAt}
+                              disabled={
+                                !Number.isFinite(editReservationAmount) ||
+                                editReservationAmount <= 0 ||
+                                !editReservationPickupAt ||
+                                (listing.pickupSlots ?? []).length === 0
+                              }
                               className="px-2 py-1 rounded-md bg-[#0D1A15] text-white text-[10px] font-semibold disabled:opacity-40"
                             >
                               Speichern
@@ -591,7 +591,7 @@ export function ProfileView({
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      {onUpdateReservation && editingReservationId !== res.id && (
+                      {onUpdateReservation && editingReservationId !== res.id && (listing.pickupSlots ?? []).length > 0 && (
                         <button
                           type="button"
                           onClick={(e) => {

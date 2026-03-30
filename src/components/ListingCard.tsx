@@ -185,13 +185,7 @@ export function ListingCard({
                   ))}
                 </select>
               ) : (
-                <input
-                  type="datetime-local"
-                  value={pickupAt}
-                  min={new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16)}
-                  onChange={(e) => setPickupAt(e.target.value)}
-                  className={`w-full rounded-lg border ${theme.border} ${theme.input} px-2 py-1.5 text-xs ${theme.text} mb-2`}
-                />
+                <p className={`text-xs mb-2 ${theme.textSec}`}>Keine buchbaren Abholzeiten</p>
               ))}
             <div className={`flex items-center ${compact ? 'gap-2' : 'gap-2.5 [@media(min-width:900px)_and_(orientation:landscape)]:gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-2'}`}>
             {!isSelf && (
@@ -217,8 +211,8 @@ export function ListingCard({
             )}
             <button
               onClick={() => onReserve(listing.id, amount, pickupAt ? new Date(pickupAt).toISOString() : '')}
-              disabled={isSelf}
-              className={`flex-1 ${compact ? 'h-8 text-[11px] gap-1' : 'h-10 [@media(min-width:900px)_and_(orientation:landscape)]:h-9 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-1'} rounded-lg font-bold flex items-center justify-center transition-all active:scale-[0.98] ${isSelf ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-[#0D1A15] text-[#FCFAF7] hover:bg-[#4A5D4E] shadow-lg shadow-[#0D1A15]/10'}`}
+              disabled={isSelf || offeredSlots.length === 0 || !pickupAt}
+               className={`flex-1 ${compact ? 'h-8 text-[11px] gap-1' : 'h-10 [@media(min-width:900px)_and_(orientation:landscape)]:h-9 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-8 text-sm [@media(min-width:900px)_and_(orientation:landscape)]:text-xs [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] gap-2 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:gap-1'} rounded-lg font-bold flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${isSelf ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-[#0D1A15] text-[#FCFAF7] hover:bg-[#4A5D4E] shadow-lg shadow-[#0D1A15]/10'}`}
             >
               {isSelf ? t?.listing?.yourOffer ?? 'Dein Angebot' : t?.listing?.reserve ?? 'Reservieren'}
             </button>

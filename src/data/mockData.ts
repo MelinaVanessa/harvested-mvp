@@ -1,4 +1,47 @@
 import type { UserProfile, Listing, Message } from '@/types'
+import { formatPickupScheduleSummary, generateWeeklyPickupSlots } from '@/utils/pickupSlots'
+
+const MOCK_SLOTS_L1 = generateWeeklyPickupSlots({
+  weekdays: [1, 2, 3, 4, 5],
+  timeStart: '17:00',
+  timeEnd: '19:00',
+  slotMinutes: 60,
+  weeksAhead: 8,
+})
+const MOCK_SUMMARY_L1 = formatPickupScheduleSummary({
+  weekdays: [1, 2, 3, 4, 5],
+  timeStart: '17:00',
+  timeEnd: '19:00',
+  slotMinutes: 60,
+})
+
+const MOCK_SLOTS_L2 = generateWeeklyPickupSlots({
+  weekdays: [0, 6],
+  timeStart: '10:00',
+  timeEnd: '14:00',
+  slotMinutes: 60,
+  weeksAhead: 8,
+})
+const MOCK_SUMMARY_L2 = formatPickupScheduleSummary({
+  weekdays: [0, 6],
+  timeStart: '10:00',
+  timeEnd: '14:00',
+  slotMinutes: 60,
+})
+
+const MOCK_SLOTS_L3 = generateWeeklyPickupSlots({
+  weekdays: [1, 3, 5],
+  timeStart: '12:00',
+  timeEnd: '13:00',
+  slotMinutes: 30,
+  weeksAhead: 8,
+})
+const MOCK_SUMMARY_L3 = formatPickupScheduleSummary({
+  weekdays: [1, 3, 5],
+  timeStart: '12:00',
+  timeEnd: '13:00',
+  slotMinutes: 30,
+})
 
 export const INITIAL_USER: UserProfile = {
   id: 'u1',
@@ -50,7 +93,8 @@ export const INITIAL_LISTINGS: Listing[] = [
     unit: 'kg',
     availableQuantity: 8.5,
     harvestType: 'pickup',
-    pickupTimes: 'Mo-Fr ab 17 Uhr',
+    pickupTimes: MOCK_SUMMARY_L1,
+    pickupSlots: MOCK_SLOTS_L1,
     location: {
       x: 42,
       y: 48,
@@ -70,7 +114,8 @@ export const INITIAL_LISTINGS: Listing[] = [
     unit: 'Stück',
     availableQuantity: 12,
     harvestType: 'self_harvest',
-    pickupTimes: 'Wochenende ganztägig',
+    pickupTimes: MOCK_SUMMARY_L2,
+    pickupSlots: MOCK_SLOTS_L2,
     location: {
       x: 55,
       y: 22,
@@ -90,7 +135,8 @@ export const INITIAL_LISTINGS: Listing[] = [
     unit: 'Bund',
     availableQuantity: 50,
     harvestType: 'pickup',
-    pickupTimes: 'Jederzeit an der Pforte',
+    pickupTimes: MOCK_SUMMARY_L3,
+    pickupSlots: MOCK_SLOTS_L3,
     location: {
       x: 68,
       y: 52,

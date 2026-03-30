@@ -2,6 +2,49 @@
  * In-memory store – same seed data as frontend mockData.
  */
 import type { UserProfile, Listing, Message, Reservation } from './types.js'
+import { formatPickupScheduleSummary, generateWeeklyPickupSlots } from './pickupSlots.js'
+
+const SEED_L1_SLOTS = generateWeeklyPickupSlots({
+  weekdays: [1, 2, 3, 4, 5],
+  timeStart: '17:00',
+  timeEnd: '19:00',
+  slotMinutes: 60,
+  weeksAhead: 8,
+})
+const SEED_L1_SUMMARY = formatPickupScheduleSummary({
+  weekdays: [1, 2, 3, 4, 5],
+  timeStart: '17:00',
+  timeEnd: '19:00',
+  slotMinutes: 60,
+})
+
+const SEED_L2_SLOTS = generateWeeklyPickupSlots({
+  weekdays: [0, 6],
+  timeStart: '10:00',
+  timeEnd: '14:00',
+  slotMinutes: 60,
+  weeksAhead: 8,
+})
+const SEED_L2_SUMMARY = formatPickupScheduleSummary({
+  weekdays: [0, 6],
+  timeStart: '10:00',
+  timeEnd: '14:00',
+  slotMinutes: 60,
+})
+
+const SEED_L3_SLOTS = generateWeeklyPickupSlots({
+  weekdays: [1, 3, 5],
+  timeStart: '12:00',
+  timeEnd: '13:00',
+  slotMinutes: 30,
+  weeksAhead: 8,
+})
+const SEED_L3_SUMMARY = formatPickupScheduleSummary({
+  weekdays: [1, 3, 5],
+  timeStart: '12:00',
+  timeEnd: '13:00',
+  slotMinutes: 30,
+})
 
 export type EmailCredential = { userId: string; password: string }
 
@@ -57,7 +100,8 @@ export const listings: Listing[] = [
     unit: 'kg',
     availableQuantity: 8.5,
     harvestType: 'pickup',
-    pickupTimes: 'Mo-Fr ab 17 Uhr',
+    pickupTimes: SEED_L1_SUMMARY,
+    pickupSlots: SEED_L1_SLOTS,
     location: {
       x: 42,
       y: 48,
@@ -77,7 +121,8 @@ export const listings: Listing[] = [
     unit: 'Stück',
     availableQuantity: 12,
     harvestType: 'self_harvest',
-    pickupTimes: 'Wochenende ganztägig',
+    pickupTimes: SEED_L2_SUMMARY,
+    pickupSlots: SEED_L2_SLOTS,
     location: {
       x: 55,
       y: 22,
@@ -97,7 +142,8 @@ export const listings: Listing[] = [
     unit: 'Bund',
     availableQuantity: 50,
     harvestType: 'pickup',
-    pickupTimes: 'Jederzeit an der Pforte',
+    pickupTimes: SEED_L3_SUMMARY,
+    pickupSlots: SEED_L3_SLOTS,
     location: {
       x: 68,
       y: 52,

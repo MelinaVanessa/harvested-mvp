@@ -73,46 +73,14 @@ const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   newPostsFromFollowing: true,
 }
 
-function isWithinPickupWindow(pickupTimes: string, isoDateTime: string): boolean {
-  const text = (pickupTimes ?? '').trim().toLowerCase()
-  if (!text) return true
-  const picked = new Date(isoDateTime)
-  if (!Number.isFinite(picked.getTime())) return false
-  const day = picked.getDay() // 0=Sun, 1=Mon, ... 6=Sat
-  const hour = picked.getHours() + picked.getMinutes() / 60
-
-  if (text.includes('jederzeit') || text.includes('ganztägig') || text.includes('ganztagig')) {
-    return true
-  }
-
-  if (text.includes('wochenende')) {
-    return day === 0 || day === 6
-  }
-
-  if ((text.includes('mo-fr') || text.includes('montag') || text.includes('werktag')) && (day < 1 || day > 5)) {
-    return false
-  }
-
-  const fromMatch = text.match(/\bab\s*(\d{1,2})(?::(\d{2}))?\s*uhr\b/)
-  if (fromMatch) {
-    const fromHour = Number(fromMatch[1]) + Number(fromMatch[2] ?? 0) / 60
-    return hour >= fromHour
-  }
-
-  const rangeMatch = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*[-–]\s*(\d{1,2})(?::(\d{2}))?\s*uhr\b/)
-  if (rangeMatch) {
-    const from = Number(rangeMatch[1]) + Number(rangeMatch[2] ?? 0) / 60
-    const to = Number(rangeMatch[3]) + Number(rangeMatch[4] ?? 0) / 60
-    return hour >= from && hour <= to
-  }
-
-  return true
+function hasOfferedPickupSlots(slots: string[] | undefined): boolean {
+  return Array.isArray(slots) && slots.length > 0
 }
 
 function isInOfferedPickupSlots(slots: string[] | undefined, isoDateTime: string): boolean {
-  if (!Array.isArray(slots) || slots.length === 0) return true
   if (!isoDateTime) return false
-  return slots.includes(isoDateTime)
+  if (!hasOfferedPickupSlots(slots)) return false
+  return slots!.includes(isoDateTime)
 }
 
 function readSavedNavState(): PersistedNavState | null {
@@ -538,6 +506,25 @@ export default function App() {
       alert(language === 'de' ? 'Bitte zuerst eine Abholzeit auswählen.' : 'Please choose a pickup time first.')
       return
     }
+    if (!hasOfferedPickupSlots(reservedListing.pickupSlots)) {
+      addNotification(
+        {
+          type: 'reservation',
+          title: language === 'de' ? 'Keine Abholzeiten' : 'No pickup times',
+          body:
+            language === 'de'
+              ? 'Dieses Angebot hat keine buchbaren Abholzeiten.'
+              : 'This listing has no bookable pickup times.',
+        },
+        'reservationConfirmed',
+      )
+      alert(
+        language === 'de'
+          ? 'Für dieses Angebot sind keine Abholtermine hinterlegt.'
+          : 'No pickup slots are configured for this listing.',
+      )
+      return
+    }
     if (!isInOfferedPickupSlots(reservedListing.pickupSlots, pickupAt)) {
       addNotification(
         {
@@ -554,25 +541,6 @@ export default function App() {
         language === 'de'
           ? 'Bitte wähle eine angebotene Abholzeit aus der Liste.'
           : 'Please choose an offered pickup time from the list.',
-      )
-      return
-    }
-    if (!isWithinPickupWindow(reservedListing.pickupTimes, pickupAt)) {
-      addNotification(
-        {
-          type: 'reservation',
-          title: language === 'de' ? 'Ungültige Abholzeit' : 'Invalid pickup time',
-          body:
-            language === 'de'
-              ? `Bitte reserviere innerhalb der angegebenen Zeiten: ${reservedListing.pickupTimes}.`
-              : `Please reserve within the listed pickup times: ${reservedListing.pickupTimes}.`,
-        },
-        'reservationConfirmed',
-      )
-      alert(
-        language === 'de'
-          ? `Diese Abholzeit liegt außerhalb der angegebenen Zeiten: ${reservedListing.pickupTimes}.`
-          : `This pickup time is outside the listed pickup times: ${reservedListing.pickupTimes}.`,
       )
       return
     }
@@ -647,6 +615,20 @@ export default function App() {
       )
       return
     }
+    if (!hasOfferedPickupSlots(listing.pickupSlots)) {
+      addNotification(
+        {
+          type: 'reservation',
+          title: language === 'de' ? 'Keine Abholzeiten' : 'No pickup times',
+          body:
+            language === 'de'
+              ? 'Für dieses Angebot sind keine Abholtermine hinterlegt.'
+              : 'This listing has no pickup slots configured.',
+        },
+        'reservationConfirmed',
+      )
+      return
+    }
     if (!isInOfferedPickupSlots(listing.pickupSlots, pickupAt)) {
       addNotification(
         {
@@ -656,20 +638,6 @@ export default function App() {
             language === 'de'
               ? 'Bitte wähle eine der angebotenen Abholzeiten aus der Liste.'
               : 'Please choose one of the offered pickup times from the list.',
-        },
-        'reservationConfirmed',
-      )
-      return
-    }
-    if (!isWithinPickupWindow(listing.pickupTimes, pickupAt)) {
-      addNotification(
-        {
-          type: 'reservation',
-          title: language === 'de' ? 'Ungültige Abholzeit' : 'Invalid pickup time',
-          body:
-            language === 'de'
-              ? `Bitte bleibe in den angegebenen Zeiten: ${listing.pickupTimes}.`
-              : `Please stay within the listed pickup times: ${listing.pickupTimes}.`,
         },
         'reservationConfirmed',
       )

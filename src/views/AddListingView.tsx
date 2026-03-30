@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { Camera, ShoppingBag, Leaf, LocateFixed } from 'lucide-react'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
+import { formatPickupScheduleSummary, generateWeeklyPickupSlots } from '@/utils/pickupSlots'
 
 interface AddListingViewProps {
   onAdd: (listing: Listing) => void
@@ -21,6 +22,25 @@ const defaultForm: Partial<Listing> = {
   image: '',
 }
 
+const PICKUP_DAY_ROW: { d: number; label: string }[] = [
+  { d: 1, label: 'Mo' },
+  { d: 2, label: 'Di' },
+  { d: 3, label: 'Mi' },
+  { d: 4, label: 'Do' },
+  { d: 5, label: 'Fr' },
+  { d: 6, label: 'Sa' },
+  { d: 0, label: 'So' },
+]
+
+type PickupDayPresetId = 'mf' | 'ms' | 'we' | 'all' | 'custom'
+
+const PRESET_WEEKDAYS: Record<Exclude<PickupDayPresetId, 'custom'>, number[]> = {
+  mf: [1, 2, 3, 4, 5],
+  ms: [1, 2, 3, 4, 5, 6],
+  we: [0, 6],
+  all: [0, 1, 2, 3, 4, 5, 6],
+}
+
 export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState<Partial<Listing>>(defaultForm)
@@ -37,7 +57,47 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
   const [addressSuggestions, setAddressSuggestions] = useState<GeoSuggestion[]>([])
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
   const [isLocating, setIsLocating] = useState(false)
-  const [pickupSlotInput, setPickupSlotInput] = useState('')
+
+  /** 0 = Sun … 6 = Sat — at least one required */
+  const [pickupDayPreset, setPickupDayPreset] = useState<PickupDayPresetId>('mf')
+  const [pickupWeekdays, setPickupWeekdays] = useState<number[]>(PRESET_WEEKDAYS.mf)
+  const [pickupTimeStart, setPickupTimeStart] = useState('14:00')
+  const [pickupTimeEnd, setPickupTimeEnd] = useState('18:00')
+  const [pickupSlotMinutes, setPickupSlotMinutes] = useState<30 | 60>(60)
+
+  const applyDayPreset = useCallback((id: PickupDayPresetId) => {
+    setPickupDayPreset(id)
+    if (id !== 'custom') {
+      setPickupWeekdays([...PRESET_WEEKDAYS[id]])
+    }
+  }, [])
+
+  const togglePickupWeekday = (d: number) => {
+    setPickupDayPreset('custom')
+    setPickupWeekdays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
+  }
+
+  const previewPickupSlots = useMemo(
+    () =>
+      generateWeeklyPickupSlots({
+        weekdays: pickupWeekdays,
+        timeStart: pickupTimeStart,
+        timeEnd: pickupTimeEnd,
+        slotMinutes: pickupSlotMinutes,
+        weeksAhead: 8,
+      }),
+    [pickupWeekdays, pickupTimeStart, pickupTimeEnd, pickupSlotMinutes],
+  )
+
+  const pickupScheduleSummary = useMemo(() => {
+    if (pickupWeekdays.length === 0) return ''
+    return formatPickupScheduleSummary({
+      weekdays: pickupWeekdays,
+      timeStart: pickupTimeStart,
+      timeEnd: pickupTimeEnd,
+      slotMinutes: pickupSlotMinutes,
+    })
+  }, [pickupWeekdays, pickupTimeStart, pickupTimeEnd, pickupSlotMinutes])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -50,9 +110,29 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const pickupSlots = (formData.pickupSlots ?? []).filter((slot) => Number.isFinite(new Date(slot).getTime()))
+    if (pickupWeekdays.length === 0) {
+      window.alert('Bitte mindestens einen Wochentag für die Abholung auswählen.')
+      return
+    }
+    const [sh, sm] = pickupTimeStart.split(':').map(Number)
+    const [eh, em] = pickupTimeEnd.split(':').map(Number)
+    const startM = sh * 60 + sm
+    const endM = eh * 60 + em
+    if (!Number.isFinite(startM) || !Number.isFinite(endM) || endM <= startM) {
+      window.alert('Bitte gültige Uhrzeiten wählen (Ende muss nach dem Start liegen, kein Über-Mitternacht-Modus).')
+      return
+    }
+    const pickupSlots = generateWeeklyPickupSlots({
+      weekdays: pickupWeekdays,
+      timeStart: pickupTimeStart,
+      timeEnd: pickupTimeEnd,
+      slotMinutes: pickupSlotMinutes,
+      weeksAhead: 8,
+    })
     if (pickupSlots.length === 0) {
-      window.alert('Bitte mindestens eine Abholzeit hinzufügen.')
+      window.alert(
+        'Daraus ergibt sich keine zukünftige Abholzeit. Bitte andere Tage, ein längeres Zeitfenster oder einen anderen Takt wählen.',
+      )
       return
     }
     onAdd({
@@ -63,32 +143,8 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
       datePosted: new Date().toISOString(),
       ...formData,
       pickupSlots,
-      pickupTimes: `${pickupSlots.length} feste Abholzeit${pickupSlots.length > 1 ? 'en' : ''}`,
+      pickupTimes: pickupScheduleSummary,
     } as Listing)
-  }
-
-  const addPickupSlot = () => {
-    if (!pickupSlotInput) return
-    const iso = new Date(pickupSlotInput).toISOString()
-    if (!Number.isFinite(new Date(iso).getTime())) return
-    const existing = formData.pickupSlots ?? []
-    if (existing.includes(iso)) return
-    const next = [...existing, iso].sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-    setFormData((prev) => ({
-      ...prev,
-      pickupSlots: next,
-      pickupTimes: `${next.length} feste Abholzeit${next.length > 1 ? 'en' : ''}`,
-    }))
-    setPickupSlotInput('')
-  }
-
-  const removePickupSlot = (iso: string) => {
-    const next = (formData.pickupSlots ?? []).filter((slot) => slot !== iso)
-    setFormData((prev) => ({
-      ...prev,
-      pickupSlots: next,
-      pickupTimes: next.length > 0 ? `${next.length} feste Abholzeit${next.length > 1 ? 'en' : ''}` : '',
-    }))
   }
 
   const handleOptimize = () => {
@@ -290,41 +346,127 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
           </div>
           <div>
             <label className={`block text-xs font-bold uppercase mb-1 ${theme.textSec}`}>{t?.add?.times}</label>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="datetime-local"
-                  className={`w-full p-3 rounded-lg ${theme.input}`}
-                  value={pickupSlotInput}
-                  min={new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16)}
-                  onChange={(e) => setPickupSlotInput(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={addPickupSlot}
-                  className="px-3 rounded-lg border border-[#C29901] text-[#C29901] text-xs font-bold"
-                >
-                  Hinzufügen
-                </button>
-              </div>
-              {(formData.pickupSlots ?? []).length > 0 ? (
-                <div className={`rounded-lg border ${theme.border} p-2 space-y-1.5`}>
-                  {(formData.pickupSlots ?? []).map((slot) => (
-                    <div key={slot} className="flex items-center justify-between text-xs">
-                      <span className={theme.text}>{new Date(slot).toLocaleString()}</span>
+            <p className={`text-xs mb-3 ${theme.textSec}`}>
+              Kurz die Tage wählen, dann das Zeitfenster — fertig. Daraus entstehen feste Abholtermine (kein Rund-um-die-Uhr).
+            </p>
+            <div className="space-y-3">
+              <div>
+                <span className={`block text-[10px] font-bold uppercase mb-1.5 ${theme.textSec}`}>Wochentage</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {(
+                    [
+                      { id: 'mf' as const, label: 'Mo–Fr' },
+                      { id: 'ms' as const, label: 'Mo–Sa' },
+                      { id: 'we' as const, label: 'Sa–So' },
+                      { id: 'all' as const, label: 'Täglich' },
+                    ] as const
+                  ).map(({ id, label }) => {
+                    const active = pickupDayPreset === id
+                    return (
                       <button
+                        key={id}
                         type="button"
-                        onClick={() => removePickupSlot(slot)}
-                        className="px-2 py-0.5 rounded-md text-red-600 border border-red-200"
+                        onClick={() => applyDayPreset(id)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                          active
+                            ? 'border-[#C29901] bg-[#C29901]/15 text-[#0D1A15]'
+                            : `${theme.border} ${theme.textSec} hover:bg-black/5`
+                        }`}
                       >
-                        Entfernen
+                        {label}
                       </button>
-                    </div>
-                  ))}
+                    )
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => applyDayPreset('custom')}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                      pickupDayPreset === 'custom'
+                        ? 'border-[#C29901] bg-[#C29901]/15 text-[#0D1A15]'
+                        : `${theme.border} ${theme.textSec} hover:bg-black/5`
+                    }`}
+                  >
+                    Eigene Tage
+                  </button>
                 </div>
-              ) : (
-                <p className={`text-xs ${theme.textSec}`}>Bitte mindestens eine Abholzeit hinzufügen.</p>
-              )}
+              </div>
+              {pickupDayPreset === 'custom' ? (
+                <div className="flex flex-wrap gap-1.5 pl-0.5">
+                  {PICKUP_DAY_ROW.map(({ d, label }) => {
+                    const on = pickupWeekdays.includes(d)
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => togglePickupWeekday(d)}
+                        className={`min-w-[2.25rem] px-2 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                          on
+                            ? 'border-[#C29901] bg-[#C29901]/15 text-[#0D1A15]'
+                            : `${theme.border} ${theme.textSec} hover:bg-black/5`
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+                <span className={`font-medium ${theme.text}`}>Zwischen</span>
+                <input
+                  type="time"
+                  value={pickupTimeStart}
+                  onChange={(e) => setPickupTimeStart(e.target.value)}
+                  className={`p-2 rounded-lg ${theme.input} text-base max-w-[8.5rem]`}
+                  aria-label="Abholung ab"
+                />
+                <span className={`${theme.textSec}`}>und</span>
+                <input
+                  type="time"
+                  value={pickupTimeEnd}
+                  onChange={(e) => setPickupTimeEnd(e.target.value)}
+                  className={`p-2 rounded-lg ${theme.input} text-base max-w-[8.5rem]`}
+                  aria-label="Abholung bis"
+                />
+                <span className={`text-xs ${theme.textSec}`}>(lokale Zeit)</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`text-xs ${theme.textSec}`}>Termine etwa alle</span>
+                <select
+                  value={pickupSlotMinutes}
+                  onChange={(e) => setPickupSlotMinutes(Number(e.target.value) as 30 | 60)}
+                  className={`px-2 py-1.5 rounded-lg ${theme.input} text-xs`}
+                  aria-label="Abstand zwischen Terminen"
+                >
+                  <option value={60}>1 Stunde</option>
+                  <option value={30}>30 Minuten</option>
+                </select>
+              </div>
+              {pickupScheduleSummary ? (
+                <p className={`text-xs font-medium ${theme.text}`}>{pickupScheduleSummary}</p>
+              ) : null}
+              <details className={`rounded-lg border ${theme.border} px-3 py-2`}>
+                <summary className={`text-xs font-semibold cursor-pointer ${theme.text} flex items-center justify-between gap-2`}>
+                  <span>
+                    Vorschau: <span className="text-[#C29901]">{previewPickupSlots.length}</span> buchbare Termine
+                  </span>
+                  <span className={`text-[10px] font-normal ${theme.textSec}`}>optional</span>
+                </summary>
+                <div className="mt-2 pt-2 border-t border-black/5 max-h-36 overflow-y-auto">
+                  {previewPickupSlots.length > 0 ? (
+                    <ul className={`text-[11px] space-y-0.5 ${theme.text}`}>
+                      {previewPickupSlots.slice(0, 8).map((slot) => (
+                        <li key={slot}>{new Date(slot).toLocaleString()}</li>
+                      ))}
+                      {previewPickupSlots.length > 8 ? (
+                        <li className={theme.textSec}>… und {previewPickupSlots.length - 8} weitere</li>
+                      ) : null}
+                    </ul>
+                  ) : (
+                    <p className={`text-xs ${theme.textSec}`}>Noch keine zukünftigen Termine — Zeitfenster oder Tage anpassen.</p>
+                  )}
+                </div>
+              </details>
             </div>
           </div>
           <div>
