@@ -182,7 +182,7 @@ export function ProfileView({
     } catch {
       /* ignore */
     }
-    alert('Link in die Zwischenablage kopiert!')
+    alert(t.errors?.profileLinkCopied ?? '')
     setShowShareOptions(false)
   }
 
@@ -221,8 +221,8 @@ export function ProfileView({
     }
     alert(
       hint === 'tiktok'
-        ? 'Link kopiert – z. B. in Bio oder Beschreibung einfügen.'
-        : 'Link kopiert – in Story, Post oder Bio einfügen.',
+        ? (t.errors?.profileLinkCopiedTiktok ?? '')
+        : (t.errors?.profileLinkCopiedInstagram ?? ''),
     )
     setShowShareOptions(false)
   }

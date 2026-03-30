@@ -111,7 +111,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (pickupWeekdays.length === 0) {
-      window.alert('Bitte mindestens einen Wochentag für die Abholung auswählen.')
+      window.alert(t.errors?.addPickupWeekday ?? '')
       return
     }
     const [sh, sm] = pickupTimeStart.split(':').map(Number)
@@ -119,7 +119,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
     const startM = sh * 60 + sm
     const endM = eh * 60 + em
     if (!Number.isFinite(startM) || !Number.isFinite(endM) || endM <= startM) {
-      window.alert('Bitte gültige Uhrzeiten wählen (Ende muss nach dem Start liegen, kein Über-Mitternacht-Modus).')
+      window.alert(t.errors?.addPickupTimes ?? '')
       return
     }
     const pickupSlots = generateWeeklyPickupSlots({
@@ -130,9 +130,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
       weeksAhead: 8,
     })
     if (pickupSlots.length === 0) {
-      window.alert(
-        'Daraus ergibt sich keine zukünftige Abholzeit. Bitte andere Tage, ein längeres Zeitfenster oder einen anderen Takt wählen.',
-      )
+      window.alert(t.errors?.addNoSlots ?? '')
       return
     }
     onAdd({
@@ -192,7 +190,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
-      window.alert('Geolocation is not supported on this device.')
+      window.alert(t.errors?.addGeoUnsupported ?? '')
       return
     }
 
@@ -239,7 +237,7 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
       },
       () => {
         setIsLocating(false)
-        window.alert('Location access denied. Please allow location permissions.')
+        window.alert(t.errors?.addGeoDenied ?? '')
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
     )

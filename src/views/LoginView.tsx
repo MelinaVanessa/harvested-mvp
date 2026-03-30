@@ -17,6 +17,14 @@ interface LoginViewProps {
   t: Record<string, Record<string, string>>
 }
 
+function tpl(s: string, vars: Record<string, string>) {
+  let out = s
+  for (const [k, v] of Object.entries(vars)) {
+    out = out.split(`{{${k}}}`).join(v)
+  }
+  return out
+}
+
 export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const [isRegistering, setIsRegistering] = useState(false)
   const [email, setEmail] = useState('')
@@ -29,6 +37,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAuthError(null)
+    const L = t.login ?? {}
     const emailLower = email.trim().toLowerCase()
     const passwordNorm = normalizePasswordForAuth(password)
     if (isRegistering) {
@@ -41,18 +50,18 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
           role: selectedRole,
         })
         if (apiReg && 'conflict' in apiReg) {
-          alert('Diese E-Mail ist bereits registriert. Bitte einloggen.')
+          alert(L.errEmailRegistered ?? 'Diese E-Mail ist bereits registriert. Bitte einloggen.')
           return
         }
         if (apiReg && 'user' in apiReg) {
-          alert(`Willkommen bei Harvested, ${name}!`)
+          alert(tpl(L.welcomeRegistered ?? 'Willkommen bei Harvested, {{name}}!', { name: name.trim() }))
           onLogin({ id: apiReg.user.id, name: apiReg.user.name, role: apiReg.user.role, profile: apiReg.user })
           return
         }
 
-        alert('Registrierung aktuell nicht möglich. Bitte prüfe die Server-Verbindung und versuche es erneut.')
+        alert(L.errRegisterServer ?? 'Registrierung gerade nicht möglich. Server-Verbindung prüfen und erneut versuchen.')
       } else {
-        alert('Bitte fülle alle Felder aus.')
+        alert(L.errRegisterFields ?? 'Bitte alle Felder ausfüllen.')
       }
     } else {
       // Server-first login so private/incognito windows can still authenticate.
@@ -69,21 +78,19 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
 
       const isUnreachable = loginResult.reason === 'unreachable'
       const isBadRequest = loginResult.reason === 'invalid_request'
-      const msg = isUnreachable
-        ? 'Backend nicht erreichbar. Bitte später erneut versuchen.'
+      const line1 = isUnreachable
+        ? (L.errUnreachable ?? L.error ?? 'Ungültige Anmeldedaten.')
         : isBadRequest
-          ? (loginResult.serverMessage
-              ? loginResult.serverMessage
-              : 'E-Mail und Passwort sind erforderlich.')
-          : (t?.login?.error ?? 'Ungültige Anmeldedaten.')
-      setAuthError(
-        isUnreachable
-          ? `${msg} Prüfe Verbindung/Deploy. Deine Eingaben konnten nicht validiert werden.`
-          : isBadRequest
-            ? msg
-            : `${msg} Stelle sicher, dass du auf „Einloggen“ bist (nicht Registrieren), E-Mail und Passwort exakt wie bei der Registrierung.`,
-      )
-      alert(msg)
+          ? (loginResult.serverMessage?.trim()
+              ? loginResult.serverMessage.trim()
+              : (L.errFieldsRequired ?? 'Bitte E-Mail und Passwort ausfüllen.'))
+          : (L.errInvalid ?? L.error ?? 'Ungültige Anmeldedaten.')
+      const line2 = isUnreachable
+        ? (L.errUnreachableHint ?? '')
+        : isBadRequest
+          ? ''
+          : (L.errInvalidHint ?? '')
+      setAuthError(line2 ? `${line1} ${line2}` : line1)
     }
   }
 

@@ -28,6 +28,12 @@ import {
 } from '@/constants/storage'
 import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
 import type { UserProfile, Listing, Reservation, Message, Review, InAppNotification } from '@/types'
+
+function trTpl(s: string, vars: Record<string, string>) {
+  let out = s
+  for (const [k, v] of Object.entries(vars)) out = out.split(`{{${k}}}`).join(v)
+  return out
+}
 import { gardenerRatingSummaryFromReviews } from '@/utils/reviewRating'
 import { ensureBrowserNotificationPermission, showBrowserNotification } from '@/utils/browserNotifications'
 
@@ -491,59 +497,43 @@ export default function App() {
   }
 
   const handleReservation = (listingId: string, amount: number, pickupAt: string) => {
+    const e = t.errors ?? {}
     const reservedListing = listings.find((l) => l.id === listingId)
     if (!reservedListing) return
     if (!pickupAt) {
       addNotification(
         {
           type: 'reservation',
-          title: language === 'de' ? 'Abholzeit fehlt' : 'Pickup time missing',
-          body:
-            language === 'de'
-              ? 'Bitte wähle zuerst eine Abholzeit. Ohne Zeit wurde nichts reserviert.'
-              : 'Please choose a pickup time first. Nothing was reserved.',
+          title: e.reservePickupTitle ?? '',
+          body: e.reservePickupBody ?? '',
         },
         'reservationConfirmed',
       )
-      alert(language === 'de' ? 'Bitte zuerst eine Abholzeit auswählen.' : 'Please choose a pickup time first.')
+      alert(e.reservePickupAlert ?? '')
       return
     }
     if (!hasOfferedPickupSlots(reservedListing.pickupSlots)) {
       addNotification(
         {
           type: 'reservation',
-          title: language === 'de' ? 'Keine Abholzeiten' : 'No pickup times',
-          body:
-            language === 'de'
-              ? 'Dieses Angebot hat keine buchbaren Abholzeiten.'
-              : 'This listing has no bookable pickup times.',
+          title: e.reserveNoSlotsTitle ?? '',
+          body: e.reserveNoSlotsBody ?? '',
         },
         'reservationConfirmed',
       )
-      alert(
-        language === 'de'
-          ? 'Für dieses Angebot sind keine Abholtermine hinterlegt.'
-          : 'No pickup slots are configured for this listing.',
-      )
+      alert(e.reserveNoSlotsAlert ?? '')
       return
     }
     if (!isInOfferedPickupSlots(reservedListing.pickupSlots, pickupAt)) {
       addNotification(
         {
           type: 'reservation',
-          title: language === 'de' ? 'Ungültige Abholzeit' : 'Invalid pickup time',
-          body:
-            language === 'de'
-              ? 'Bitte wähle eine der angebotenen Abholzeiten aus der Liste.'
-              : 'Please choose one of the offered pickup times from the list.',
+          title: e.reserveInvalidSlotTitle ?? '',
+          body: e.reserveInvalidSlotBody ?? '',
         },
         'reservationConfirmed',
       )
-      alert(
-        language === 'de'
-          ? 'Bitte wähle eine angebotene Abholzeit aus der Liste.'
-          : 'Please choose an offered pickup time from the list.',
-      )
+      alert(e.reserveInvalidSlotAlert ?? '')
       return
     }
     setListings((prev) =>
@@ -571,10 +561,11 @@ export default function App() {
             .replace('{{unit}}', reservedListing.unit)
             .replace('{{title}}', reservedListing.title),
       }, 'reservationConfirmed')
-    alert(`Erfolgreich ${amount} reserviert! Der Gärtner wurde benachrichtigt.`)
+    alert(trTpl(e.reserveSuccessAlert ?? '', { amount: String(amount) }))
   }
 
   const handleCancelReservation = (reservationId: string) => {
+    const e = t.errors ?? {}
     const res = reservations.find((r) => r.id === reservationId)
     if (!res) return
     const listing = listings.find((l) => l.id === res.listingId)
@@ -582,18 +573,17 @@ export default function App() {
       prev.map((l) => (l.id === res.listingId ? { ...l, availableQuantity: l.availableQuantity + res.amount } : l))
     )
     setReservations((prev) => prev.filter((r) => r.id !== reservationId))
+    const title =
+      (listing?.title ?? '').trim() || (e.reserveListingFallback ?? '')
     addNotification(
       {
         type: 'reservation',
-        title: language === 'de' ? 'Reservierung geändert' : 'Reservation changed',
-        body:
-          language === 'de'
-            ? `Deine Reservierung für "${listing?.title ?? 'Angebot'}" wurde storniert.`
-            : `Your reservation for "${listing?.title ?? 'listing'}" was cancelled.`,
+        title: e.reserveChangedTitle ?? '',
+        body: trTpl(e.reserveCancelledBody ?? '', { title }),
       },
       'reservationConfirmed',
     )
-    alert('Reservierung storniert.')
+    alert(e.reserveCancelledAlert ?? '')
   }
 
   const handleUpdateReservation = (reservationId: string, amount: number, pickupAt: string) => {
@@ -602,16 +592,14 @@ export default function App() {
     const listing = listings.find((l) => l.id === existing.listingId)
     if (!listing) return
 
+    const e = t.errors ?? {}
     if (!Number.isFinite(amount)) return
     if (!pickupAt || !Number.isFinite(new Date(pickupAt).getTime())) {
       addNotification(
         {
           type: 'reservation',
-          title: language === 'de' ? 'Abholzeit fehlt' : 'Pickup time missing',
-          body:
-            language === 'de'
-              ? 'Bitte wähle zuerst eine gültige Abholzeit. Es wurde nichts geändert.'
-              : 'Please choose a valid pickup time first. Nothing changed.',
+          title: e.reserveUpdatePickupTitle ?? '',
+          body: e.reserveUpdatePickupBody ?? '',
         },
         'reservationConfirmed',
       )
@@ -621,11 +609,8 @@ export default function App() {
       addNotification(
         {
           type: 'reservation',
-          title: language === 'de' ? 'Keine Abholzeiten' : 'No pickup times',
-          body:
-            language === 'de'
-              ? 'Für dieses Angebot sind keine Abholtermine hinterlegt.'
-              : 'This listing has no pickup slots configured.',
+          title: e.reserveNoSlotsTitle ?? '',
+          body: e.reserveUpdateNoSlotsBody ?? '',
         },
         'reservationConfirmed',
       )
@@ -635,11 +620,8 @@ export default function App() {
       addNotification(
         {
           type: 'reservation',
-          title: language === 'de' ? 'Ungültige Abholzeit' : 'Invalid pickup time',
-          body:
-            language === 'de'
-              ? 'Bitte wähle eine der angebotenen Abholzeiten aus der Liste.'
-              : 'Please choose one of the offered pickup times from the list.',
+          title: e.reserveInvalidSlotTitle ?? '',
+          body: e.reserveInvalidSlotBody ?? '',
         },
         'reservationConfirmed',
       )
@@ -648,7 +630,7 @@ export default function App() {
     const nextAmount = Math.max(0.5, amount)
     const delta = nextAmount - existing.amount
     if (delta > 0 && listing.availableQuantity < delta) {
-      alert(language === 'de' ? 'Nicht genug verfügbare Menge für diese Änderung.' : 'Not enough available quantity.')
+      alert(e.reserveNotEnoughQty ?? '')
       return
     }
 
@@ -675,11 +657,8 @@ export default function App() {
     addNotification(
       {
         type: 'reservation',
-        title: language === 'de' ? 'Reservierung geändert' : 'Reservation changed',
-        body:
-          language === 'de'
-            ? `Deine Reservierung für "${listing.title}" wurde aktualisiert.`
-            : `Your reservation for "${listing.title}" was updated.`,
+        title: e.reserveChangedTitle ?? '',
+        body: trTpl(e.reserveUpdatedBody ?? '', { title: listing.title }),
       },
       'reservationConfirmed',
     )
@@ -687,6 +666,7 @@ export default function App() {
 
   useEffect(() => {
     const evaluateReservationReminders = () => {
+      const e = TRANSLATIONS[language].errors ?? {}
       const now = Date.now()
       setReservations((prev) => {
         let changed = false
@@ -701,27 +681,32 @@ export default function App() {
           let updated = res
           if (shouldSendDay && !res.reminderDayBeforeSent) {
             const listing = listings.find((l) => l.id === res.listingId)
-            addNotification({
-              type: 'reservation',
-              title: language === 'de' ? 'Erinnerung: morgen abholen' : 'Reminder: pickup tomorrow',
-              body:
-                language === 'de'
-                  ? `Deine Reservierung "${listing?.title ?? 'Angebot'}" ist morgen um ${new Date(res.pickupAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`
-                  : `Your reservation "${listing?.title ?? 'listing'}" is tomorrow at ${new Date(res.pickupAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-            }, 'reservationReminders')
+            const title =
+              (listing?.title ?? '').trim() || (e.reserveListingFallback ?? '')
+            const time = new Date(res.pickupAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            addNotification(
+              {
+                type: 'reservation',
+                title: e.reminderTomorrowTitle ?? '',
+                body: trTpl(e.reminderTomorrowBody ?? '', { title, time }),
+              },
+              'reservationReminders',
+            )
             updated = { ...updated, reminderDayBeforeSent: true }
             changed = true
           }
           if (shouldSendHour && !updated.reminderHourBeforeSent) {
             const listing = listings.find((l) => l.id === res.listingId)
-            addNotification({
-              type: 'reservation',
-              title: language === 'de' ? 'Erinnerung: in 1 Stunde' : 'Reminder: in 1 hour',
-              body:
-                language === 'de'
-                  ? `Deine Reservierung "${listing?.title ?? 'Angebot'}" ist in etwa 1 Stunde.`
-                  : `Your reservation "${listing?.title ?? 'listing'}" is in about 1 hour.`,
-            }, 'reservationReminders')
+            const title =
+              (listing?.title ?? '').trim() || (e.reserveListingFallback ?? '')
+            addNotification(
+              {
+                type: 'reservation',
+                title: e.reminderHourTitle ?? '',
+                body: trTpl(e.reminderHourBody ?? '', { title }),
+              },
+              'reservationReminders',
+            )
             updated = { ...updated, reminderHourBeforeSent: true }
             changed = true
           }
@@ -753,7 +738,7 @@ export default function App() {
         setListings((prev) => [created, ...prev])
       } catch (e) {
         console.error('Could not create listing via API', e)
-        alert(language === 'de' ? 'Angebot konnte nicht gespeichert werden.' : 'Could not save listing.')
+        alert(t.errors?.listingSaveFailed ?? '')
         return
       }
     } else {
@@ -784,7 +769,7 @@ export default function App() {
 
     if (!currentUser.isMember) {
       setCurrentUser((prev) => ({ ...prev, isMember: true }))
-      alert('Glückwunsch! Deine Mitgliedschaft ist jetzt kostenlos aktiv, da du etwas geteilt hast.')
+      alert(t.errors?.membershipUnlocked ?? '')
     }
     setActiveTab('home')
     setFeedType('explore')
@@ -948,14 +933,14 @@ export default function App() {
   }
 
   const handleDeleteListing = async (id: string) => {
-    if (confirm('Möchtest du diesen Beitrag wirklich löschen?')) {
+    if (confirm(t.errors?.listingDeleteConfirm ?? '')) {
       if (API_ENABLED) {
         try {
           const res = await fetch(`${API_BASE_URL}/api/listings/${encodeURIComponent(id)}`, { method: 'DELETE' })
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
         } catch (e) {
           console.error('Could not delete listing via API', e)
-          alert(language === 'de' ? 'Löschen fehlgeschlagen.' : 'Delete failed.')
+          alert(t.errors?.listingDeleteFailed ?? '')
           return
         }
       }
@@ -977,7 +962,7 @@ export default function App() {
         return
       } catch (e) {
         console.error('Could not update listing via API', e)
-        alert(language === 'de' ? 'Speichern fehlgeschlagen.' : 'Save failed.')
+        alert(t.errors?.listingUpdateFailed ?? '')
         return
       }
     }
