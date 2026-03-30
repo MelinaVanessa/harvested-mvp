@@ -68,13 +68,20 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
       }
 
       const isUnreachable = loginResult.reason === 'unreachable'
+      const isBadRequest = loginResult.reason === 'invalid_request'
       const msg = isUnreachable
         ? 'Backend nicht erreichbar. Bitte später erneut versuchen.'
-        : (t?.login?.error ?? 'Ungültige Anmeldedaten.')
+        : isBadRequest
+          ? (loginResult.serverMessage
+              ? loginResult.serverMessage
+              : 'E-Mail und Passwort sind erforderlich.')
+          : (t?.login?.error ?? 'Ungültige Anmeldedaten.')
       setAuthError(
         isUnreachable
           ? `${msg} Prüfe Verbindung/Deploy. Deine Eingaben konnten nicht validiert werden.`
-          : `${msg} Stelle sicher, dass du auf „Einloggen“ bist (nicht Registrieren), E-Mail und Passwort exakt wie bei der Registrierung.`,
+          : isBadRequest
+            ? msg
+            : `${msg} Stelle sicher, dass du auf „Einloggen“ bist (nicht Registrieren), E-Mail und Passwort exakt wie bei der Registrierung.`,
       )
       alert(msg)
     }

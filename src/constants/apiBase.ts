@@ -80,10 +80,13 @@ export async function tryAuthLogin(body: { email: string; password: string }): P
 
 export async function tryAuthLoginDetailed(body: { email: string; password: string }): Promise<{
   user: UserProfile | null
-  reason: 'ok' | 'invalid_credentials' | 'unreachable'
+  reason: 'ok' | 'invalid_credentials' | 'invalid_request' | 'unreachable'
+  serverMessage?: string
 }> {
   let hadInvalidCredentials = false
+  let hadInvalidRequest = false
   let hadReachableAuthServer = false
+  let lastAuthError: string | undefined
   for (const base of getAuthApiBaseCandidates()) {
     try {
       const res = await fetchWithTimeout(authUrl(base, 'login'), {
@@ -93,9 +96,35 @@ export async function tryAuthLoginDetailed(body: { email: string; password: stri
       })
       // Only real auth responses should influence credential verdicts.
       // A 404/HTML from a static origin must not become "invalid credentials".
-      if (res.status === 401 || res.status === 400) {
+      const ctErr = res.headers.get('content-type') ?? ''
+      if (res.status === 400) {
+        hadReachableAuthServer = true
+        let errText = ''
+        if (ctErr.includes('application/json')) {
+          try {
+            const errJson = (await res.json()) as { error?: string }
+            errText = (errJson.error ?? '').trim()
+          } catch {
+            /* ignore */
+          }
+        }
+        if (/missing/i.test(errText)) hadInvalidRequest = true
+        else hadInvalidCredentials = true
+        if (errText) lastAuthError = errText
+        continue
+      }
+      if (res.status === 401) {
         hadReachableAuthServer = true
         hadInvalidCredentials = true
+        if (ctErr.includes('application/json')) {
+          try {
+            const errJson = (await res.json()) as { error?: string }
+            const e = (errJson.error ?? '').trim()
+            if (e) lastAuthError = e
+          } catch {
+            /* ignore */
+          }
+        }
         continue
       }
       const ct = res.headers.get('content-type') ?? ''
@@ -107,7 +136,10 @@ export async function tryAuthLoginDetailed(body: { email: string; password: stri
       /* try next base */
     }
   }
-  if (hadInvalidCredentials) return { user: null, reason: 'invalid_credentials' }
+  if (hadInvalidRequest)
+    return { user: null, reason: 'invalid_request', serverMessage: lastAuthError }
+  if (hadInvalidCredentials)
+    return { user: null, reason: 'invalid_credentials', serverMessage: lastAuthError }
   if (hadReachableAuthServer) return { user: null, reason: 'invalid_credentials' }
   return { user: null, reason: 'unreachable' }
 }

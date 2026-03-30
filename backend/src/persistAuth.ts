@@ -32,6 +32,18 @@ function normalizeCredentialsFromFile(raw: unknown): Record<string, EmailCredent
   return out
 }
 
+/** Merge file creds into store so disk never wipes seed logins (e.g. empty `[]` in auth.json). */
+function mergeCredentialsFromDisk(file: Record<string, EmailCredential[]>): void {
+  for (const [email, fileCreds] of Object.entries(file)) {
+    if (!Array.isArray(fileCreds) || fileCreds.length === 0) continue
+    const existing = credentialsByEmail[email] ?? []
+    const byUserId = new Map<string, EmailCredential>()
+    for (const c of existing) byUserId.set(c.userId, c)
+    for (const c of fileCreds) byUserId.set(c.userId, c)
+    credentialsByEmail[email] = [...byUserId.values()]
+  }
+}
+
 export function loadAuthFromDisk(): void {
   try {
     if (!fs.existsSync(AUTH_FILE)) return
@@ -41,7 +53,7 @@ export function loadAuthFromDisk(): void {
       users?: Record<string, UserProfile>
     }
     if (j.credentialsByEmail && typeof j.credentialsByEmail === 'object') {
-      Object.assign(credentialsByEmail, normalizeCredentialsFromFile(j.credentialsByEmail))
+      mergeCredentialsFromDisk(normalizeCredentialsFromFile(j.credentialsByEmail))
     }
     if (j.users && typeof j.users === 'object') {
       Object.assign(users, j.users)
