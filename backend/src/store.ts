@@ -59,7 +59,7 @@ export const users: Record<string, UserProfile> = {
     name: 'Melina Vanessa Mann',
     handle: '@anna_gärtnert',
     bio: 'Liebt frisches Gemüse und teilt gerne.',
-    avatar: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400',
     role: 'gardener',
     isMember: true,
     following: ['u2'],

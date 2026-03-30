@@ -9,10 +9,12 @@ interface ChatViewProps {
   currentUserId: string
   onSend: (text: string) => void
   onBack: () => void
+  /** Opens the partner profile (caller should clear chat if needed). */
+  onOpenPartnerProfile?: () => void
   theme: ThemeTokens
 }
 
-export function ChatView({ partner, messages, currentUserId, onSend, onBack, theme }: ChatViewProps) {
+export function ChatView({ partner, messages, currentUserId, onSend, onBack, onOpenPartnerProfile, theme }: ChatViewProps) {
   const [inputText, setInputText] = useState('')
   const [showKeyboard, setShowKeyboard] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -41,11 +43,22 @@ export function ChatView({ partner, messages, currentUserId, onSend, onBack, the
         <button onClick={onBack} className={`p-1 -ml-2 ${theme.text}`}>
           <ArrowLeft size={24} />
         </button>
-        <img src={partner.avatar} className="w-8 h-8 rounded-full object-cover" alt={partner.name} />
-        <div>
-          <h3 className={`font-bold text-sm leading-tight ${theme.text}`}>{partner.name}</h3>
-          <p className={`text-[10px] ${theme.textSec}`}>Online</p>
-        </div>
+        <button
+          type="button"
+          onClick={() => onOpenPartnerProfile?.()}
+          disabled={!onOpenPartnerProfile}
+          className={`flex items-center gap-3 min-w-0 flex-1 text-left rounded-lg -my-1 py-1 pr-2 ${onOpenPartnerProfile ? 'hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer' : 'cursor-default'}`}
+        >
+          <img
+            src={partner.avatar || '/favicon.svg'}
+            className="w-8 h-8 rounded-full object-cover shrink-0 bg-gray-100"
+            alt=""
+          />
+          <div className="min-w-0">
+            <h3 className={`font-bold text-sm leading-tight truncate ${theme.text}`}>{partner.name}</h3>
+            <p className={`text-[10px] ${theme.textSec}`}>Online</p>
+          </div>
+        </button>
       </div>
 
       <div

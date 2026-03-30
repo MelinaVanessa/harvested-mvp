@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Map as MapIcon, Home, PlusCircle, User, Heart, MessageCircle, Menu, Leaf, Settings, LogOut, HelpCircle, Bell } from 'lucide-react'
 import { ErrorBoundary, NavButton } from '@/components'
 import {
@@ -847,17 +847,19 @@ export default function App() {
     })
   }
 
-  const ensureAdminWelcomeThread = (user: UserProfile) => {
+  const ensureAdminWelcomeThread = useCallback((user: UserProfile) => {
     const adminId = 'u1'
     if (!user?.id || user.id === adminId) return
 
+    const welcomeId = `m_welcome_${user.id}`
+    const firstName = (user.name ?? '').trim().split(/\s+/)[0] || 'du'
     const welcomeText =
       language === 'de'
-        ? `Hi ${user.name || 'du'}! Ich bin ${OWNER_NAME}. Schreib mir hier jederzeit direkt Feedback oder Fragen zur App.`
-        : `Hi ${user.name || 'there'}! I am ${OWNER_NAME}. Feel free to send direct feedback or questions here anytime.`
+        ? `Hi ${firstName}! Ich bin Melina, die Gründerin von Harvested. Schreibe mir gerne jederzeit bei Fragen oder wenn du gerne Feedback geben würdest!`
+        : `Hi ${firstName}! I'm Melina, the founder of Harvested. Feel free to message me anytime with questions or feedback.`
 
     const welcomeMessage: Message = {
-      id: `m_welcome_${Date.now()}`,
+      id: welcomeId,
       senderId: adminId,
       text: welcomeText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -869,6 +871,17 @@ export default function App() {
       const adminThread = prev[adminThreadKey] ?? []
       const userThread = prev[userThreadKey] ?? []
 
+      const hasWelcome = (arr: Message[]) => arr.some((m) => m.id === welcomeId)
+      if (hasWelcome(adminThread) || hasWelcome(userThread)) {
+        const source = hasWelcome(adminThread) ? adminThread : userThread
+        const synced = [...source]
+        return {
+          ...prev,
+          [adminThreadKey]: synced,
+          [userThreadKey]: [...synced],
+        }
+      }
+
       // If a thread already exists, keep data and just mirror missing side.
       if (adminThread.length > 0 || userThread.length > 0) {
         const source = adminThread.length > 0 ? adminThread : userThread
@@ -879,13 +892,19 @@ export default function App() {
         }
       }
 
+      const seeded = [welcomeMessage]
       return {
         ...prev,
-        [adminThreadKey]: [welcomeMessage],
-        [userThreadKey]: [welcomeMessage],
+        [adminThreadKey]: seeded,
+        [userThreadKey]: [...seeded],
       }
     })
-  }
+  }, [language])
+
+  useEffect(() => {
+    if (!isLoggedIn || !currentUser?.id || currentUser.id === 'u1') return
+    ensureAdminWelcomeThread(currentUser)
+  }, [isLoggedIn, currentUser.id, ensureAdminWelcomeThread])
 
   const handleSendMessage = (partnerId: string, text: string) => {
     const newMessage: Message = {
@@ -1014,22 +1033,43 @@ export default function App() {
   }
 
   const renderContent = () => {
-    if (chatPartnerId)
+    if (chatPartnerId) {
+      const resolvedPartner: UserProfile =
+        users[chatPartnerId] ??
+        (MOCK_USERS as Record<string, UserProfile>)[chatPartnerId] ??
+        ({
+          id: chatPartnerId,
+          name: 'Nutzer',
+          handle: '@user',
+          bio: '',
+          avatar: '',
+          role: 'gardener',
+          isMember: false,
+          following: [],
+          likedListings: [],
+        } as UserProfile)
       return (
         <ChatView
-          partner={users[chatPartnerId]}
+          partner={resolvedPartner}
           messages={messages[chatPartnerId] ?? []}
           currentUserId={currentUser.id}
           onSend={(text) => handleSendMessage(chatPartnerId, text)}
           onBack={() => setChatPartnerId(null)}
+          onOpenPartnerProfile={() => {
+            const id = chatPartnerId
+            setChatPartnerId(null)
+            openProfile(id)
+          }}
           theme={theme}
         />
       )
+    }
     if (showInbox)
       return (
         <InboxView
-          users={users}
+          users={{ ...MOCK_USERS, ...users }}
           messages={messages}
+          currentUserId={currentUser.id}
           onSelectChat={(id) => {
             setChatPartnerId(id)
             setShowInbox(false)
@@ -1250,7 +1290,6 @@ export default function App() {
                   setUsers((prev) => ({ ...prev, [nextUser.id]: nextUser }))
                   setCurrentUser(nextUser)
                   setIsLoggedIn(true)
-                  ensureAdminWelcomeThread(nextUser)
                   // Persist login by default so page refresh does not log users out.
                   setSavedLogin(nextUser.id)
                   setPendingSaveUserId(null)

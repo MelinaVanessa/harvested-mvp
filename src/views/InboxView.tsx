@@ -4,13 +4,20 @@ import type { UserProfile, Message, ThemeTokens } from '@/types'
 interface InboxViewProps {
   users: Record<string, UserProfile>
   messages: Record<string, Message[]>
+  /** Hide the mirrored thread bucket keyed by the signed-in user (admin welcome uses both u1 and self). */
+  currentUserId: string
   onSelectChat: (userId: string) => void
   onBack: () => void
   theme: ThemeTokens
 }
 
-export function InboxView({ users, messages, onSelectChat, onBack, theme }: InboxViewProps) {
-  const activeConversations = Object.keys(messages)
+export function InboxView({ users, messages, currentUserId, onSelectChat, onBack, theme }: InboxViewProps) {
+  const activeConversations = Object.keys(messages).filter(
+    (id) =>
+      id !== currentUserId &&
+      (messages[id]?.length ?? 0) > 0 &&
+      Boolean(users[id]),
+  )
   return (
     <div className={`h-full flex flex-col ${theme.bg} ${theme.text}`}>
       <div className={`px-4 py-3 border-b ${theme.border} flex items-center gap-3`}>
@@ -27,7 +34,7 @@ export function InboxView({ users, messages, onSelectChat, onBack, theme }: Inbo
           </div>
         ) : (
           activeConversations.map((userId) => {
-            const user = users[userId]
+            const user = users[userId]!
             const convMessages = messages[userId]
             const lastMsg = convMessages[convMessages.length - 1]
             return (
@@ -36,7 +43,11 @@ export function InboxView({ users, messages, onSelectChat, onBack, theme }: Inbo
                 onClick={() => onSelectChat(userId)}
                 className={`flex items-center gap-4 p-4 border-b ${theme.border} active:opacity-70 cursor-pointer`}
               >
-                <img src={user.avatar} className="w-12 h-12 rounded-full object-cover" alt={user.name} />
+                <img
+                  src={user.avatar || '/favicon.svg'}
+                  className="w-12 h-12 rounded-full object-cover bg-gray-100"
+                  alt=""
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline mb-1">
                     <h3 className="font-bold truncate">{user.name}</h3>
