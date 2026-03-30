@@ -4,6 +4,7 @@ import { FilterChip } from '@/components/FilterChip'
 import { ListingCard } from '@/components/ListingCard'
 import { ListingDetailModal } from '@/components/ListingDetailModal'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
+import type { GardenerRatingSummary } from '@/utils/reviewRating'
 
 interface HomeViewProps {
   listings: Listing[]
@@ -13,6 +14,7 @@ interface HomeViewProps {
   toggleLike: (listingId: string) => void
   toggleFollow: (gardenerId: string) => void
   getGardener: (id: string) => UserProfile
+  getGardenerRatingSummary: (profileId: string) => GardenerRatingSummary | null
   filterType: 'all' | 'pickup' | 'self_harvest'
   setFilterType: (v: 'all' | 'pickup' | 'self_harvest') => void
   handleReservation: (listingId: string, amount: number, pickupAt: string) => void
@@ -31,6 +33,7 @@ export function HomeView({
   toggleLike,
   toggleFollow,
   getGardener,
+  getGardenerRatingSummary,
   filterType,
   setFilterType,
   handleReservation,
@@ -176,6 +179,8 @@ export function HomeView({
           user={currentUser}
           isOwnProfile={false}
           gardener={getGardener(String(detailListing.gardenerId ?? ''))}
+          gardenerRatingSummary={getGardenerRatingSummary(String(detailListing.gardenerId ?? ''))}
+          onGardenerClick={onUserClick}
           onReserve={handleReservation}
           onEditListing={() => {}}
           onDeleteListing={() => {}}

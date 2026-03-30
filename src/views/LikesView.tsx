@@ -3,6 +3,7 @@ import { Heart } from 'lucide-react'
 import { ListingCard } from '@/components/ListingCard'
 import { ListingDetailModal } from '@/components/ListingDetailModal'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
+import type { GardenerRatingSummary } from '@/utils/reviewRating'
 
 interface LikesViewProps {
   listings: Listing[]
@@ -10,6 +11,7 @@ interface LikesViewProps {
   toggleLike: (listingId: string) => void
   toggleFollow: (gardenerId: string) => void
   getGardener: (id: string) => UserProfile
+  getGardenerRatingSummary: (profileId: string) => GardenerRatingSummary | null
   handleReservation: (listingId: string, amount: number, pickupAt: string) => void
   onAdminDelete: (listingId: string) => void
   isAdmin: boolean
@@ -24,6 +26,7 @@ export function LikesView({
   toggleLike,
   toggleFollow,
   getGardener,
+  getGardenerRatingSummary,
   handleReservation,
   onAdminDelete,
   isAdmin,
@@ -59,6 +62,7 @@ export function LikesView({
               key={l.id}
               listing={l}
               gardener={getGardener(String(l.gardenerId ?? ''))}
+              gardenerRatingSummary={getGardenerRatingSummary(String(l.gardenerId ?? ''))}
               currentUser={currentUser}
               onLike={() => toggleLike(l.id)}
               onFollow={() => toggleFollow(l.gardenerId)}
@@ -82,6 +86,8 @@ export function LikesView({
           user={currentUser}
           isOwnProfile={false}
           gardener={getGardener(String(detailListing.gardenerId ?? ''))}
+          gardenerRatingSummary={getGardenerRatingSummary(String(detailListing.gardenerId ?? ''))}
+          onGardenerClick={onUserClick}
           onReserve={handleReservation}
           onEditListing={() => {}}
           onDeleteListing={() => {}}

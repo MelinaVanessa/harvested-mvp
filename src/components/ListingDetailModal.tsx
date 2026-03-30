@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ShoppingBag, Clock, Leaf, Edit3, Trash2, Save, Sparkles, Loader2, Minus, Plus, MapPin } from 'lucide-react'
+import { X, ShoppingBag, Clock, Leaf, Edit3, Trash2, Save, Sparkles, Loader2, Minus, Plus, MapPin, Star } from 'lucide-react'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
 import { getGoogleMapsUrlForListing } from '@/utils/listingPosition'
+import type { GardenerRatingSummary } from '@/utils/reviewRating'
 
 interface ListingDetailModalProps {
   selectedPost: Listing
@@ -22,6 +23,8 @@ interface ListingDetailModalProps {
   variant?: 'default' | 'map'
   /** Listing author — used for reserve UI (isSelf check) and contact copy */
   gardener?: UserProfile
+  gardenerRatingSummary?: GardenerRatingSummary | null
+  onGardenerClick?: (userId: string) => void
   onReserve?: (listingId: string, amount: number, pickupAt: string) => void
 }
 
@@ -40,6 +43,8 @@ export function ListingDetailModal({
   t,
   variant = 'default',
   gardener,
+  gardenerRatingSummary = null,
+  onGardenerClick,
   onReserve,
 }: ListingDetailModalProps) {
   const [recipe, setRecipe] = useState('')
@@ -171,6 +176,35 @@ export function ListingDetailModal({
     </div>
   ) : null
 
+  const gardenerAvatarClass = `shrink-0 rounded-full bg-gray-100 object-cover ${isMap ? 'w-9 h-9' : 'w-11 h-11'}`
+  const gardenerRatingLine = gardenerRatingSummary ? (
+    <div className={`flex items-center gap-1 mt-0.5 ${isMap ? 'mt-0' : ''}`}>
+      <Star size={isMap ? 12 : 14} className="shrink-0 fill-[#C29901] text-[#C29901]" aria-hidden />
+      <span className={`font-semibold ${isMap ? 'text-xs' : 'text-sm'} ${theme.text}`}>
+        {gardenerRatingSummary.average.toFixed(1)}
+      </span>
+      <span className={`${isMap ? 'text-[11px]' : 'text-xs'} ${theme.textSec}`}>
+        · {gardenerRatingSummary.count}{' '}
+        {gardenerRatingSummary.count === 1
+          ? t?.profile?.reviewCountOne ?? 'review'
+          : t?.profile?.reviewCountMany ?? 'reviews'}
+      </span>
+    </div>
+  ) : (
+    <p className={`${isMap ? 'text-[11px]' : 'text-xs'} ${theme.textSec} mt-0.5`}>
+      {t?.profile?.noReviews ?? 'No reviews yet.'}
+    </p>
+  )
+  const gardenerProfileBlock = gardener ? (
+    <>
+      <img src={gardener.avatar} alt="" className={gardenerAvatarClass} />
+      <div className="leading-tight min-w-0 flex-1">
+        <p className={`font-semibold ${theme.text} ${isMap ? 'text-sm' : 'text-base'}`}>{gardener.name}</p>
+        {gardenerRatingLine}
+      </div>
+    </>
+  ) : null
+
   const modal = (
     <div
       className={`fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in ${
@@ -260,6 +294,19 @@ export function ListingDetailModal({
               >
                 {selectedPost.title}
               </h3>
+              {gardenerProfileBlock ? (
+                onGardenerClick ? (
+                  <button
+                    type="button"
+                    onClick={() => onGardenerClick(gardener!.id)}
+                    className={`w-full flex items-center gap-3 text-left rounded-xl -mx-1 px-1 py-2 mb-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${isMap ? 'mb-2 py-1.5' : ''}`}
+                  >
+                    {gardenerProfileBlock}
+                  </button>
+                ) : (
+                  <div className={`flex items-center gap-3 mb-3 ${isMap ? 'mb-2' : ''}`}>{gardenerProfileBlock}</div>
+                )
+              ) : null}
               {!isSelfListing ? (
                 <div className={`flex flex-col gap-2 ${isMap ? 'mb-2' : 'mb-3 [@media(orientation:landscape)]:mb-2'}`}>
                   <div className={`flex items-center gap-1 text-[#4A5D4E] text-sm font-medium`}>

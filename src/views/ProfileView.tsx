@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   ArrowLeft,
   PlusCircle,
@@ -16,6 +16,7 @@ import { ListingDetailModal } from '@/components/ListingDetailModal'
 import { ImageCropper } from '@/components/ImageCropper'
 import { LOGO_URL } from '@/constants'
 import type { Listing, UserProfile, Reservation, ThemeTokens, Review } from '@/types'
+import { gardenerRatingSummaryFromReviews } from '@/utils/reviewRating'
 
 const SHARE_BRANDS = {
   link: '/brands/link.svg',
@@ -102,6 +103,10 @@ export function ProfileView({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const safeFollowing = safeUser.following ?? []
   const userListings = listings.filter((l) => l.gardenerId === safeUser.id)
+  const profileGardenerRatingSummary = useMemo(
+    () => gardenerRatingSummaryFromReviews(reviews, safeUser.id),
+    [reviews, safeUser.id],
+  )
   const isFollowing = !isOwnProfile && (currentUser.following ?? []).includes(safeUser.id)
   const myReservations: Reservation[] = isOwnProfile ? (safeUser.reservations ?? []) : []
   const profileReviews = reviews
@@ -832,6 +837,7 @@ export function ProfileView({
           setSelectedPost={setSelectedPost}
           user={currentUser}
           gardener={safeUser}
+          gardenerRatingSummary={profileGardenerRatingSummary}
           onReserve={!isOwnProfile ? onReserve : undefined}
           isOwnProfile={isOwnProfile}
           onEditListing={startEditPost}

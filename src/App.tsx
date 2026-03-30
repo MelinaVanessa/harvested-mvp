@@ -28,6 +28,7 @@ import {
 } from '@/constants/storage'
 import { INITIAL_USER, MOCK_USERS, INITIAL_LISTINGS, INITIAL_MESSAGES } from '@/data'
 import type { UserProfile, Listing, Reservation, Message, Review, InAppNotification } from '@/types'
+import { gardenerRatingSummaryFromReviews } from '@/utils/reviewRating'
 import { ensureBrowserNotificationPermission, showBrowserNotification } from '@/utils/browserNotifications'
 
 type ActiveTab =
@@ -458,6 +459,7 @@ export default function App() {
   }, [listings, currentUser.following, currentUser.id, t, users])
 
   const getGardener = (id: string) => users[id] ?? { name: 'Unbekannt', handle: '@unknown', avatar: '', id, bio: '', role: 'gardener', isMember: false, following: [], likedListings: [] }
+  const getGardenerRatingSummary = (profileId: string) => gardenerRatingSummaryFromReviews(reviews, profileId)
 
   const toggleLike = (listingId: string) => {
     setCurrentUser((prev) => {
@@ -1073,6 +1075,7 @@ export default function App() {
             toggleLike={toggleLike}
             toggleFollow={toggleFollow}
             getGardener={getGardener}
+            getGardenerRatingSummary={getGardenerRatingSummary}
             filterType={filterType}
             setFilterType={setFilterType}
             handleReservation={handleReservation}
@@ -1091,6 +1094,7 @@ export default function App() {
             setFilterType={setFilterType}
             handleReservation={handleReservation}
             getGardener={getGardener}
+            getGardenerRatingSummary={getGardenerRatingSummary}
             onUserClick={openProfile}
             setActiveTab={setActiveTab}
             currentUser={currentUser}
@@ -1113,6 +1117,7 @@ export default function App() {
             toggleLike={toggleLike}
             toggleFollow={toggleFollow}
             getGardener={getGardener}
+            getGardenerRatingSummary={getGardenerRatingSummary}
             handleReservation={handleReservation}
             onAdminDelete={handleDeleteListing}
             isAdmin={isAdmin}

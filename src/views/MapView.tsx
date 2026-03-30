@@ -6,6 +6,7 @@ import { ListingDetailModal } from '@/components/ListingDetailModal'
 import { InteractiveGoogleMap } from '@/components/InteractiveGoogleMap'
 import { OpenStreetMapLayer } from '@/components/OpenStreetMapLayer'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
+import type { GardenerRatingSummary } from '@/utils/reviewRating'
 
 /** Collapsed height of the listings sheet (px) — thin strip: handle barely above the bottom edge */
 const SHEET_PEEK_HEIGHT = 44
@@ -16,6 +17,7 @@ interface MapViewProps {
   setFilterType: (v: 'all' | 'pickup' | 'self_harvest') => void
   handleReservation: (listingId: string, amount: number, pickupAt: string) => void
   getGardener: (id: string) => UserProfile
+  getGardenerRatingSummary: (profileId: string) => GardenerRatingSummary | null
   onUserClick: (userId: string) => void
   setActiveTab: (tab: 'home' | 'map' | 'add' | 'profile' | 'likes') => void
   currentUser: UserProfile
@@ -34,6 +36,7 @@ export function MapView({
   setFilterType,
   handleReservation,
   getGardener,
+  getGardenerRatingSummary,
   onUserClick,
   setActiveTab,
   currentUser,
@@ -441,6 +444,7 @@ export function MapView({
                   key={l.id}
                   listing={l}
                   gardener={getGardener(String(l.gardenerId ?? ''))}
+                  gardenerRatingSummary={getGardenerRatingSummary(String(l.gardenerId ?? ''))}
                   currentUser={currentUser}
                   onLike={() => toggleLike(l.id)}
                   onFollow={() => toggleFollow(l.gardenerId)}
@@ -468,6 +472,8 @@ export function MapView({
           user={currentUser}
           isOwnProfile={false}
           gardener={getGardener(String(selectedListing.gardenerId ?? ''))}
+          gardenerRatingSummary={getGardenerRatingSummary(String(selectedListing.gardenerId ?? ''))}
+          onGardenerClick={onUserClick}
           onReserve={handleReservation}
           onEditListing={() => {}}
           onDeleteListing={() => {}}

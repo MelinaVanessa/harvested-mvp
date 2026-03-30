@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Heart, Clock, ShoppingBag, Minus, Plus, MoreVertical } from 'lucide-react'
+import { Heart, Clock, ShoppingBag, Minus, Plus, MoreVertical, Star } from 'lucide-react'
 import type { Listing, UserProfile, ThemeTokens } from '@/types'
 import { getGoogleMapsUrlForListing } from '@/utils/listingPosition'
+import type { GardenerRatingSummary } from '@/utils/reviewRating'
 
 interface ListingCardProps {
   listing: Listing
@@ -16,6 +17,7 @@ interface ListingCardProps {
   isAdmin?: boolean
   onAdminDelete?: (listingId: string) => void
   compact?: boolean
+  gardenerRatingSummary?: GardenerRatingSummary | null
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
 }
@@ -32,6 +34,7 @@ export function ListingCard({
   isAdmin = false,
   onAdminDelete,
   compact = false,
+  gardenerRatingSummary = null,
   theme,
   t,
 }: ListingCardProps) {
@@ -57,6 +60,24 @@ export function ListingCard({
           <img src={gardener.avatar} alt={gardener.name} className="w-8 h-8 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:w-7 [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:h-7 rounded-full bg-gray-100" />
           <div className="leading-tight min-w-0 flex-1">
             <p className={`text-sm [@media(min-width:1000px)_and_(max-height:700px)_and_(orientation:landscape)]:text-[11px] font-semibold ${theme.text} hover:underline line-clamp-1`}>{gardener.name}</p>
+            {gardenerRatingSummary ? (
+              <div className={`flex items-center gap-1 mt-0.5 ${compact ? 'mt-0' : ''}`}>
+                <Star size={compact ? 10 : 12} className="shrink-0 fill-[#C29901] text-[#C29901]" aria-hidden />
+                <span className={`font-semibold ${compact ? 'text-[10px]' : 'text-[11px]'} ${theme.text}`}>
+                  {gardenerRatingSummary.average.toFixed(1)}
+                </span>
+                <span className={`${compact ? 'text-[9px]' : 'text-[10px]'} ${theme.textSec}`}>
+                  · {gardenerRatingSummary.count}{' '}
+                  {gardenerRatingSummary.count === 1
+                    ? t?.profile?.reviewCountOne ?? 'review'
+                    : t?.profile?.reviewCountMany ?? 'reviews'}
+                </span>
+              </div>
+            ) : (
+              <p className={`${compact ? 'text-[9px] mt-0.5' : 'text-[10px] mt-0.5'} ${theme.textSec} line-clamp-1`}>
+                {t?.profile?.noReviews ?? 'No reviews yet.'}
+              </p>
+            )}
             {listing.location.address?.trim() ? (
               <a
                 href={getGoogleMapsUrlForListing(listing)}
