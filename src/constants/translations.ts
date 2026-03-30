@@ -51,6 +51,9 @@ export const TRANSLATIONS: Record<'de' | 'en', Record<string, Record<string, str
       errUnreachableHint: 'Später erneut versuchen oder Verbindung prüfen — der Login konnte nicht geprüft werden.',
       errInvalid: 'Ungültige Anmeldedaten.',
       errInvalidHint: 'Prüfe E-Mail und Passwort (Tippfehler?). Passwort muss exakt wie bei der Registrierung sein.',
+      errEmailNotRegistered:
+        'Diese E-Mail ist auf dem Server nicht registriert. Nach einem Update vom Host musst du ein neues Konto anlegen oder ein anderes Login nutzen.',
+      errWrongPassword: 'Passwort passt nicht. Tippfehler? Groß-/Kleinschreibung beim Passwort beachten (E-Mail kann beliebig sein).',
       errFieldsRequired: 'Bitte E-Mail und Passwort ausfüllen.',
       errEmailRegistered: 'Diese E-Mail ist bereits registriert. Bitte einloggen.',
       errRegisterServer: 'Registrierung gerade nicht möglich. Server-Verbindung prüfen und erneut versuchen.',
@@ -148,6 +151,9 @@ export const TRANSLATIONS: Record<'de' | 'en', Record<string, Record<string, str
       errUnreachableHint: 'Try again later or check your connection — we could not verify your login.',
       errInvalid: 'Invalid credentials.',
       errInvalidHint: 'Double-check your email and password (typos?). The password must match what you used when you signed up.',
+      errEmailNotRegistered:
+        'This email is not registered on the server. After a host reset you may need to register again or use another account.',
+      errWrongPassword: 'Password does not match. Check for typos. Passwords are case-sensitive (email is not).',
       errFieldsRequired: 'Please enter email and password.',
       errEmailRegistered: 'This email is already registered. Please log in.',
       errRegisterServer: 'Registration is not available right now. Check your connection and try again.',

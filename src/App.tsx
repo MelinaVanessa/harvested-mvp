@@ -15,6 +15,7 @@ import {
   ProfileView,
 } from '@/views'
 import { THEMES, TRANSLATIONS } from '@/constants'
+import { getPrimaryApiBase, tryFetchUserById } from '@/constants/apiBase'
 import {
   getSavedLogin,
   setSavedLogin,
@@ -49,9 +50,8 @@ type ActiveTab =
   | 'legal_privacy'
   | 'legal_imprint'
 
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '') ||
-  'https://harvested-mvp.onrender.com'
+/** Same host resolution as login (meta tag + VITE_API_URL + origin + Render fallback). */
+const API_BASE_URL = getPrimaryApiBase()
 const API_ENABLED = API_BASE_URL.length > 0
 const OWNER_NAME = 'Melina Vanessa Mann'
 const ADMIN_EMAIL = 'melina_vanessa.mann@web.de'
@@ -313,16 +313,13 @@ export default function App() {
         return
       }
 
-      const controller = new AbortController()
-      const timeout = window.setTimeout(() => controller.abort(), 4000)
       try {
-        const res = await fetch(`${API_BASE_URL}/api/users/${encodeURIComponent(saved.userId)}`, {
-          headers: { Accept: 'application/json' },
-          signal: controller.signal,
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const remoteUser = (await res.json()) as UserProfile
-        if (cancelled || !remoteUser?.id) return
+        const remoteUser = await tryFetchUserById(saved.userId)
+        if (cancelled) return
+        if (!remoteUser?.id) {
+          clearSavedLogin()
+          return
+        }
         const next = profilePatch ? { ...remoteUser, ...profilePatch } : remoteUser
         setUsers((prev) => ({ ...mergeUsersFromStorage(MOCK_USERS, prev), [next.id]: next }))
         setCurrentUser(next)
@@ -330,7 +327,6 @@ export default function App() {
       } catch {
         clearSavedLogin()
       } finally {
-        window.clearTimeout(timeout)
         if (!cancelled) setIsAuthBootstrapping(false)
       }
     }

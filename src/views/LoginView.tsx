@@ -78,16 +78,22 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
 
       const isUnreachable = loginResult.reason === 'unreachable'
       const isBadRequest = loginResult.reason === 'invalid_request'
+      const isEmailMissing = loginResult.reason === 'email_not_registered'
+      const isWrongPw = loginResult.reason === 'wrong_password'
       const line1 = isUnreachable
         ? (L.errUnreachable ?? L.error ?? 'Ungültige Anmeldedaten.')
         : isBadRequest
           ? (loginResult.serverMessage?.trim()
               ? loginResult.serverMessage.trim()
               : (L.errFieldsRequired ?? 'Bitte E-Mail und Passwort ausfüllen.'))
-          : (L.errInvalid ?? L.error ?? 'Ungültige Anmeldedaten.')
+          : isEmailMissing
+            ? (L.errEmailNotRegistered ?? L.errInvalid ?? L.error ?? '')
+            : isWrongPw
+              ? (L.errWrongPassword ?? L.errInvalid ?? L.error ?? '')
+              : (L.errInvalid ?? L.error ?? 'Ungültige Anmeldedaten.')
       const line2 = isUnreachable
         ? (L.errUnreachableHint ?? '')
-        : isBadRequest
+        : isBadRequest || isEmailMissing || isWrongPw
           ? ''
           : (L.errInvalidHint ?? '')
       setAuthError(line2 ? `${line1} ${line2}` : line1)

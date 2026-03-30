@@ -76,7 +76,7 @@ authRouter.post('/login', (req, res) => {
 
   const list = credListFor(emailRaw)
   if (list.length === 0) {
-    return res.status(401).json({ error: 'Invalid credentials' })
+    return res.status(401).json({ error: 'Invalid credentials', code: 'EMAIL_NOT_REGISTERED' })
   }
 
   const matches = list.filter((cred) => {
@@ -84,13 +84,13 @@ authRouter.post('/login', (req, res) => {
     return stored === passwordNorm || cred.password === passwordInput
   })
   if (matches.length === 0) {
-    return res.status(401).json({ error: 'Invalid credentials' })
+    return res.status(401).json({ error: 'Invalid credentials', code: 'WRONG_PASSWORD' })
   }
 
   const cred = matches[0]
   const user = users[cred.userId]
   if (!user) {
-    return res.status(401).json({ error: 'Invalid credentials' })
+    return res.status(401).json({ error: 'Invalid credentials', code: 'USER_PROFILE_MISSING' })
   }
 
   return res.json({ user })

@@ -80,11 +80,19 @@ export async function tryAuthLogin(body: { email: string; password: string }): P
 
 export async function tryAuthLoginDetailed(body: { email: string; password: string }): Promise<{
   user: UserProfile | null
-  reason: 'ok' | 'invalid_credentials' | 'invalid_request' | 'unreachable'
+  reason:
+    | 'ok'
+    | 'invalid_credentials'
+    | 'email_not_registered'
+    | 'wrong_password'
+    | 'invalid_request'
+    | 'unreachable'
   serverMessage?: string
 }> {
   let hadInvalidCredentials = false
   let hadInvalidRequest = false
+  let hadEmailNotRegistered = false
+  let hadWrongPassword = false
   let hadReachableAuthServer = false
   let lastAuthError: string | undefined
   for (const base of getAuthApiBaseCandidates()) {
@@ -118,9 +126,12 @@ export async function tryAuthLoginDetailed(body: { email: string; password: stri
         hadInvalidCredentials = true
         if (ctErr.includes('application/json')) {
           try {
-            const errJson = (await res.json()) as { error?: string }
+            const errJson = (await res.json()) as { error?: string; code?: string }
             const e = (errJson.error ?? '').trim()
             if (e) lastAuthError = e
+            const code = (errJson.code ?? '').trim().toUpperCase()
+            if (code === 'EMAIL_NOT_REGISTERED') hadEmailNotRegistered = true
+            if (code === 'WRONG_PASSWORD') hadWrongPassword = true
           } catch {
             /* ignore */
           }
@@ -138,10 +149,32 @@ export async function tryAuthLoginDetailed(body: { email: string; password: stri
   }
   if (hadInvalidRequest)
     return { user: null, reason: 'invalid_request', serverMessage: lastAuthError }
+  if (hadEmailNotRegistered)
+    return { user: null, reason: 'email_not_registered', serverMessage: lastAuthError }
+  if (hadWrongPassword)
+    return { user: null, reason: 'wrong_password', serverMessage: lastAuthError }
   if (hadInvalidCredentials)
     return { user: null, reason: 'invalid_credentials', serverMessage: lastAuthError }
   if (hadReachableAuthServer) return { user: null, reason: 'invalid_credentials' }
   return { user: null, reason: 'unreachable' }
+}
+
+/** Restore session across API hosts (same order as login). Cold starts may exceed a few seconds. */
+export async function tryFetchUserById(userId: string): Promise<UserProfile | null> {
+  const suffix = `/api/users/${encodeURIComponent(userId)}`
+  for (const base of getAuthApiBaseCandidates()) {
+    try {
+      const url = base ? `${base}${suffix}` : suffix
+      const res = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } })
+      const ct = res.headers.get('content-type') ?? ''
+      if (!res.ok || !ct.includes('application/json')) continue
+      const user = (await res.json()) as UserProfile
+      if (user?.id) return user
+    } catch {
+      /* next base */
+    }
+  }
+  return null
 }
 
 export async function tryAuthRegister(body: {
