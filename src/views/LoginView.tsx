@@ -106,12 +106,12 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
 
   return (
     <div
-      className="h-full w-full flex flex-col items-center justify-center app-gutter py-6 overflow-y-auto no-scrollbar"
+      className="h-full w-full flex flex-col items-stretch justify-start app-gutter py-6 overflow-y-auto no-scrollbar [scrollbar-gutter:stable]"
       style={{ backgroundColor: OFF_WHITE }}
     >
-      <div className="w-full max-w-sm flex flex-col items-center">
-        {/* justify-start: avoids re-centering the whole column when the error block gains height */}
-        <div className="flex-1 flex flex-col items-center justify-start min-h-[min-content] py-8 pt-12 sm:pt-16">
+      {/* mx-auto + w-full: fixed track width; avoid items-center shrink-to-fit (field width was changing with error text). */}
+      <div className="w-full max-w-sm mx-auto flex flex-col items-stretch min-w-0">
+        <div className="flex-1 flex flex-col w-full min-w-0 items-stretch justify-start min-h-[min-content] py-8 pt-12 sm:pt-16">
           <img
             src={LOGIN_LOGO_SRC}
             alt=""
@@ -132,7 +132,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
 
           <form
             onSubmit={handleSubmit}
-            className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150"
+            className="w-full min-w-0 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150"
           >
             {isRegistering && (
               <div className="animate-in slide-in-from-top-4 fade-in duration-300 space-y-4">
@@ -231,7 +231,11 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
             </div>
 
             {authError ? (
-              <p className="w-full text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert" aria-live="polite">
+              <p
+                className="w-full min-w-0 break-words text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+                role="alert"
+                aria-live="polite"
+              >
                 {authError}
               </p>
             ) : null}
@@ -245,7 +249,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
             </button>
           </form>
 
-          <div className="mt-8 text-center animate-in fade-in duration-1000 delay-300 pb-8">
+          <div className="mt-8 w-full text-center animate-in fade-in duration-1000 delay-300 pb-8">
             <button
               type="button"
               onClick={() => {
