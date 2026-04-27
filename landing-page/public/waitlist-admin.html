@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Harvested — Waitlist admin</title>
+    <style>
+      body {
+        font-family: system-ui, 'Segoe UI', sans-serif;
+        background: #fcfaf7;
+        color: #0d1a15;
+        margin: 0;
+        padding: 1.5rem;
+        max-width: 28rem;
+      }
+      h1 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #4a5d4e;
+        margin: 0 0 0.5rem;
+      }
+      p {
+        margin: 0 0 1.25rem;
+        font-size: 0.9rem;
+        color: #444;
+        line-height: 1.5;
+      }
+      label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 0.35rem;
+      }
+      input[type='password'] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid rgba(74, 93, 78, 0.25);
+        border-radius: 8px;
+        font-size: 1rem;
+        background: #fff;
+      }
+      input[type='password']:focus {
+        outline: 2px solid rgba(74, 93, 78, 0.2);
+        outline-offset: 1px;
+      }
+      button {
+        margin-top: 1rem;
+        padding: 0.65rem 1.1rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #fcfaf7;
+        background: #4a5d4e;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #3d4d42;
+      }
+      .hint {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 1.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Waitlist signups</h1>
+    <p>Enter the same value you set as <strong>WAITLIST_ADMIN_SECRET</strong> in Vercel. You will see a table of name, email, and role (one row per signup).</p>
+    <form method="post" action="/api/waitlist-board" autocomplete="off">
+      <label for="secret">Admin secret</label>
+      <input id="secret" type="password" name="secret" required autocomplete="off" />
+      <button type="submit">Show table</button>
+    </form>
+    <p class="hint">This page is not linked from the public site. Bookmark it only on a trusted device.</p>
+  </body>
+</html>
