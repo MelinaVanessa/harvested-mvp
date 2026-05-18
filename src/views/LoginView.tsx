@@ -15,6 +15,8 @@ interface LoginViewProps {
   onLogin: (userData?: { id: string; name: string; role: UserRole; profile?: UserProfile }) => void
   theme: ThemeTokens
   t: Record<string, Record<string, string>>
+  language: 'de' | 'en'
+  setLanguage: (v: 'de' | 'en') => void
 }
 
 function tpl(s: string, vars: Record<string, string>) {
@@ -25,7 +27,8 @@ function tpl(s: string, vars: Record<string, string>) {
   return out
 }
 
-export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
+export function LoginView({ onLogin, theme: _theme, t, language, setLanguage }: LoginViewProps) {
+  const L = t.login ?? {}
   const [isRegistering, setIsRegistering] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -37,7 +40,6 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAuthError(null)
-    const L = t.login ?? {}
     const emailLower = email.trim().toLowerCase()
     const passwordNorm = normalizePasswordForAuth(password)
     if (isRegistering) {
@@ -148,8 +150,8 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
                   >
                     <Sprout size={22} className={selectedRole === 'gardener' ? 'text-[#4A5D4E]' : 'text-[#88887D]'} />
                     <div className="text-center">
-                      <span className="block text-xs font-semibold">Anbieter</span>
-                      <span className="block text-[10px] text-[#4A5D4E] font-medium">Kostenlos</span>
+                      <span className="block text-xs font-semibold">{L.roleProvider ?? 'Anbieter'}</span>
+                      <span className="block text-[10px] text-[#4A5D4E] font-medium">{L.roleProviderTag ?? 'Kostenlos'}</span>
                     </div>
                   </button>
                   <button
@@ -163,8 +165,8 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
                   >
                     <ShoppingCart size={22} className={selectedRole === 'buyer' ? 'text-[#4A5D4E]' : 'text-[#88887D]'} />
                     <div className="text-center">
-                      <span className="block text-xs font-semibold">Nutzer</span>
-                      <span className="block text-[10px] text-[#4A5D4E] font-medium">1. Monat gratis</span>
+                      <span className="block text-xs font-semibold">{L.roleUser ?? 'Nutzer'}</span>
+                      <span className="block text-[10px] text-[#4A5D4E] font-medium">{L.roleUserTag ?? '1. Monat gratis'}</span>
                     </div>
                   </button>
                 </div>
@@ -176,7 +178,7 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
                     type="text"
                     required
                     className={inputClass}
-                    placeholder="Dein Name"
+                    placeholder={t.profile?.namePlaceholder ?? 'Dein Name'}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
@@ -222,8 +224,8 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute inset-y-0 right-0 w-11 flex items-center justify-center text-[#4A5D4E] hover:opacity-75"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? (L.hidePassword ?? 'Hide password') : (L.showPassword ?? 'Show password')}
+                  title={showPassword ? (L.hidePassword ?? 'Hide password') : (L.showPassword ?? 'Show password')}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -261,6 +263,29 @@ export function LoginView({ onLogin, theme: _theme, t }: LoginViewProps) {
             >
               {isRegistering ? (t.login.hasAccount ?? 'Bereits ein Konto? Einloggen') : t.login.register}
             </button>
+            <p className="mt-4 text-sm" style={{ color: TEXT_MUTED }} role="group" aria-label={t.settings?.language ?? 'Language'}>
+              <button
+                type="button"
+                onClick={() => setLanguage('en')}
+                className={`font-medium hover:underline ${language === 'en' ? '' : 'opacity-60'}`}
+                style={{ color: language === 'en' ? WALDGRUEN : TEXT_MUTED }}
+                aria-current={language === 'en' ? 'true' : undefined}
+              >
+                English
+              </button>
+              <span className="mx-1.5 opacity-50" aria-hidden>
+                /
+              </span>
+              <button
+                type="button"
+                onClick={() => setLanguage('de')}
+                className={`font-medium hover:underline ${language === 'de' ? '' : 'opacity-60'}`}
+                style={{ color: language === 'de' ? WALDGRUEN : TEXT_MUTED }}
+                aria-current={language === 'de' ? 'true' : undefined}
+              >
+                Deutsch
+              </button>
+            </p>
           </div>
         </div>
       </div>

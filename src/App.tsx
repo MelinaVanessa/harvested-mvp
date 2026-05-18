@@ -1281,6 +1281,8 @@ export default function App() {
               }}
               theme={theme}
               t={t}
+              language={language}
+              setLanguage={setLanguage}
             />
             )}
           </div>
