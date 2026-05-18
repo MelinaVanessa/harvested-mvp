@@ -202,7 +202,7 @@ async function handleWaitlistList(res) {
 const PILOT_CAP = 100
 
 /** Keep in sync with api/waitlist-pilot-capacity.mjs — or set PILOT_CLAIMED_MANUAL in .env */
-const PILOT_SLOTS_CLAIMED = 42
+const PILOT_SLOTS_CLAIMED = 48
 
 function publicPilotClaimed() {
   const raw = process.env.PILOT_CLAIMED_MANUAL

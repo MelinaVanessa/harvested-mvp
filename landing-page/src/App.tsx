@@ -16,23 +16,22 @@ const copy = {
     navWaitlist: 'Updates erhalten',
     navLang: 'English',
     heroEyebrowPrefix: 'Pilot Berlin-Brandenburg · ',
-    heroEyebrowHighlight: 'anfangs kostenlos',
-    heroTitle: 'Gemeinsam gegen Ernteverschwendung',
-    heroLead:
-      'Wir verbinden Gärtner mit Menschen in der Nähe: Überschuss teilen/abholen statt wegwerfen.',
+    heroEyebrowHighlight: 'Jetzt kostenlos testen',
+    heroTitle: 'Superfrisch aus deiner Region',
+    heroLead: 'Der Marktplatz für lokale Erzeuger und leidenschaftliche Gärtner',
     waitlistPilotBanner:
-      '📍 Berlin-Pilot: Wir vergeben aktuell nur 100 Plätze, um ein perfektes Erlebnis zu garantieren. Bewirb dich jetzt für deinen Platz.',
-    waitlistPilotProgress: '{claimed} von {cap} Plätzen vergeben',
+      '📍 Berlin-Pilot: Wir öffnen zunächst nur 100 Plätze für Käufer und Anbieter, um Qualität und Service auf Top-Niveau zu halten. Bewirb dich jetzt.',
+    waitlistPilotProgress: '{claimed} von {cap} Marktplatz-Plätzen vergeben',
     heroCta: 'Zur Bewerbung',
-    formTitle: 'Bewerbe dich und werde Testnutzer',
+    formTitle: 'Bewerbe dich für den Marktplatz-Start',
     formIntro:
-      'Updates zum Pilot-Start und direkte Infos von mir, wie du die Plattform mitgestalten kannst. Relevant, ehrlich und garantiert ohne Spam.',
+      'Erhalte Updates zum Start und erfahre zuerst, wann du super frische Lebensmittel in deiner Umgebung kaufen oder anbieten kannst.',
     formName: 'Name',
     formNamePh: 'Vor- und Nachname',
     formEmail: 'E-Mail',
     formEmailPh: 'euer.name@email.de',
     formJoinAs: 'Du bewirbst dich als',
-    formRoleGardener: 'Gärtner',
+    formRoleGardener: 'Anbieter',
     formRoleNeighbor: 'Nachbar',
     formRoleBoth: 'Beides',
     formSubmit: 'Jetzt Bewerbung abschicken',
@@ -40,6 +39,10 @@ const copy = {
       'Noch kein Login. Wir benachrichtigen dich beim Start in Berlin.',
     formSubmitting: 'Wird gesendet…',
     formErrGeneric: 'Etwas ist schiefgelaufen. Bitte versucht es erneut.',
+    formErrConsent: 'Bitte stimme der Datenschutzerklärung zu.',
+    formConsentPrefix: 'Ich stimme der',
+    formConsentPolicy: 'Datenschutzerklärung',
+    formConsentSuffix: 'zu.',
     formErrDuplicate:
       'Du stehst schon auf der Liste. Wir melden uns trotzdem, wenn es Neuigkeiten gibt.',
     formErrOk:
@@ -47,7 +50,7 @@ const copy = {
     formErrNetwork:
       'Server nicht erreichbar. Startet die API lokal oder setzt VITE_API_URL.',
     previewEyebrow: 'Produktvorschau',
-    previewTitle: 'So fühlt sich Harvested in der App an',
+    previewTitle: 'So fühlt sich Harvested-Berlin in der App an',
     previewIntro:
       'Ein kurzer Blick in die wichtigsten Seiten: von Karte bis Profil. Wischt durch die Ansichten.',
     previewIntroClick:
@@ -90,37 +93,39 @@ const copy = {
       },
     ] as PreviewSlide[],
     howTitle: 'Wie es funktioniert',
-    how1t: 'Gärtner sagen, was reif ist',
+    how1t: 'Anbieter listen ihre frischesten Produkte',
     how1d:
-      'Ihr zeigt, was reif ist, wie die Abholung läuft und ob Selbsternten möglich ist.',
-    how2t: 'Nachbarn finden Gärten in der Nähe',
+      'Erzeuger und Gartenbesitzer stellen verfügbare Produkte mit Menge und Abhol- oder Lieferoptionen ein.',
+    how2t: 'Käufer entdecken Angebote in ihrer Region',
     how2d:
-      'Frische direkt von der Quelle: voll ausgereift und natürlich gewachsen. Du siehst sofort die Entfernung und wählst deine Abholzeit.',
-    how3t: 'Trefft euch im Garten',
+      'Käufer finden in Sekunden regionale Angebote, vergleichen Frische und Verfügbarkeit und reservieren direkt beim Anbieter.',
+    how3t: 'Sicher kaufen, lokal übergeben',
     how3d:
-      'Holt Überschuss ab oder helft beim Ernten - lokal, direkt und ohne Umwege.',
+      'Bestellungen werden direkt zwischen Anbietern und Käufern abgewickelt: transparent, flexibel und fair für beide Seiten.',
     cardGardenersH: 'Für Gärtner',
     cardGardenersP:
-      'Teile Ernte zu deinen Regeln: Du bestimmst Zeit, Ort und wer kommt.',
+      'Verkaufe deine Produkte zu deinen Bedingungen: Du bestimmst Verfügbarkeit, Preis und Übergabe.',
     cardNeighborsH: 'Für Nachbarn',
     cardNeighborsP:
-      'Frisches Obst & Gemüse direkt aus deiner Nachbarschaft.',
-    storyTitle: 'Wer Harvested aufbaut',
+      'Kaufe super frische Lebensmittel direkt von lokalen Anbietern in deiner Region.',
+    storyTitle: 'Wer Harvested-Berlin aufbaut',
     storyName: 'Melina Vanessa Mann',
     storyBody:
-      'Ich bin zwanzig, studiere BWL an der HTW Berlin und bin Partnerships Department Lead bei Enactus Berlin, einer studentischen NGO mit sozialen und nachhaltigen Impact-Start-ups. Harvested will genau das für Ernteüberschuss tun: weniger Verschwendung, mehr Begegnung in der Nachbarschaft. Wir starten als Pilot in Berlin–Brandenburg und lassen es am Anfang kostenlos, während wir es mit euch ausprobieren.',
+      'Ich bin zwanzig, studiere BWL an der HTW Berlin und bin Partnerships Department Lead bei Enactus Berlin, einer studentischen NGO mit sozialen und nachhaltigen Impact-Start-ups. Mit Harvested-Berlin bauen wir einen lokalen Marktplatz, auf dem super frische Lebensmittel direkt zwischen Anbietern und Käufern gehandelt werden. Wir starten als Pilot in Berlin-Brandenburg und entwickeln die Plattform eng mit euch weiter.',
     storyImgAlt: 'Melina Vanessa Mann, draußen auf einer Wiese',
     footerSocials: 'Socials',
     footerContact: 'Kontakt',
     footerUpdates: 'Updates erhalten',
     footerQuestions: 'WhatsApp: +49 1590 6105570',
     footerWhatsappCommunity: 'WhatsApp Community',
-    footerInstagram: 'Harvested auf Instagram',
-    footerCompanyLinkedIn: 'Harvested auf LinkedIn',
+    footerTikTok: 'Harvested-Berlin auf TikTok',
+    footerInstagram: 'Harvested-Berlin auf Instagram',
+    footerCompanyLinkedIn: 'Harvested-Berlin auf LinkedIn',
     footerFounderLinkedIn: 'Melina auf LinkedIn',
     footerLegal: 'Rechtliches',
+    footerPrivacy: 'Datenschutz',
     footerImpressum: 'Impressum',
-    docTitle: 'Harvested — Überschuss aus Gärten in eurer Nähe',
+    docTitle: 'Harvested-Berlin — Überschuss aus Gärten in eurer Nähe',
   },
   en: {
     navHow: 'How it works',
@@ -128,23 +133,22 @@ const copy = {
     navWaitlist: 'Get updates',
     navLang: 'Deutsch',
     heroEyebrowPrefix: 'Pilot Berlin-Brandenburg · ',
-    heroEyebrowHighlight: 'free at first',
-    heroTitle: 'Together against harvest waste.',
-    heroLead:
-      'We connect gardeners with people nearby: share/pick up surplus instead of wasting it.',
+    heroEyebrowHighlight: 'Test for free now',
+    heroTitle: 'Super fresh from your region',
+    heroLead: 'The marketplace for local producers and passionate gardeners',
     waitlistPilotBanner:
-      '📍 Berlin pilot: We are only opening 100 spots right now to guarantee a great experience. Apply now for your place.',
-    waitlistPilotProgress: '{claimed} of {cap} spots filled',
+      '📍 Berlin pilot: We are opening only 100 spots at first for buyers and sellers to keep quality and service at a premium level. Apply now.',
+    waitlistPilotProgress: '{claimed} of {cap} marketplace spots filled',
     heroCta: 'Apply now',
-    formTitle: 'Bring Harvested to your neighborhood.',
+    formTitle: 'Apply for marketplace early access.',
     formIntro:
-      'Updates on the pilot launch and direct notes from me on how you can help shape the platform. Relevant, honest, and guaranteed spam-free.',
+      'Get launch updates and be first to know when you can buy or sell super fresh food in your local area.',
     formName: 'Name',
     formNamePh: 'First and last name',
     formEmail: 'Email',
     formEmailPh: 'your.name@email.com',
     formJoinAs: 'You are joining as',
-    formRoleGardener: 'Grower',
+    formRoleGardener: 'Seller',
     formRoleNeighbor: 'Neighbor',
     formRoleBoth: 'Both',
     formSubmit: 'Submit your application now',
@@ -152,13 +156,17 @@ const copy = {
       'No login yet. We will notify you when we launch in Berlin.',
     formSubmitting: 'Sending…',
     formErrGeneric: 'Something went wrong. Please try again.',
+    formErrConsent: 'Please agree to the privacy policy.',
+    formConsentPrefix: 'I agree to the',
+    formConsentPolicy: 'privacy policy',
+    formConsentSuffix: '.',
     formErrDuplicate:
       'You are already on the list. We will still email you when we launch nearby.',
     formErrOk:
       'Application received! We will review your details and get back to you.',
     formErrNetwork: 'Could not reach the server. Start the API locally or set VITE_API_URL.',
     previewEyebrow: 'Product preview',
-    previewTitle: 'How Harvested feels in the app',
+    previewTitle: 'How Harvested-Berlin feels in the app',
     previewIntro:
       'A quick look at the main pages: from map to profile. Swipe through the screens.',
     previewIntroClick:
@@ -201,36 +209,39 @@ const copy = {
       },
     ] as PreviewSlide[],
     howTitle: 'How it works',
-    how1t: 'Growers say what is ready',
+    how1t: 'Sellers list their freshest products',
     how1d:
-      'Growers share what is ripe, how pickup works, and whether self-harvest is open.',
-    how2t: 'Neighbors find gardens nearby',
+      'Growers and local producers post available items with quality details, quantities, and pickup or delivery options.',
+    how2t: 'Buyers discover local offers',
     how2d:
-      'Real home gardens, not big stores. You see how far it is and how each grower likes to pass the food to you.',
-    how3t: 'Meet at the garden',
-    how3d: 'Pick up surplus or join a harvest slot - local, direct, and simple.',
+      'Buyers quickly find local offers, compare freshness and availability, and reserve directly with the seller.',
+    how3t: 'Buy locally with trusted handoff',
+    how3d:
+      'Orders are handled directly between sellers and buyers: transparent, flexible, and fair for both sides.',
     cardGardenersH: 'For gardeners',
     cardGardenersP:
-      'Share harvest surplus your way: you decide when to share and who comes to your garden.',
+      'Sell your products on your terms: you control availability, pricing, and handoff.',
     cardNeighborsH: 'For neighbors',
     cardNeighborsP:
-      'Fresh from gardens in Berlin-Brandenburg. Local, fair, and directly from people you can meet.',
-    storyTitle: 'Who is building Harvested',
+      'Buy super fresh food directly from trusted local sellers in Berlin-Brandenburg.',
+    storyTitle: 'Who is building Harvested-Berlin',
     storyName: 'Melina Vanessa Mann',
     storyBody:
-      'I am twenty, studying business at HTW Berlin, and I am the Partnerships Department Lead at Enactus Berlin, a student NGO with social and sustainable impact start-ups. Harvested is the same instinct for harvest surplus: less waste, more friendly contact between neighbours. We are piloting first in Berlin–Brandenburg and keeping it free at the start while we learn this together with you.',
+      'I am twenty, studying business at HTW Berlin, and I am the Partnerships Department Lead at Enactus Berlin, a student NGO with social and sustainable impact start-ups. With Harvested-Berlin, we are building a local marketplace where super fresh food is traded directly between sellers and buyers. We are piloting first in Berlin-Brandenburg and refining the platform closely with the community.',
     storyImgAlt: 'Melina Vanessa Mann outdoors in a meadow',
     footerSocials: 'Socials',
     footerContact: 'Contact',
     footerUpdates: 'Get updates',
     footerQuestions: 'WhatsApp: +49 1590 6105570',
     footerWhatsappCommunity: 'WhatsApp community',
-    footerInstagram: 'Harvested on Instagram',
-    footerCompanyLinkedIn: 'Harvested on LinkedIn',
+    footerTikTok: 'Harvested-Berlin on TikTok',
+    footerInstagram: 'Harvested-Berlin on Instagram',
+    footerCompanyLinkedIn: 'Harvested-Berlin on LinkedIn',
     footerFounderLinkedIn: 'Melina on LinkedIn',
     footerLegal: 'Legal',
+    footerPrivacy: 'Privacy',
     footerImpressum: 'Imprint',
-    docTitle: 'Harvested — surplus from gardens near you',
+    docTitle: 'Harvested-Berlin — surplus from gardens near you',
   },
 } as const
 
@@ -248,7 +259,7 @@ function pilotCapacityEndpoint(): string {
 
 /** Same as PILOT_SLOTS_CLAIMED in api/waitlist-pilot-capacity.mjs — used when API is missing or fails */
 const PILOT_BAR_CAP = 100
-const PILOT_BAR_CLAIMED_DEFAULT = 42
+const PILOT_BAR_CLAIMED_DEFAULT = 48
 
 function PilotCapacityBar({ t }: { t: (typeof copy)['de'] }) {
   const [cap, setCap] = useState(PILOT_BAR_CAP)
@@ -333,18 +344,30 @@ function WaitlistForm({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<WaitlistRole>('neighbor')
+  const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [notice, setNotice] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setNotice(null)
+    if (!consent) {
+      setNotice({ tone: 'err', text: t.formErrConsent })
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch(waitlistEndpoint(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), role }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          role,
+          consentGiven: true,
+          consentVersion: '2026-04-27',
+          consentAt: new Date().toISOString(),
+        }),
       })
       const data = (await res.json().catch(() => ({}))) as {
         error?: string
@@ -366,6 +389,7 @@ function WaitlistForm({
         })
         setName('')
         setEmail('')
+        setConsent(false)
       }
     } catch {
       setNotice({
@@ -458,6 +482,28 @@ function WaitlistForm({
           })}
         </div>
       </fieldset>
+
+      <label className="mt-4 flex items-start gap-2 text-xs leading-snug text-obsidian/75 sm:text-sm">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(ev) => setConsent(ev.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border border-olive/30 accent-olive"
+          required
+        />
+        <span>
+          {t.formConsentPrefix}{' '}
+          <a
+            href="/datenschutz.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-olive/30 underline-offset-2 hover:text-olive"
+          >
+            {t.formConsentPolicy}
+          </a>
+          {' ' + t.formConsentSuffix}
+        </span>
+      </label>
 
       <button
         type="submit"
@@ -591,7 +637,10 @@ export default function App() {
               className="h-7 w-7 shrink-0 object-contain"
               aria-hidden="true"
             />
-            <span className="text-lg font-semibold tracking-normal text-olive">Harvested</span>
+            <span className="inline-flex h-[1.55rem] flex-col items-start justify-center text-[0.82rem] font-semibold leading-none tracking-normal text-olive landscape:h-[1.45rem] landscape:text-[0.8rem] sm:h-auto sm:text-base sm:leading-[0.82]">
+              <span>Harvested-</span>
+              <span className="mt-[2px]">Berlin</span>
+            </span>
           </a>
           <nav className="flex shrink-0 items-center gap-2 sm:gap-3">
             <a
@@ -630,7 +679,7 @@ export default function App() {
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 z-[1] bg-black/20 backdrop-blur-[2px]"
+            className="pointer-events-none absolute inset-0 z-[1] bg-black/20"
             aria-hidden
           />
           <div
@@ -701,7 +750,23 @@ export default function App() {
                 id="gardeners"
                 className="scroll-mt-24 rounded-2xl border border-olive/10 bg-creamy/50 p-8 shadow-sm sm:rounded-2xl"
               >
-                <h2 className="font-display text-2xl font-medium tracking-tight text-olive">{t.cardGardenersH}</h2>
+                <h2 className="flex items-center gap-2 font-display text-2xl font-medium tracking-tight text-olive">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5 shrink-0 text-olive/90"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 20v-7" />
+                    <path d="M12 13c0-3.2 2.6-5 5.7-5-.1 3.2-2.2 5-5.7 5Z" />
+                    <path d="M12 15c0-2.6-2.1-4.1-4.7-4.1.1 2.5 1.8 4.1 4.7 4.1Z" />
+                  </svg>
+                  <span>{t.cardGardenersH}</span>
+                </h2>
                 <p className="mt-4 max-w-prose text-sm leading-[1.65] text-obsidian/72 sm:text-base">
                   {t.cardGardenersP}
                 </p>
@@ -710,7 +775,22 @@ export default function App() {
                 id="neighbors"
                 className="scroll-mt-24 rounded-2xl border border-olive/10 bg-creamy/50 p-8 shadow-sm sm:rounded-2xl"
               >
-                <h2 className="font-display text-2xl font-medium tracking-tight text-olive">{t.cardNeighborsH}</h2>
+                <h2 className="flex items-center gap-2 font-display text-2xl font-medium tracking-tight text-olive">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5 shrink-0 text-olive/90"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="8" r="3" />
+                    <path d="M6.5 19.2c0-3.1 2.6-5.2 5.5-5.2s5.5 2.1 5.5 5.2" />
+                  </svg>
+                  <span>{t.cardNeighborsH}</span>
+                </h2>
                 <p className="mt-4 max-w-prose text-sm leading-[1.65] text-obsidian/72 sm:text-base">
                   {t.cardNeighborsP}
                 </p>
@@ -906,7 +986,7 @@ export default function App() {
             />
             <p className="m-0">
               <span className="text-dusty">© {new Date().getFullYear()}</span>{' '}
-              <span className="font-semibold text-olive">Harvested</span>
+              <span className="font-semibold text-olive">Harvested-Berlin</span>
             </p>
           </div>
           <div className="grid w-full grid-cols-1 gap-4 sm:max-w-none sm:grid-cols-2 sm:gap-x-8 sm:gap-y-5 lg:grid-cols-4">
@@ -922,6 +1002,17 @@ export default function App() {
                   <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5a4.25 4.25 0 0 0-4.25-4.25h-8.5Zm9.5 2.25a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5Z" />
                 </svg>
                 {t.footerInstagram}
+              </a>
+              <a
+                href="https://www.tiktok.com/@harvested_berlin?is_from_webapp=1&sender_device=pc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-obsidian underline decoration-olive/25 decoration-1 underline-offset-4 transition hover:text-olive hover:decoration-olive/40 sm:text-[0.875rem]"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-current">
+                  <path d="M14.35 3c.23 1.33 1.04 2.58 2.16 3.36.9.63 2 .98 3.14 1V10a8.7 8.7 0 0 1-3.02-.54v5.45a6.63 6.63 0 1 1-5.73-6.56v2.62a4.03 4.03 0 1 0 3.45 3.97V3h2Z" />
+                </svg>
+                {t.footerTikTok}
               </a>
               <a
                 href="https://www.linkedin.com/company/harvested-berlin"
@@ -985,6 +1076,15 @@ export default function App() {
             </div>
             <div className="flex flex-col items-start gap-1">
               <p className="m-0 text-xs font-semibold uppercase tracking-wide text-dusty">{t.footerLegal}</p>
+              <a
+                href="/datenschutz.html"
+                className="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-obsidian underline decoration-olive/25 decoration-1 underline-offset-4 transition hover:text-olive hover:decoration-olive/40 sm:text-[0.875rem]"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-current">
+                  <path d="M12 2.25 4 5v5.85c0 4.75 2.85 8.98 7.26 10.78l.74.3.74-.3C17.15 19.83 20 15.6 20 10.85V5l-8-2.75Zm0 1.58L18.5 6v4.85c0 4.02-2.37 7.62-6.05 9.21L12 20.2l-.45-.14A9.93 9.93 0 0 1 5.5 10.85V6L12 3.83Zm-.75 5.42v5.5h1.5v-5.5h-1.5Zm0 6.75v1.5h1.5V16h-1.5Z" />
+                </svg>
+                {t.footerPrivacy}
+              </a>
               <a
                 href="/impressum.html"
                 className="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-obsidian underline decoration-olive/25 decoration-1 underline-offset-4 transition hover:text-olive hover:decoration-olive/40 sm:text-[0.875rem]"

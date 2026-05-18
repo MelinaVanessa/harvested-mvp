@@ -6,7 +6,7 @@ const CAP = 100
  * Slots shown as “taken” on the landing-page pilot bar (0–100).
  * Update this when you have a new number, or set PILOT_CLAIMED_MANUAL on Vercel to override without redeploying.
  */
-const PILOT_SLOTS_CLAIMED = 42
+const PILOT_SLOTS_CLAIMED = 48
 
 function publicPilotClaimed() {
   const raw = process.env.PILOT_CLAIMED_MANUAL

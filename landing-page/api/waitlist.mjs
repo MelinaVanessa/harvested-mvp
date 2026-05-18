@@ -50,6 +50,11 @@ export default async function handler(req, res) {
   const emailRaw =
     typeof payload.email === 'string' ? String(payload.email).trim().toLowerCase() : ''
   const role = payload.role
+  const consentGiven = payload.consentGiven
+  const consentVersion =
+    typeof payload.consentVersion === 'string' ? String(payload.consentVersion).trim().slice(0, 40) : ''
+  const consentAt =
+    typeof payload.consentAt === 'string' ? String(payload.consentAt).trim().slice(0, 64) : ''
 
   if (!nameRaw) {
     res.statusCode = 400
@@ -67,6 +72,12 @@ export default async function handler(req, res) {
     res.statusCode = 400
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
     res.end(JSON.stringify({ error: 'Invalid role' }))
+    return
+  }
+  if (consentGiven !== true || !consentVersion || !consentAt) {
+    res.statusCode = 400
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.end(JSON.stringify({ error: 'Consent required' }))
     return
   }
 
@@ -93,6 +104,9 @@ export default async function handler(req, res) {
     role,
     name: nameRaw,
     createdAt: new Date().toISOString(),
+    consentGiven: true,
+    consentVersion,
+    consentAt,
   }
 
   try {
