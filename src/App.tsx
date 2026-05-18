@@ -836,8 +836,8 @@ export default function App() {
     const firstName = (user.name ?? '').trim().split(/\s+/)[0] || 'du'
     const welcomeText =
       language === 'de'
-        ? `Hi ${firstName}! Ich bin Melina, die Gründerin von Harvested. Schreibe mir gerne jederzeit bei Fragen oder wenn du gerne Feedback geben würdest!`
-        : `Hi ${firstName}! I'm Melina, the founder of Harvested. Feel free to message me anytime with questions or feedback.`
+        ? `Hi ${firstName}! Ich bin Melina, die Gründerin von Harvested-Berlin. Schreib mir gerne bei Fragen zum Marktplatz oder wenn du Feedback hast!`
+        : `Hi ${firstName}! I'm Melina, founder of Harvested-Berlin. Message me anytime about the marketplace or if you have feedback!`
 
     const welcomeMessage: Message = {
       id: welcomeId,
@@ -1337,7 +1337,7 @@ export default function App() {
                     >
                       <Menu size={isShortLandscape ? 21 : 24} />
                     </button>
-                    <h1 className={`${isShortLandscape ? 'text-base' : 'text-xl'} font-bold tracking-tight ${theme.text}`}>Harvested</h1>
+                    <h1 className={`${isShortLandscape ? 'text-base' : 'text-xl'} font-bold tracking-tight ${theme.text}`}>{t.brand?.name ?? 'Harvested-Berlin'}</h1>
                   </div>
                   <div className="flex items-center gap-3">
                     <button
@@ -1446,7 +1446,7 @@ export default function App() {
                 >
                   <div className="mb-6 flex items-center gap-2">
                     <Leaf className="text-[#4A5D4E]" size={28} />
-                    <span className={`text-2xl font-bold ${theme.text}`}>Harvested</span>
+                    <span className={`text-2xl font-bold ${theme.text}`}>{t.brand?.name ?? 'Harvested-Berlin'}</span>
                   </div>
                   <div className="space-y-4 flex-1">
                     <button

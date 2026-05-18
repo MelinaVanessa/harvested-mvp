@@ -174,7 +174,7 @@ export function ProfileView({
   }
 
   const profileShareUrl = `https://harvested.app/u/${(safeUser.handle ?? '').replace('@', '')}`
-  const profileShareLine = `${safeUser.name ?? 'Profil'} · Harvested · ${profileShareUrl}`
+  const profileShareLine = `${safeUser.name ?? 'Profil'} · ${t.brand?.name ?? 'Harvested-Berlin'} · ${profileShareUrl}`
 
   const handleCopyLink = async () => {
     try {
@@ -200,7 +200,9 @@ export function ProfileView({
   }
 
   const shareX = () => {
-    const text = encodeURIComponent(`Check out ${safeUser.name ?? 'this profile'} on Harvested`)
+    const text = encodeURIComponent(
+      `Check out ${safeUser.name ?? 'this profile'} on ${t.brand?.name ?? 'Harvested-Berlin'}`,
+    )
     shareOpen(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(profileShareUrl)}`)
   }
 
@@ -231,7 +233,7 @@ export function ProfileView({
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: `${safeUser.name ?? 'Harvested'} Profil`,
+          title: `${safeUser.name ?? t.brand?.name ?? 'Harvested-Berlin'} Profil`,
           text: profileShareLine,
           url: profileShareUrl,
         })

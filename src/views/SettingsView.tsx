@@ -190,7 +190,7 @@ export function SettingsView({
           >
             <LogOut size={18} /> {t?.settings?.logout ?? 'Abmelden'}
           </button>
-          <p className={`text-xs ${theme.textSec} mt-4`}>Harvested App v1.0.4</p>
+          <p className={`text-xs ${theme.textSec} mt-4`}>{t?.brand?.name ?? 'Harvested-Berlin'} App v1.0.5</p>
           <p className={`text-[10px] ${theme.textSec} mt-1 opacity-60`}>Made with 💚 in Berlin</p>
         </div>
       </div>

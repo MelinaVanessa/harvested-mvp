@@ -149,7 +149,8 @@ export function AddListingView({ onAdd, currentUser, theme, t }: AddListingViewP
     setFormData((prev) => ({
       ...prev,
       description:
-        '✨ Frisch aus meinem Garten! Knackig, saftig und voller Geschmack. Perfekt für einen gesunden Snack oder Salat. Kommt vorbei und holt es euch!',
+        t?.add?.optimizeSample ??
+        'Super frisch aus meiner Region! Knackig, saisonal und direkt vom Erzeuger. Reserviere deine Menge und hol sie lokal ab.',
     }))
   }
 

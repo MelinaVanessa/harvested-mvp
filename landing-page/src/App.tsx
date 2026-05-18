@@ -102,10 +102,10 @@ const copy = {
     how3t: 'Sicher kaufen, lokal übergeben',
     how3d:
       'Bestellungen werden direkt zwischen Anbietern und Käufern abgewickelt: transparent, flexibel und fair für beide Seiten.',
-    cardGardenersH: 'Für Gärtner',
+    cardGardenersH: 'Für Anbieter',
     cardGardenersP:
       'Verkaufe deine Produkte zu deinen Bedingungen: Du bestimmst Verfügbarkeit, Preis und Übergabe.',
-    cardNeighborsH: 'Für Nachbarn',
+    cardNeighborsH: 'Für Käufer',
     cardNeighborsP:
       'Kaufe super frische Lebensmittel direkt von lokalen Anbietern in deiner Region.',
     storyTitle: 'Wer Harvested-Berlin aufbaut',
@@ -218,10 +218,10 @@ const copy = {
     how3t: 'Buy locally with trusted handoff',
     how3d:
       'Orders are handled directly between sellers and buyers: transparent, flexible, and fair for both sides.',
-    cardGardenersH: 'For gardeners',
+    cardGardenersH: 'For sellers',
     cardGardenersP:
       'Sell your products on your terms: you control availability, pricing, and handoff.',
-    cardNeighborsH: 'For neighbors',
+    cardNeighborsH: 'For buyers',
     cardNeighborsP:
       'Buy super fresh food directly from trusted local sellers in Berlin-Brandenburg.',
     storyTitle: 'Who is building Harvested-Berlin',

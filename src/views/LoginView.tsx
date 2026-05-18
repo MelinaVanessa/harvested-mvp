@@ -126,10 +126,21 @@ export function LoginView({ onLogin, theme: _theme, t, language, setLanguage }: 
             className="text-2xl font-serif font-semibold tracking-[0.15em] text-center mb-1"
             style={{ color: WALDGRUEN }}
           >
-            HARVESTED
+            HARVESTED-BERLIN
           </h1>
-          <p className="text-sm text-center mb-8" style={{ color: TEXT_MUTED }}>
+          <p className="text-sm text-center mb-2" style={{ color: TEXT_MUTED }}>
             {t.login.subtitle}
+          </p>
+          <p className="text-xs text-center mb-8">
+            <a
+              href="https://www.harvested-berlin.de/#waitlist"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium hover:underline"
+              style={{ color: WALDGRUEN }}
+            >
+              {L.pilotLink ?? 'Noch kein Zugang? Zur Pilot-Bewerbung'}
+            </a>
           </p>
 
           <form
